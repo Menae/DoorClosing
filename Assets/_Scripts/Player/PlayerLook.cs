@@ -3,96 +3,118 @@ using UnityEngine.InputSystem;
 
 public class PlayerLook : MonoBehaviour
 {
-    [Header("Sensitivity")]
-    [SerializeField] private float mouseSensitivity = 0.1f;
-
-    [Header("Vertical Clamp")]
-    [SerializeField] private float verticalClamp = 80.0f;
-
-    [Header("Smoothing")]
-    [Tooltip("値が大きいほど遅延が強くなる。0にすると即時反応（従来の挙動）")]
-    [SerializeField] private float smoothTime = 0.08f;
-
     [Header("References")]
     [SerializeField] private Transform cameraTransform;
+    [SerializeField] private CharacterController characterController;
 
-    // ─── 目標値（マウス入力を即時加算する先） ────────────
-    private float _targetXRotation = 0f; // 上下の目標角度
-    private float _targetYRotation = 0f; // 左右の目標角度
+    [Header("Look")]
+    [SerializeField, Min(0f)] private float mouseSensitivity = 0.12f;
+    [SerializeField, Range(0f, 89f)] private float pitchLimit = 80f;
 
-    // ─── 現在値（SmoothDampで目標値に追従する） ──────────
-    private float _currentXRotation = 0f;
-    private float _currentYRotation = 0f;
+    [Header("Movement")]
+    [SerializeField, Min(0f)] private float moveSpeed = 2.5f;
+    [SerializeField] private bool lockCursorOnStart = true;
 
-    // ─── SmoothDampの速度変数（内部計算用・触らない） ────
-    private float _xVelocity = 0f;
-    private float _yVelocity = 0f;
+    private float pitch;
+
+    private void Awake()
+    {
+        if (cameraTransform == null && Camera.main != null)
+        {
+            cameraTransform = Camera.main.transform;
+        }
+
+        if (characterController == null)
+        {
+            characterController = GetComponent<CharacterController>();
+        }
+    }
 
     private void Start()
     {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-
-        // 初期YRotationをPlayerの現在角度に合わせる
-        // （ゲーム開始時に突然回転しないようにするため）
-        _targetYRotation = transform.eulerAngles.y;
-        _currentYRotation = transform.eulerAngles.y;
+        if (lockCursorOnStart)
+        {
+            LockCursor();
+        }
     }
 
     private void Update()
     {
-        ReadInput();
-        ApplySmoothedRotation();
+        HandleCursorLock();
+
+        if (Cursor.lockState == CursorLockMode.Locked)
+        {
+            Look();
+        }
+
+        Move();
     }
 
-    // ─── マウス入力を目標値に加算するだけ ────────────────
-    private void ReadInput()
+    private void HandleCursorLock()
     {
+        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            UnlockCursor();
+        }
+
+        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame && Cursor.lockState != CursorLockMode.Locked)
+        {
+            LockCursor();
+        }
+    }
+
+    private void Look()
+    {
+        if (Mouse.current == null || cameraTransform == null)
+        {
+            return;
+        }
+
         Vector2 mouseDelta = Mouse.current.delta.ReadValue();
+        float yaw = mouseDelta.x * mouseSensitivity;
+        float pitchDelta = mouseDelta.y * mouseSensitivity;
 
-        float mouseX = mouseDelta.x * mouseSensitivity;
-        float mouseY = mouseDelta.y * mouseSensitivity;
+        transform.Rotate(Vector3.up, yaw, Space.Self);
 
-        // 目標値を更新（現在値は更新しない）
-        _targetYRotation += mouseX;
-
-        _targetXRotation -= mouseY;
-        _targetXRotation = Mathf.Clamp(_targetXRotation, -verticalClamp, verticalClamp);
+        pitch = Mathf.Clamp(pitch - pitchDelta, -pitchLimit, pitchLimit);
+        cameraTransform.localRotation = Quaternion.Euler(pitch, 0f, 0f);
     }
 
-    // ─── SmoothDampで現在値を目標値に追従させて反映 ──────
-    private void ApplySmoothedRotation()
+    private void Move()
     {
-        // SmoothDamp：目標値に向かって滑らかに加減速しながら追従する
-        // smoothTime が大きいほどゆっくり追いつく
-        _currentXRotation = Mathf.SmoothDamp(
-            _currentXRotation,
-            _targetXRotation,
-            ref _xVelocity,
-            smoothTime
-        );
+        if (Keyboard.current == null || moveSpeed <= 0f)
+        {
+            return;
+        }
 
-        _currentYRotation = Mathf.SmoothDamp(
-            _currentYRotation,
-            _targetYRotation,
-            ref _yVelocity,
-            smoothTime
-        );
+        Vector2 input = Vector2.zero;
+        if (Keyboard.current.aKey.isPressed) input.x -= 1f;
+        if (Keyboard.current.dKey.isPressed) input.x += 1f;
+        if (Keyboard.current.sKey.isPressed) input.y -= 1f;
+        if (Keyboard.current.wKey.isPressed) input.y += 1f;
 
-        // 水平回転：Playerオブジェクトごと回す
-        transform.rotation = Quaternion.Euler(0f, _currentYRotation, 0f);
+        input = Vector2.ClampMagnitude(input, 1f);
+        Vector3 move = transform.right * input.x + transform.forward * input.y;
+        move *= moveSpeed * Time.deltaTime;
 
-        // 垂直回転：Cameraのみ
-        cameraTransform.localRotation = Quaternion.Euler(_currentXRotation, 0f, 0f);
+        if (characterController != null)
+        {
+            characterController.Move(move);
+            return;
+        }
+
+        transform.position += move;
     }
 
-    public void SetSensitivity(float value)
+    private static void LockCursor()
     {
-        mouseSensitivity = value;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
-    public void SetSmoothTime(float value)
+    private static void UnlockCursor()
     {
-        smoothTime = value;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 }
