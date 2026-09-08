@@ -238,3 +238,12 @@
 - Decision / reason: 初期期限超過を内部 `None` 誤答として共通Revealへ渡し、Graceは既存の独立期限で非常停止だけを救済とする。乗っ取り正解時はResolve中だけ走行を止め、解決完了前に再走行させる。挑発は無操作成功時に不要な停止を入れない。2アセットは非常停止正解・閉扉走行・表示8から上昇・初期期限6秒へ修正した。
 - Trial value / trade-off: 6秒はGAME-015に基づく初期試作値で、2表現とも同値にして表現差と難易度差を混ぜない。人の実プレイで識別時間と操作距離を測り、後半夜の短縮値を別途決める。各系統専用FSMは共通Reveal/Grace/Deathを重複させるため採らない。
 - Proof / limits: 乗っ取り対象Play Mode 5/5、全Play Mode 28/28、Edit Mode serialization 2/2、Console Error 0。合成Input System→Raycastで期限前停止、一時停止からの再走行、期限超過、Grace救済、二度目誤答とGrace期限死を確認。実シーンの表示・音、Windows Player実入力、難易度・恐怖は未検証。
+
+## IMPL-M2-04 — 3系統縦切りと自己完結する試作手掛かり
+
+- Status / date / owner: WORK-001・GAME-004〜009・012〜015の承認と試作委任内の可逆的実装選択、2026-09-08、Owner: Codex。
+- Context: 3系統の中核ロジックは分離テスト済みだが、一つの実シーンで通常入力を通す配線がなく、既存stand-in prefabのローカル座標と音・字幕参照も未設定だった。M1を直接変更すると通常帰宅の証拠を崩す。
+- Decision / reason: M1から独立した `M2VerticalSlice` とrepair可能なBuilderを作り、Lure→Provocation→Hijackを短い一巡として配線する。BeatDefinitionにpresentation local transformを持たせ、既存prefabをデータ側で配置する。外部音素材なしでも区別を検証できるよう、挑発は車内の偽指示表示＋短い生成チャイム、乗っ取りは既存階数drift＋生成機械音、誘引は廊下中央の異常柱とする。
+- Trial values / trade-off: Lure travel 2秒、Provocation無操作5秒、Hijack初期期限6秒、順番・寸法・ASCII文言・生成音色は人の評価前の試作値。説明HUDは追加せず環境内提示に限定した。procedural toneは依存と素材権利を増やさない一方、正式な音響品質ではない。日本語font asset追加は今回行わず、試作文言をASCIIに限定した。
+- Proof / limits: 通常のWASD・マウス・短クリックで3系統一巡1/1、全Play Mode 31/31、Edit Mode 2/2、scene validate 0 issue、Console Error 0、Windows Development Build成功・Player応答とLure到達を確認。画像で柱、偽指示、9階表示を実見。Player画面の直接目視、OS入力一巡、聴感、初見理解、恐怖は未検証で、正式採用を意味しない。
+- Effects: `Assets/Scenes/M2VerticalSlice.unity`、M2 Builder/テスト/ビルドメニュー、BeatDefinition/BeatStateMachine、Provocation/Hijack presentation、3 Beat asset、PROJECT_STATUS。

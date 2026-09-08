@@ -1,5 +1,17 @@
 # 現在地・再開情報
 
+## M2-04 3系統縦切りシーン（2026-09-08）
+
+- 状態／担当: 試作実装・自動検証完了。現在のCodex task 01a07f7e-0cd8-7500-b2c1-afbb84a88bfb、このcheckout。Astra修正 `a3e8447` のpush済み・全30件合格を確認して継続。
+- 目的／見える行動: 専用シーンで誘引を閉じて拒否、挑発を無操作で耐え、乗っ取りを非常停止し、3系統を通常のWASD・マウス・左クリック経路で一巡して終了できる。誤答時は既存Reveal・Grace・死亡再挑戦を同じ配線で使う。
+- 対象仕様／試作: GAME-004〜009、012〜015、ROADMAP M2。M1NormalRouteを上書きせず専用 `M2VerticalSlice` を生成する。既存BeatDefinitionの未配線値を仕様に合わせ、時間・簡易表示・順番は人の評価前の試作値として記録する。
+- 対象ファイル／検証: M2シーンBuilder、生成scene/.meta、lure/provocationアセット、必要なPlayerテストとEditorメニュー、DECISIONS、本書。Unityコンパイル、専用シーンの通常入力一巡、誤答再挑戦、Game View実見、全Play/Edit回帰、Windows Development Playerを分離確認する。
+- 既存作業: ユーザーがSandbox・Utility・関連差分のcommitまたは不要時削除を明示委任。まず内容を保存・検証し、M2変更と混ぜず独立単位で扱う。削除が必要でない限り保持する。
+- 実装: M1を上書きせず `M2VerticalSlice` と再生成可能なBuilderを追加し、Lure→Provocation→HijackをRunManagerへ配線。BeatDefinitionごとの試作配置、誘引の白い異常柱、挑発の車内偽指示表示＋生成チャイム、乗っ取りの8階超え表示＋生成モーター音を追加した。外部素材・runtime依存は追加していない。挑発のASCII文言、音色、3/5/6秒等は正式採用前の試作値。
+- 検証: 専用シーン通常入力テスト1/1合格（最終job `4f9b38024e9347cbae3e768a522ef2cc`、合成Keyboard/Mouse→Raycast→短クリック、直接SubmitAction・teleportなし）。最終コードで全Play Mode 31/31（`artifacts/tests/20260908-073553-800/playmode.xml`）、Edit Mode 2/2（`artifacts/tests/20260908-073104-376/editmode.xml`）、Console Error 0、scene validateはmissing script 0 / broken prefab 0 / issues 0。最終画像は `artifacts/m2-04/scene-input-20260908-072621-529` で柱・挑発表示を実見し、`hijack-panel.png` は表示9を捉えた。
+- Windows: 最終コードのM2単独Development Build成功、0 errors / 0 warnings、`artifacts/builds/20260908-073657-567/build.json`。一つ前の同機能build `20260908-073211-130` はPlayerを実起動し、応答あり・M2のLure Diagnosis到達・通常終了をログ確認。最終差分は正式参照がある場合に試作panel色を上書きしないguardのみ。ネイティブ画面取得は利用不可でPlayer画面とOS実入力一巡は未確認。人の理解度・恐怖・音色・難易度は未評価。
+- 検証中断記録: 初回シーンテストはBeat asset参照がnullで失敗し、sceneをrepairして解消。MCP全件job `118ef1383f924c9d833c048d69f1ef60` は初期化時にorphan化し、成功扱いせずEditorメニューから再実行して上記31/31を得た。誘引Prefabのplate/drone未配線warningは残り、現段階の柱判別には影響しないが正式演出では解消する。
+
 ## M2 Astraレビュー（2026-09-08）
 
 - 担当: task 01a07fbb-3ac2-7a62-a049-19d919724625。Sol担当taskはidle/完了を確認し、ユーザー依頼のレビュー・不具合修正のみ引き継ぐ。
@@ -83,11 +95,11 @@
 ## 一目で分かる状態
 
 - 仕様: [GAME_SPEC.md](GAME_SPEC.md) v1.0を文書化済み。ユーザーの意図確認と今回の文書化依頼に基づく。
-- 現在工程: M2実装中。M1の残る合成入力境界を検証し、挑発の無操作成功・誤答後無操作回復の中核ロジックを実装。
-- 最新の実装単位: M2-01 挑発の無操作成功。コンパイル、対象3/3、全Play Mode 18/18、Edit Mode 2/2、Consoleを検証済み。
+- 現在工程: M2基本3系統の専用縦切り試作まで実装・自動検証済み。次は人の短時間プレイ評価に基づく可読性・音・間の調整、またはM3への移行判断。
+- 最新の実装単位: M2-04 3系統縦切り。全Play Mode 31/31、Edit Mode 2/2、scene validate 0件、Windows Development BuildとPlayer起動ログを確認。
 - Unity操作担当／実装担当: 現在のtask（01a07f7e-0cd8-7500-b2c1-afbb84a88bfb）。この記録は排他ロックではない。
-- 次の一手: M2-02誘引の身体・敷居・閉扉・救済期限の境界を既存FSMに接続し、分離配置の合成入力で固定する。
-- 人の作業待ち: 現時点なし。最初の体験評価はM2の短いビルドが遊べてから。
+- 次の一手: M2 Playerを人が短時間プレイし、柱の判別、挑発と乗っ取りの区別、無操作5秒、生成音の聞き取りを評価する。技術実装はM3へ進められるが、試作演出の正式採用はこの評価後。
+- 人の作業待ち: M2の体験受入は未実施。技術作業自体のblockerではない。
 - M1-01: 入力コード・FSM・テスト・Editor検証補助を変更。9/9 Play Mode合格、Mainの一時配置でOSクリック→PressClose→Departを確認。
 - 文書整備時の履歴: 対象10文書のリンク・文字化け検査に合格。全体git diff --checkは既存Sandbox.unityの末尾空白を報告。今回は独立M1NormalRouteを追加し、Main/Sandboxは保存していない。
 
@@ -97,7 +109,7 @@
 |---|---|---|
 | 文書・運用 | 完了 | 仕様、決定、保留、工程、現在地、実験、開始手順を整備。リンク・参照を検査 |
 | M1 通常帰宅 | 試作実装済み・一部未検証 | 入力・閉塞・実シーン・走り・停止再受付の全回帰15/15合格、画面実見。Windowsビルド・起動・描画確認。OS連続操作一巡・人の受入は未実施 |
-| M2 基本3系統 | 中核ロジック実装済み・縦切り配線待ち | 挑発・誘引・乗っ取りの入力／期限／身体／扉境界は全Play Mode 28/28合格。専用シーン配線、表示・音の実見、Windows Player、人の受入は未実施 |
+| M2 基本3系統 | 専用縦切り試作・自動検証済み | 3系統を通常入力で一巡、全Play 31/31、Edit 2/2、画面証跡、Windows build/起動確認。Player画面・OS実入力一巡と人の理解/恐怖/音評価は未実施 |
 | M3 全4夜 | 未着手 | 6表現・順序・追加遭遇 |
 | M4 保存・メニュー | 未着手 | 累積時間・死亡の継続含む |
 | M5 仕上げ | 未着手 | 素材、音、視認性、設定等 |

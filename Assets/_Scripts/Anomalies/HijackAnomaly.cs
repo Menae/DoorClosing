@@ -23,11 +23,15 @@ public class HijackAnomaly : AnomalyBehaviour
     private float originalMotorPitch = 1f;
     private float originalMotorVolume = 1f;
     private int normalDisplayFloor;
+    private AudioClip generatedMotorClip;
+
+    public bool IsMotorPlaying => motor != null && motor.isPlaying;
 
     protected override void Awake()
     {
         base.Awake();
         originalLocalPosition = transform.localPosition;
+        EnsurePrototypeMotor();
 
         if (motor != null)
         {
@@ -140,6 +144,12 @@ public class HijackAnomaly : AnomalyBehaviour
         }
 
         transform.localPosition = originalLocalPosition;
+
+        if (generatedMotorClip != null)
+        {
+            Destroy(generatedMotorClip);
+            generatedMotorClip = null;
+        }
     }
 
     private IEnumerator RampMotor()
@@ -209,6 +219,22 @@ public class HijackAnomaly : AnomalyBehaviour
         {
             WarnMissingReferenceOnce(nameof(motor));
         }
+    }
+
+    private void EnsurePrototypeMotor()
+    {
+        if (motor != null)
+        {
+            return;
+        }
+
+        motor = gameObject.AddComponent<AudioSource>();
+        motor.playOnAwake = false;
+        motor.loop = true;
+        motor.spatialBlend = 0.2f;
+        motor.volume = 0.65f;
+        generatedMotorClip = GeneratedTone.CreateMechanicalLoop("HijackTrialMotor");
+        motor.clip = generatedMotorClip;
     }
 
     private void StopRampRoutine()

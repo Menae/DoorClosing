@@ -12,14 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 87e5e7fc8b334193b0f5575d786e27ac, type: 3}
   m_Name: provocation
   m_EditorClassIdentifier: Assembly-CSharp::BeatDefinition
-  debugLabel: Beat
+  debugLabel: Provocation - Prototype A
   category: 1
-  correctAction: 1
+  correctAction: 6
   correctFloorNumber: -1
-  travelSeconds: 4
-  revealSeconds: 2
-  graceSeconds: 3
-  doorsStayClosed: 0
-  displayFloor: 1
+  travelSeconds: 2
+  revealSeconds: 1.5
+  graceSeconds: 4
+  passiveSuccessSeconds: 5
+  doorsStayClosed: 1
+  displayFloor: 8
   hijackDeadlineSeconds: 0
   anomalyPrefab: {fileID: 1353772691805850281, guid: 329b4ae829c372d488f3d8bd05e9199f, type: 3}
+  presentationLocalPosition: {x: -0.85, y: 2.05, z: 4.72}
+  presentationLocalScale: {x: 0.7, y: 0.55, z: 0.08}

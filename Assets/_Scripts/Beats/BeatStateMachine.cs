@@ -453,6 +453,8 @@ public class BeatStateMachine : MonoBehaviour
         }
 
         currentAnomalyInstance = Instantiate(def.AnomalyPrefab, anomalyParent);
+        currentAnomalyInstance.transform.SetLocalPositionAndRotation(def.PresentationLocalPosition, Quaternion.identity);
+        currentAnomalyInstance.transform.localScale = def.PresentationLocalScale;
         currentAnomaly = currentAnomalyInstance.GetComponentInChildren<AnomalyBehaviour>();
 
         if (currentAnomaly == null)

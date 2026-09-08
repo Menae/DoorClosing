@@ -24,6 +24,8 @@ public class BeatDefinition : ScriptableObject
     [Header("Anomaly")]
     [SerializeField, Min(0f)] private float hijackDeadlineSeconds;
     [SerializeField] private GameObject anomalyPrefab;
+    [SerializeField] private Vector3 presentationLocalPosition;
+    [SerializeField] private Vector3 presentationLocalScale = Vector3.one;
 
     public string DebugLabel => debugLabel;
     public AnomalyCategory Category => category;
@@ -37,6 +39,8 @@ public class BeatDefinition : ScriptableObject
     public int DisplayFloor => displayFloor;
     public float HijackDeadlineSeconds => hijackDeadlineSeconds;
     public GameObject AnomalyPrefab => anomalyPrefab;
+    public Vector3 PresentationLocalPosition => presentationLocalPosition;
+    public Vector3 PresentationLocalScale => presentationLocalScale == Vector3.zero ? Vector3.one : presentationLocalScale;
     public bool HasHijackDeadline => category == AnomalyCategory.Hijack && hijackDeadlineSeconds > 0f;
     public bool HasPassiveSuccess => category == AnomalyCategory.Provocation && passiveSuccessSeconds > 0f;
 }

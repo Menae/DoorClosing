@@ -228,6 +228,15 @@ namespace GraduationProject.EditorTools
             EditorApplication.delayCall += () => BuildWindows(new[] { M1NormalRouteBuilder.ScenePath });
         }
 
+        [MenuItem("Tools/Unity Agent/Build M2 Vertical Slice Windows Development")]
+        public static void RequestM2Build()
+        {
+            RequireCleanEditMode();
+            if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.StandaloneWindows64 || !File.Exists(M2VerticalSliceBuilder.ScenePath))
+                throw new InvalidOperationException("Requires Windows64 and the saved M2 vertical-slice scene.");
+            EditorApplication.delayCall += () => BuildWindows(new[] { M2VerticalSliceBuilder.ScenePath });
+        }
+
         private static void BuildWindows(string[] requestedScenes)
         {
             RequireCleanEditMode();

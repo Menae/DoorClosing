@@ -24,3 +24,5 @@ MonoBehaviour:
   displayFloor: 8
   hijackDeadlineSeconds: 6
   anomalyPrefab: {fileID: 4625319245853077497, guid: dfc5d947f0d28ca448d19daca581ad00, type: 3}
+  presentationLocalPosition: {x: 1.3, y: 2.4, z: 4.72}
+  presentationLocalScale: {x: 0.18, y: 0.18, z: 0.08}
