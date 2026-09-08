@@ -1,5 +1,14 @@
 # 現在地・再開情報
 
+## M2-02 誘引の身体・閉扉・救済境界（2026-09-08）
+
+- 状態／担当: 実装・自動検証完了。現在のCodex task 01a07f7e-0cd8-7500-b2c1-afbb84a88bfb、このcheckout。
+- 目的／見える行動: 誘引のかご内待機は無期限。敷居越えで初回誤答。外から閉は閉扉後に死亡。Grace中は身体帰還＋閉受理＋閉扉完了で生還し、受理後の閉扉時間は旧期限を超えても死亡させない。閉塞で再開扉した場合は残猶予から再開。
+- 対象仕様／決定: GAME-005〜007、ROADMAP M2、WORK-002。かごとCharacterControllerの水平方向完全内包判定を通常帰宅と共有し、既存BeatStateMachineの系統別完了条件として実装。
+- 対象ファイル: BeatStateMachine、NormalJourneyController、新規CabinOccupancy、InteractionInputTests、DECISIONS、本書。既存未コミットのLureAnomaly・Standin_Lure・Sandboxは変更しない。
+- 検証結果: 誘引対象Play Mode 5/5、全Play Mode 23/23、Edit Mode serialization 2/2、Console Error 0。合成Mouse→Raycastと身体座標変化で、無期限待機、敷居越えReveal、外閉死亡、帰還＋閉扉完了、閉扉中期限超過、閉塞後の残猶予再開を固定。証跡は `artifacts/tests/20260908-061505-964/playmode.xml` と `artifacts/tests/20260908-061557-856/editmode.xml`（git対象外）。
+- 未検証／次: 実シーン配線、Windows Player実入力、見た目・恐怖は未検証。次はM2-03の乗っ取り期限と停止救済を同じ入力経路で固定する。
+
 ## M2-01 挑発の無操作成功（2026-09-08）
 
 - 担当／場所: 現在のCodex task 01a07f7e-0cd8-7500-b2c1-afbb84a88bfb、このcheckout。M1-03検証後に継続。

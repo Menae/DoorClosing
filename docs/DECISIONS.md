@@ -222,3 +222,11 @@
 - Decision / reason: BeatDefinitionに挑発用の無操作成功時間を追加し、BeatStateMachineが入力なしの診断完了を明示的に成功扱いする。初回誤答後は既存Grace時間の無入力完了をGraceRecoveredとする。共通演出・死亡・進行を再利用し、系統ごとの並行FSMは増やさない。
 - Alternative / trade-off: 各怪異専用Controllerは局所条件を隔離できるが、現時点でReveal/Grace/DeathとRunManager連携が重複する。誘引の扉・身体条件と乗っ取りの時限を加えた結果、2つ以上の入力受付経路で同じ条件分岐が重複する場合は境界を再検討する。
 - Proof: 無入力DiagnosisのCorrect、誤答後無入力GraceのGraceRecovered、Grace中2度目誤答のDeath。合成Input Systemと全Play Mode回帰で検証する。具体時間と演出効果は人の評価待ち。
+
+## IMPL-M2-02 — 誘引の身体境界と閉扉完了を既存FSMに拡張
+
+- Status / date / owner: WORK-001・GAME-005〜007の承認内の可逆的実装選択、2026-09-08、Owner: Codex。
+- Context: 誘引はボタン回答だけでなく、身体の敷居越え、閉ボタン受理時の身体位置、閉扉完了、閉塞による再開扉を一つの救済条件として扱う必要がある。従来FSMは入力直後に正解を確定し、扉アニメーションとGrace残時間を関連付けていなかった。
+- Decision / reason: 通常帰宅と誘引でCharacterControllerの水平完全内包判定を `CabinOccupancy` に共有する。誘引は敷居越えを合成 `ExitCab` 誤答として既存Revealへ渡し、かご内の閉受理後はGrace消費を止め、実際の閉扉完了時だけ生還とする。閉塞で再開扉した場合は保存した残時間から入力受付を再開し、外からの閉は閉扉完了後に死亡させる。
+- Alternative / trade-off: 誘引専用MonoBehaviourへ状態を分離する案は扉所有権と共通Reveal/Death進行を二重化するため今回は採らない。FSM内の系統分岐が今後さらに増え、同じ扉待機処理が複数系統へ広がる場合は、回答ポリシーを専用Strategyへ抽出する。
+- Proof / limits: 誘引対象Play Mode 5/5、全Play Mode 23/23、Edit Mode serialization 2/2、Console Error 0。合成Input System→Raycastと身体座標で境界を固定した。実シーン配線、Windows Player実入力、演出品質と恐怖は未検証。

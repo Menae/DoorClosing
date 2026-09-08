@@ -9,6 +9,8 @@ public class BeatStateMachine : MonoBehaviour
     [SerializeField] private ElevatorController elevatorController;
     [SerializeField] private FloorIndicator floorIndicator;
     [SerializeField] private Transform anomalyParent;
+    [SerializeField] private CharacterController passenger;
+    [SerializeField] private BoxCollider cabin;
 
     [Header("Startup")]
     [SerializeField] private bool beginInitialBeatOnStart;
@@ -29,6 +31,8 @@ public class BeatStateMachine : MonoBehaviour
     private SubmittedAction pendingAction;
     private bool hasPendingAction;
     private bool acceptsPlayerAction;
+
+    public bool IsPassengerInsideCabin => CabinOccupancy.FullyContains(cabin, passenger);
 
     private struct SubmittedAction
     {
@@ -133,10 +137,30 @@ public class BeatStateMachine : MonoBehaviour
             SetState(BeatState.Committed);
             GameEvents.RaisePlayerCommitted(pendingAction.Action);
 
+            if (IsLureCloseOutside(def, pendingAction))
+            {
+                yield return CloseDoorsAndWait();
+                CleanupCurrentAnomaly();
+                GameEvents.RaiseBeatResolved(BeatOutcome.Death);
+                beatRoutine = null;
+                yield break;
+            }
+
             BeatOutcome diagnosisOutcome = Evaluate(pendingAction);
             if (diagnosisOutcome == BeatOutcome.Correct)
             {
-                yield return ResolveAndDepart(def);
+                bool lureDoorsClosed = false;
+                if (def.Category == AnomalyCategory.Lure)
+                {
+                    yield return TryCloseLureDoors(value => lureDoorsClosed = value);
+                    if (!lureDoorsClosed)
+                    {
+                        ClearPendingAction();
+                        continue;
+                    }
+                }
+
+                yield return ResolveAndDepart(def, lureDoorsClosed);
                 GameEvents.RaiseBeatResolved(BeatOutcome.Correct);
                 yield break;
             }
@@ -156,12 +180,17 @@ public class BeatStateMachine : MonoBehaviour
             SetState(BeatState.Grace);
             currentAnomaly?.OnGraceStart();
             bool recovered = false;
-            yield return WaitForGraceRecovery(def, value => recovered = value);
+            bool recoveryClosedLureDoors = false;
+            yield return WaitForGraceRecovery(def, (value, doorsClosed) =>
+            {
+                recovered = value;
+                recoveryClosedLureDoors = doorsClosed;
+            });
 
             if (recovered)
             {
                 currentAnomaly?.OnGraceEnd(true);
-                yield return ResolveAndDepart(def);
+                yield return ResolveAndDepart(def, recoveryClosedLureDoors);
                 GameEvents.RaiseBeatResolved(BeatOutcome.GraceRecovered);
                 yield break;
             }
@@ -206,15 +235,18 @@ public class BeatStateMachine : MonoBehaviour
         yield return WaitForSecondsFromDefinition(representedTravelSeconds);
     }
 
-    private IEnumerator ResolveAndDepart(BeatDefinition def)
+    private IEnumerator ResolveAndDepart(BeatDefinition def, bool doorsAlreadyClosed = false)
     {
         SetState(BeatState.Resolve);
         elevatorController?.SetTravelling(false);
         yield return WaitForSecondsFromDefinition(resolveSeconds);
 
         SetState(BeatState.Depart);
-        elevatorController?.CloseDoors();
-        yield return WaitForSecondsFromDefinition(doorCloseSeconds);
+        if (!doorsAlreadyClosed)
+        {
+            elevatorController?.CloseDoors();
+            yield return WaitForSecondsFromDefinition(doorCloseSeconds);
+        }
 
         CleanupCurrentAnomaly();
         beatRoutine = null;
@@ -226,8 +258,23 @@ public class BeatStateMachine : MonoBehaviour
         acceptsPlayerAction = true;
 
         float elapsedSeconds = 0f;
+        bool lureWasInside = def.Category != AnomalyCategory.Lure || IsPassengerInsideCabin;
         while (!hasPendingAction)
         {
+            if (def.Category == AnomalyCategory.Lure && passenger != null && cabin != null)
+            {
+                if (IsPassengerInsideCabin)
+                {
+                    lureWasInside = true;
+                }
+                else if (lureWasInside)
+                {
+                    pendingAction = new SubmittedAction(PlayerAction.ExitCab, -1);
+                    hasPendingAction = true;
+                    break;
+                }
+            }
+
             if (def.HasHijackDeadline && elapsedSeconds >= def.HijackDeadlineSeconds)
             {
                 pendingAction = new SubmittedAction(PlayerAction.None, -1);
@@ -250,36 +297,96 @@ public class BeatStateMachine : MonoBehaviour
         onPassiveCompletion?.Invoke(false);
     }
 
-    private IEnumerator WaitForGraceRecovery(BeatDefinition def, System.Action<bool> onComplete)
+    private IEnumerator WaitForGraceRecovery(BeatDefinition def, System.Action<bool, bool> onComplete)
     {
         ClearPendingAction();
         acceptsPlayerAction = true;
 
-        float elapsedSeconds = 0f;
-        while (elapsedSeconds < def.GraceSeconds)
+        float remainingSeconds = def.GraceSeconds;
+        while (remainingSeconds > 0f)
         {
             if (hasPendingAction)
             {
                 GameEvents.RaisePlayerCommitted(pendingAction.Action);
 
+                if (def.Category == AnomalyCategory.Lure && pendingAction.Action == PlayerAction.PressClose)
+                {
+                    acceptsPlayerAction = false;
+                    if (!IsPassengerInsideCabin)
+                    {
+                        yield return CloseDoorsAndWait();
+                        onComplete?.Invoke(false, false);
+                        yield break;
+                    }
+
+                    bool doorsClosed = false;
+                    yield return TryCloseLureDoors(value => doorsClosed = value);
+                    if (doorsClosed)
+                    {
+                        onComplete?.Invoke(true, true);
+                        yield break;
+                    }
+
+                    ClearPendingAction();
+                    acceptsPlayerAction = true;
+                    continue;
+                }
+
                 if (Evaluate(pendingAction) == BeatOutcome.Correct)
                 {
                     acceptsPlayerAction = false;
-                    onComplete?.Invoke(true);
+                    onComplete?.Invoke(true, false);
                     yield break;
                 }
 
                 acceptsPlayerAction = false;
-                onComplete?.Invoke(false);
+                onComplete?.Invoke(false, false);
                 yield break;
             }
 
-            elapsedSeconds += Time.deltaTime;
+            remainingSeconds -= Time.deltaTime;
             yield return null;
         }
 
         acceptsPlayerAction = false;
-        onComplete?.Invoke(def.HasPassiveSuccess);
+        onComplete?.Invoke(def.HasPassiveSuccess, false);
+    }
+
+    private bool IsLureCloseOutside(BeatDefinition def, SubmittedAction action)
+    {
+        return def.Category == AnomalyCategory.Lure && action.Action == PlayerAction.PressClose
+            && !IsPassengerInsideCabin;
+    }
+
+    private IEnumerator TryCloseLureDoors(System.Action<bool> onComplete)
+    {
+        if (elevatorController == null || !IsPassengerInsideCabin)
+        {
+            onComplete?.Invoke(false);
+            yield break;
+        }
+
+        yield return CloseDoorsAndWait();
+        if (!elevatorController.LastCloseObstructed && IsPassengerInsideCabin)
+        {
+            onComplete?.Invoke(true);
+            yield break;
+        }
+
+        if (!elevatorController.IsDoorOpen)
+        {
+            elevatorController.OpenDoors();
+            while (elevatorController.IsDoorMoving) yield return null;
+        }
+
+        onComplete?.Invoke(false);
+    }
+
+    private IEnumerator CloseDoorsAndWait()
+    {
+        if (elevatorController == null) yield break;
+        elevatorController.CloseDoors();
+        while (elevatorController.IsDoorMoving) yield return null;
     }
 
     private BeatOutcome Evaluate(SubmittedAction submittedAction)

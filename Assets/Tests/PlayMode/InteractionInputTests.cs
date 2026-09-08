@@ -33,15 +33,22 @@ namespace GraduationProject.Tests
     {
         private GameObject root;
         private Component machine;
+        private Component elevator;
         private Component target;
         private ScriptableObject beat;
         private Image gauge;
+        private CharacterController passenger;
+        private BoxCollider cabin;
+        private BoxCollider safety;
         private Mouse mouse;
         private float savedTimeScale;
         private readonly List<string> states = new List<string>();
         private readonly List<string> commits = new List<string>();
         private readonly List<string> outcomes = new List<string>();
         private readonly List<(EventInfo info, Delegate callback)> subscriptions = new List<(EventInfo, Delegate)>();
+        private static readonly Vector3 OccupancyOrigin = new Vector3(520, 500, 500);
+        private bool DoorMoving => (bool)elevator.GetType().GetProperty("IsDoorMoving").GetValue(elevator);
+        private bool DoorOpen => (bool)elevator.GetType().GetProperty("IsDoorOpen").GetValue(elevator);
 
         public override void Setup()
         {
@@ -57,7 +64,34 @@ namespace GraduationProject.Tests
             root = new GameObject("UnityAgent_InputFixture");
             root.SetActive(false);
             root.AddComponent(GameAccess.Type("ResponseEvaluator"));
+            elevator = root.AddComponent(GameAccess.Type("ElevatorController"));
+            GameAccess.Set(elevator, "doorSlideSeconds", 0.05f);
+
+            var passengerObject = new GameObject("Passenger");
+            passengerObject.transform.SetParent(root.transform);
+            passengerObject.transform.position = OccupancyOrigin;
+            passenger = passengerObject.AddComponent<CharacterController>();
+            passenger.height = 1.8f;
+            passenger.radius = 0.25f;
+            var cabinObject = new GameObject("Cabin", typeof(BoxCollider));
+            cabinObject.transform.SetParent(root.transform);
+            cabinObject.transform.position = OccupancyOrigin;
+            cabin = cabinObject.GetComponent<BoxCollider>();
+            cabin.size = new Vector3(4f, 3f, 4f);
+            cabin.isTrigger = true;
+            var safetyObject = new GameObject("DoorSafety", typeof(BoxCollider));
+            safetyObject.transform.SetParent(root.transform);
+            safetyObject.transform.position = OccupancyOrigin + Vector3.forward * 8f;
+            safety = safetyObject.GetComponent<BoxCollider>();
+            safety.size = new Vector3(2f, 3f, 0.5f);
+            safety.isTrigger = true;
+            GameAccess.Set(elevator, "doorSafetyZone", safety);
+            GameAccess.Set(elevator, "passengerBody", passenger);
+
             machine = root.AddComponent(GameAccess.Type("BeatStateMachine"));
+            GameAccess.Set(machine, "elevatorController", elevator);
+            GameAccess.Set(machine, "passenger", passenger);
+            GameAccess.Set(machine, "cabin", cabin);
             GameAccess.Set(machine, "doorOpenSeconds", 0f);
             GameAccess.Set(machine, "doorCloseSeconds", 0f);
             GameAccess.Set(machine, "resolveSeconds", 0f);
@@ -249,6 +283,14 @@ namespace GraduationProject.Tests
             yield return null;
         }
 
+        private void MovePassenger(Vector3 position)
+        {
+            passenger.enabled = false;
+            passenger.transform.position = position;
+            passenger.enabled = true;
+            Physics.SyncTransforms();
+        }
+
         [UnityTest]
         public IEnumerator InvalidButtons_DoNotCommitOrCountAsSecondError()
         {
@@ -323,6 +365,79 @@ namespace GraduationProject.Tests
             yield return ClickAction("PressEmergencyStop");
             yield return Until(() => outcomes.Contains("Death"), "provocation second error death");
             Assert.That(commits, Is.EqualTo(new[] { "PressClose", "PressEmergencyStop" }));
+        }
+
+        [UnityTest]
+        public IEnumerator Lure_NoInputInsideCabin_RemainsSafeWithoutDeadline()
+        {
+            yield return Diagnose();
+            yield return new WaitForSecondsRealtime(0.2f);
+            Assert.That(states.Last(), Is.EqualTo("Diagnosis"));
+            Assert.That(commits, Is.Empty);
+            Assert.That(outcomes, Is.Empty);
+        }
+
+        [UnityTest]
+        public IEnumerator Lure_CrossingThreshold_RevealsWithoutButtonInput()
+        {
+            yield return Diagnose();
+            MovePassenger(OccupancyOrigin + Vector3.forward * 4f);
+            yield return Until(() => states.Contains("Grace"), "lure threshold reveal");
+            Assert.That(commits, Is.EqualTo(new[] { "ExitCab" }));
+            Assert.That(outcomes, Does.Contain("WrongRevealed"));
+        }
+
+        [UnityTest]
+        public IEnumerator Lure_CloseOutsideCabin_ClosesThenDiesImmediately()
+        {
+            MovePassenger(OccupancyOrigin + Vector3.forward * 4f);
+            yield return Diagnose();
+            yield return ClickAction("PressClose");
+            yield return Until(() => outcomes.Contains("Death"), "outside close death");
+            Assert.That(outcomes, Does.Not.Contain("WrongRevealed"));
+            Assert.That(DoorMoving, Is.False);
+            Assert.That(DoorOpen, Is.False);
+        }
+
+        [UnityTest]
+        public IEnumerator Lure_ReturnAndCloseWithinGrace_SurvivesAfterOldDeadlineWhileDoorFinishes()
+        {
+            GameAccess.Set(beat, "graceSeconds", 0.1f);
+            GameAccess.Set(elevator, "doorSlideSeconds", 0.25f);
+            yield return Diagnose();
+            MovePassenger(OccupancyOrigin + Vector3.forward * 4f);
+            yield return Until(() => states.Contains("Grace"), "lure grace");
+            MovePassenger(OccupancyOrigin);
+            yield return null;
+            yield return ClickAction("PressClose");
+            yield return new WaitForSecondsRealtime(0.15f);
+            Assert.That(outcomes, Does.Not.Contain("Death"), "Accepted close freezes the old grace deadline");
+            Assert.That(outcomes, Does.Not.Contain("GraceRecovered"), "Recovery waits for door completion");
+            yield return Until(() => outcomes.Contains("GraceRecovered"), "recovery after closed doors");
+            Assert.That(DoorOpen, Is.False);
+        }
+
+        [UnityTest]
+        public IEnumerator Lure_ObstructedRecoveryClose_ReopensAndResumesRemainingGrace()
+        {
+            GameAccess.Set(beat, "graceSeconds", 0.12f);
+            GameAccess.Set(elevator, "doorSlideSeconds", 0.08f);
+            yield return Diagnose();
+            MovePassenger(OccupancyOrigin + Vector3.forward * 4f);
+            yield return Until(() => states.Contains("Grace"), "lure grace");
+            MovePassenger(OccupancyOrigin);
+            safety.transform.position = OccupancyOrigin;
+            Physics.SyncTransforms();
+            yield return ClickAction("PressClose");
+            yield return Until(() => !DoorMoving, "obstructed close reopens");
+            Assert.That(states.Last(), Is.EqualTo("Grace"));
+            Assert.That(DoorOpen, Is.True);
+            Assert.That(outcomes, Does.Not.Contain("Death"), "Door processing must not consume grace");
+
+            safety.transform.position = OccupancyOrigin + Vector3.forward * 8f;
+            Physics.SyncTransforms();
+            yield return ClickAction("PressClose");
+            yield return Until(() => outcomes.Contains("GraceRecovered"), "fresh close within remaining grace");
         }
 
         [UnityTest]

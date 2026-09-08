@@ -30,16 +30,7 @@ public class NormalJourneyController : MonoBehaviour
 
     public bool IsBodyInside
     {
-        get
-        {
-            if (passenger == null || cabin == null) return false;
-            var body = passenger.bounds;
-            var space = cabin.bounds;
-            // Full horizontal body must clear the threshold; floor contact is not an exclusion.
-            return body.min.x >= space.min.x && body.max.x <= space.max.x
-                && body.min.z >= space.min.z && body.max.z <= space.max.z
-                && space.Contains(body.center);
-        }
+        get => CabinOccupancy.FullyContains(cabin, passenger);
     }
 
     private void Start()
