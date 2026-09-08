@@ -1,5 +1,13 @@
 # Decisions
 
+## VIS-001 — 内装リファレンスと日本語表示
+- Status: 参照方針はユーザー指定済み。具体的な内装はGAME-015に基づく試作、人の品質評価待ち。
+- Date: 2026-09-08; Owner: user（具体実装: Astra）
+- Context: M1/M2の機能試作から見た目を改善する依頼と写真4枚。
+- Decision: 『8番出口』を写実度の目標、実写3枚をマンションと車内の材質・経年・掲示・照明の参考にする。日本語と操作距離での文字可視性を重視。人物や実在連絡先を素材化しない。
+- Trade-off: 第一段階は既存の経路・操作盤位置を維持して材質と装飾を改善。試作寸法や仮形状は残り、目標品質到達は宣言しない。新しい環境パッケージ／描画基盤の導入は不要。
+- Effects: ApartmentVisualPass、ApartmentVisuals素材、M1/M2 scenes、挑発Prefab/表示、VISUAL_REFERENCES、PROJECT_STATUS。
+
 ## ENV-001 — Development environment
 - Status: approved scope / initial implementation and technical verification complete
 - Date: 2026-09-06; verified 2026-09-07 JST

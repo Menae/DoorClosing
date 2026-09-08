@@ -53,6 +53,15 @@ MonoBehaviour:
   recoveredColor: {r: 0, g: 1, b: 0, a: 1}
   failedColor: {r: 0, g: 0, b: 0, a: 1}
   emissionIntensity: 1.5
+  presentationFont: {fileID: 11400000, guid: dd74155c9e0e7fc4a8d51a0ec99e637f, type: 2}
+  normalAnnouncement: "\u5B89\u5168\u78BA\u8A8D\u306E\u305F\u3081\n\u975E\u5E38\u505C\u6B62\u3092\n\u62BC\u3057\u3066\u304F\u3060\u3055\u3044"
+  revealedAnnouncement: "\u62BC\u3057\u3066\u3002\u62BC\u3057\u3066\u3002\n\u62BC\u3057\u3066\u3002"
+  speaker: {fileID: 0}
+  announceClip: {fileID: 0}
+  subtitle: {fileID: 0}
+  revealLamp: {fileID: 0}
+  firstDelay: 3
+  repeatInterval: 15
 --- !u!1 &7018571423013487491
 GameObject:
   m_ObjectHideFlags: 0

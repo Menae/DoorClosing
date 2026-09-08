@@ -1,5 +1,17 @@
 # 現在地・再開情報
 
+## VIS-01 参考写真に基づくM1/M2内装改善（2026-09-08）
+
+- 状態／担当: 内装の第一段階を実装・技術確認済み、見た目の人間評価待ち。Astra task 01a07fbb-3ac2-7a62-a049-19d919724625。Sol task idle、main差分なし、M2 Edit Mode未保存変更なしを確認して担当した。
+- 依頼: ユーザー提供4枚。『8番出口』を写実度の目標、残り3枚を築年数のある居住中マンションと車内の材質・貼り紙・天井灯の参考とする。日本語と実プレイ時の文字可視性に留意。GAME-015/WORK-001の試作委任内で可逆的な見た目を改善する。正式な視覚品質・恐怖の受入は人の評価待ち。
+- 計画: 既存URP/TMPを採用し共有内装を拡張。Editor専用の再適用可能な装飾処理、素材、両scene、日本語の挑発表示を対象に、車内→入口／8階廊下→実画面確認の順で進める。ゲーム進行・経路・ボタン当たり判定・難易度は維持。写真の人物・実在連絡先は素材化しない。
+- 検証予定: compile/Console、既存M1/M2入力回帰、1080p Game Viewで入口・車内・廊下・怪異表示、Windows Development Player起動とOS入力を分離確認。素材反復、影、文字欠落、対象遮蔽が主な確認点。未実施を合格扱いしない。
+- 中間検証: project Play Mode 33/33成功・失敗skipなし（artifacts/tests/20260908-092718-003 および 20260908-093052-727）。今回は対象assemblyを指定した33件で、過去の全37件とは母数が異なる。Edit Mode 2/2（20260908-093548-293）。
+- 修正経過: TMP追加でTransformがRectTransformへ置換される参照切れ、Unity native componentのnull判定を修正して再適用。作業開始時dirtyなし、生成途中の自分の変更のみを保存・再開した。画面確認で入口掲示の折返し、車内注意書きの重なり、挑発文字のパネル外はみ出し、発光materialのkeyword無効、立体目地の遠景ちらつきを発見して修正。画像資料・採用範囲・生成素材はVISUAL_REFERENCES.md。
+- 最終検証: 床材／照明変更後の通常入力2/2成功・失敗skipなし（MCP job bd1a63278f194c1a851f8cf53ff7f10c）。Game Viewの入口・挑発表示・8超え階数・廊下を実見（artifacts/m2-04/scene-input-20260908-093627-704、1579x888）。その後、入口掲示の柱との重なりと扉の見切り線だけを修正。最終M2 Windows Development Buildはartifacts/builds/20260908-093929-670/build.json、成功・errors 0 / warnings 0。Console Error 0、M2 scene validate 0 issue、追加InteriorVisuals内Collider 0を確認。
+- Windows証跡: artifacts/visual-01/windows-player.png はWindows Computer Useで取得した最終Player入口（client 1280x720）。Player-observed.logの保存時点で実行時例外・Unicode欠落警告なし。ユーザー入力を検知してこちらの入力を中止し、Playerを起動したまま残す。AgentによるOS入力一巡は未検証。ユーザー側の操作ログをAgentの操作試験に数えない。
+- 限界／次: 1080p固定画面・60fps／最低環境・音の聴感・恐怖・正式な写実品質は未認定。操作盤と空間寸法は既存試作のまま。『8番出口』相当の完成品質には未達で、第一段階の内装・日本語を実際に遊んで評価してから、形状／固有ディテールを詰める。M3は今回対象外。ゲーム工程の次担当は未着手状態から本記録を読む。
+
 ## Computer Use手順の訂正（2026-09-08）
 
 - 担当／範囲: task 01a07fbb-3ac2-7a62-a049-19d919724625。ユーザーの明示依頼でAGENTS・START_HERE・DEVELOPMENT・本書のみ更新。Sol担当はidleを確認。ゲーム工程・実装担当は変更しない。

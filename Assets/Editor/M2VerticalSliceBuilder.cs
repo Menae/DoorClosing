@@ -93,7 +93,7 @@ namespace GraduationProject.EditorTools
             Set(run, "blackFadeImage", hud.transform.Find("Fade").GetComponent<Image>());
             TMP_Text clearText = hud.transform.Find("NightComplete").GetComponent<TMP_Text>();
             Set(run, "nightClearText", clearText);
-            Set(run, "clearMessage", "M2 VERTICAL SLICE CLEAR");
+            Set(run, "clearMessage", "帰宅しました");
             Set(run, "clearFadeSeconds", 0.8f);
             Set(run, "startRunOnStart", false);
             SetBeatList(run, lure, provocation, hijack);

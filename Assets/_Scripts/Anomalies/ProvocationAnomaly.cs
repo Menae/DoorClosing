@@ -12,6 +12,9 @@ public class ProvocationAnomaly : AnomalyBehaviour
     private const float LampBlinkIntervalSeconds = 0.2f;
 
     [Header("Provocation")]
+    [SerializeField] private TMP_FontAsset presentationFont;
+    [SerializeField] private string normalAnnouncement = NormalAnnouncement;
+    [SerializeField] private string revealedAnnouncement = RevealedAnnouncement;
     [SerializeField] private AudioSource speaker;
     [SerializeField] private AudioClip announceClip;
     [SerializeField] private TMP_Text subtitle;
@@ -59,7 +62,7 @@ public class ProvocationAnomaly : AnomalyBehaviour
     {
         base.OnReveal();
         StopAnnouncementRoutine();
-        PresentAnnouncement(RevealedAnnouncement, RevealedPitch);
+        PresentAnnouncement(revealedAnnouncement, RevealedPitch);
 
         if (HasReference(revealLamp, nameof(revealLamp)))
         {
@@ -102,7 +105,7 @@ public class ProvocationAnomaly : AnomalyBehaviour
 
         while (true)
         {
-            PresentAnnouncement(NormalAnnouncement, originalSpeakerPitch);
+            PresentAnnouncement(normalAnnouncement, originalSpeakerPitch);
             yield return WaitForSecondsIfPositive(repeatInterval);
         }
     }
@@ -142,12 +145,13 @@ public class ProvocationAnomaly : AnomalyBehaviour
             display.transform.localRotation = Quaternion.identity;
             display.transform.localScale = new Vector3(0.45f, 0.55f, 1f);
             TextMeshPro text = display.AddComponent<TextMeshPro>();
+            if (presentationFont != null) text.font = presentationFont;
             text.alignment = TextAlignmentOptions.Center;
             text.enableAutoSizing = true;
-            text.fontSizeMin = 1f;
-            text.fontSizeMax = 5f;
+            text.fontSizeMin = 0.7f;
+            text.fontSizeMax = 2.2f;
             text.color = new Color(1f, 0.12f, 0.08f);
-            text.rectTransform.sizeDelta = new Vector2(4.2f, 1.8f);
+            text.rectTransform.sizeDelta = new Vector2(1.9f, 1.5f);
             subtitle = text;
         }
 
@@ -178,6 +182,7 @@ public class ProvocationAnomaly : AnomalyBehaviour
     {
         foreach (Renderer renderer in GetComponentsInChildren<Renderer>())
         {
+            if (renderer.GetComponent<TMP_Text>() != null) continue;
             foreach (Material material in renderer.materials)
             {
                 if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
