@@ -41,6 +41,7 @@ namespace GraduationProject.Tests
         private BoxCollider cabin;
         private BoxCollider safety;
         private Mouse mouse;
+        private AudioClip motorClip;
         private float savedTimeScale;
         private readonly List<string> states = new List<string>();
         private readonly List<string> commits = new List<string>();
@@ -139,6 +140,7 @@ namespace GraduationProject.Tests
                 subscriptions.Clear();
                 if (root != null) Object.DestroyImmediate(root);
                 if (beat != null) Object.DestroyImmediate(beat);
+                if (motorClip != null) Object.DestroyImmediate(motorClip);
                 Time.timeScale = savedTimeScale;
             }
             finally { base.TearDown(); }
@@ -410,6 +412,24 @@ namespace GraduationProject.Tests
         }
 
         [UnityTest]
+        public IEnumerator Lure_LeavingDuringDiagnosisClose_RevealsAfterReopening()
+        {
+            GameAccess.Set(elevator, "doorSlideSeconds", 0.15f);
+            yield return Diagnose();
+            yield return ClickAction("PressClose");
+            Assert.That(DoorMoving, Is.True);
+            MovePassenger(OccupancyOrigin + Vector3.forward * 4f);
+            yield return Until(() => !DoorMoving, "close interrupted by departure");
+            yield return Until(() => states.Contains("Grace"), "departure during close must reveal", 1f);
+            Assert.That(DoorOpen, Is.True);
+            Assert.That(outcomes, Does.Not.Contain("Correct"));
+            Assert.That(commits, Is.EqualTo(new[] { "PressClose", "ExitCab" }));
+            MovePassenger(OccupancyOrigin);
+            yield return ClickAction("PressClose");
+            yield return Until(() => outcomes.Contains("GraceRecovered"), "return and fresh close recover");
+        }
+
+        [UnityTest]
         public IEnumerator Lure_ReturnAndCloseWithinGrace_SurvivesAfterOldDeadlineWhileDoorFinishes()
         {
             GameAccess.Set(beat, "graceSeconds", 0.1f);
@@ -463,6 +483,33 @@ namespace GraduationProject.Tests
             yield return Until(() => outcomes.Contains("Correct"), "hijack travel resumes");
             Assert.That(Travelling, Is.True);
             Assert.That(commits, Is.EqualTo(new[] { "PressEmergencyStop" }));
+        }
+
+        [UnityTest]
+        public IEnumerator Hijack_EmergencyStop_StopsAnomalyMotorDuringResolve()
+        {
+            ConfigureHijack(2f, 1f);
+            GameAccess.Set(machine, "resolveSeconds", 0.5f);
+            GameAccess.Set(machine, "anomalyParent", root.transform);
+            var template = new GameObject("HijackMotorFixture");
+            template.transform.SetParent(root.transform);
+            template.SetActive(false);
+            var motor = template.AddComponent<AudioSource>();
+            motor.playOnAwake = false;
+            motorClip = AudioClip.Create("SilentMotorFixture", 44100, 1, 44100, false);
+            motor.clip = motorClip;
+            var anomaly = template.AddComponent(GameAccess.Type("HijackAnomaly"));
+            GameAccess.Set(anomaly, "motor", motor);
+            template.SetActive(true);
+            GameAccess.Set(beat, "anomalyPrefab", template);
+            yield return Diagnose();
+            var activeMotor = root.GetComponentsInChildren<AudioSource>().Single(source => source != motor);
+            Assert.That(activeMotor.isPlaying, Is.True, "Fixture must exercise the actual anomaly audio source");
+            yield return ClickAction("PressEmergencyStop");
+            yield return Until(() => states.Contains("Resolve"), "emergency stop resolution");
+            Assert.That(activeMotor == null || !activeMotor.isPlaying, Is.True,
+                "Anomaly motor must stop with the elevator, not continue through Resolve");
+            yield return Until(() => outcomes.Contains("Correct"), "travel resumes after stopped motor");
         }
 
         [UnityTest]

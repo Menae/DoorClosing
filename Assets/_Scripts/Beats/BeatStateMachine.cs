@@ -152,17 +152,34 @@ public class BeatStateMachine : MonoBehaviour
                 bool lureDoorsClosed = false;
                 if (def.Category == AnomalyCategory.Lure)
                 {
-                    yield return TryCloseLureDoors(value => lureDoorsClosed = value);
+                    bool leftDuringClose = false;
+                    yield return TryCloseLureDoors((closed, left) =>
+                    {
+                        lureDoorsClosed = closed;
+                        leftDuringClose = left;
+                    });
                     if (!lureDoorsClosed)
                     {
-                        ClearPendingAction();
-                        continue;
+                        if (!leftDuringClose)
+                        {
+                            ClearPendingAction();
+                            continue;
+                        }
+
+                        // Leaving during an accepted close is still the first wrong response.
+                        // Do not restart diagnosis with the passenger already outside.
+                        pendingAction = new SubmittedAction(PlayerAction.ExitCab, -1);
+                        GameEvents.RaisePlayerCommitted(pendingAction.Action);
+                        diagnosisOutcome = BeatOutcome.WrongRevealed;
                     }
                 }
 
-                yield return ResolveAndDepart(def, lureDoorsClosed);
-                GameEvents.RaiseBeatResolved(BeatOutcome.Correct);
-                yield break;
+                if (diagnosisOutcome == BeatOutcome.Correct)
+                {
+                    yield return ResolveAndDepart(def, lureDoorsClosed);
+                    GameEvents.RaiseBeatResolved(BeatOutcome.Correct);
+                    yield break;
+                }
             }
 
             if (diagnosisOutcome == BeatOutcome.Represented)
@@ -241,6 +258,12 @@ public class BeatStateMachine : MonoBehaviour
         if (def.Category != AnomalyCategory.Provocation)
         {
             elevatorController?.SetTravelling(false);
+        }
+        if (def.Category == AnomalyCategory.Hijack)
+        {
+            // The anomaly owns a separate motor loop/drift: stop it when the rescue
+            // is accepted, rather than leaving it running during the stopped interval.
+            CleanupCurrentAnomaly();
         }
         yield return WaitForSecondsFromDefinition(resolveSeconds);
 
@@ -328,7 +351,7 @@ public class BeatStateMachine : MonoBehaviour
                     }
 
                     bool doorsClosed = false;
-                    yield return TryCloseLureDoors(value => doorsClosed = value);
+                    yield return TryCloseLureDoors((closed, _) => doorsClosed = closed);
                     if (doorsClosed)
                     {
                         onComplete?.Invoke(true, true);
@@ -366,28 +389,40 @@ public class BeatStateMachine : MonoBehaviour
             && !IsPassengerInsideCabin;
     }
 
-    private IEnumerator TryCloseLureDoors(System.Action<bool> onComplete)
+    private IEnumerator TryCloseLureDoors(System.Action<bool, bool> onComplete)
     {
         if (elevatorController == null || !IsPassengerInsideCabin)
         {
-            onComplete?.Invoke(false);
+            onComplete?.Invoke(false, !IsPassengerInsideCabin);
             yield break;
         }
 
-        yield return CloseDoorsAndWait();
-        if (!elevatorController.LastCloseObstructed && IsPassengerInsideCabin)
+        bool leftDuringClose = false;
+        elevatorController.CloseDoors();
+        while (elevatorController.IsDoorMoving)
         {
-            onComplete?.Invoke(true);
+            if (!IsPassengerInsideCabin)
+            {
+                leftDuringClose = true;
+                elevatorController.OpenDoors();
+                break;
+            }
+            yield return null;
+        }
+        leftDuringClose |= !IsPassengerInsideCabin;
+        if (!leftDuringClose && !elevatorController.LastCloseObstructed)
+        {
+            onComplete?.Invoke(true, false);
             yield break;
         }
 
-        if (!elevatorController.IsDoorOpen)
+        if (!elevatorController.IsDoorOpen && !elevatorController.IsDoorMoving)
         {
             elevatorController.OpenDoors();
-            while (elevatorController.IsDoorMoving) yield return null;
         }
+        while (elevatorController.IsDoorMoving) yield return null;
 
-        onComplete?.Invoke(false);
+        onComplete?.Invoke(false, leftDuringClose);
     }
 
     private IEnumerator CloseDoorsAndWait()

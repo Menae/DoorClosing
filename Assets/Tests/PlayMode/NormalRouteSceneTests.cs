@@ -131,10 +131,14 @@ namespace GraduationProject.Tests
             Vector3 start = player.position;
 
             Press(keyboard.wKey, queueEventOnly: true);
-            for (int i = 0; i < 20; i++) yield return null;
+            yield return null;
+            Vector3 walkStart = player.position;
+            float walkStartedAt = Time.time;
+            while (Time.time - walkStartedAt < 0.15f) yield return null;
+            float walkDistance = Vector3.ProjectOnPlane(player.position - walkStart, Vector3.up).magnitude;
+            float walkSpeed = walkDistance / (Time.time - walkStartedAt);
             Release(keyboard.wKey, queueEventOnly: true);
             yield return null;
-            float walkDistance = Vector3.ProjectOnPlane(player.position - start, Vector3.up).magnitude;
 
             controller.enabled = false;
             player.position = start;
@@ -143,15 +147,20 @@ namespace GraduationProject.Tests
             Press(keyboard.leftShiftKey, queueEventOnly: true);
             yield return null;
             Press(keyboard.wKey, queueEventOnly: true);
-            for (int i = 0; i < 20; i++) yield return null;
+            yield return null;
+            Vector3 sprintStart = player.position;
+            float sprintStartedAt = Time.time;
+            while (Time.time - sprintStartedAt < 0.15f) yield return null;
+            float sprintDistance = Vector3.ProjectOnPlane(player.position - sprintStart, Vector3.up).magnitude;
+            float sprintSpeed = sprintDistance / (Time.time - sprintStartedAt);
             Release(keyboard.leftShiftKey, queueEventOnly: true);
+            yield return null;
             Release(keyboard.wKey, queueEventOnly: true);
             yield return null;
-            float sprintDistance = Vector3.ProjectOnPlane(player.position - start, Vector3.up).magnitude;
 
             Assert.That(walkDistance, Is.GreaterThan(0.1f), "Walking must move the authored player");
-            Assert.That(sprintDistance, Is.GreaterThan(walkDistance * 1.35f),
-                $"Left Shift sprint should exceed walking speed. walk={walkDistance:F3}, sprint={sprintDistance:F3}");
+            Assert.That(sprintSpeed, Is.GreaterThan(walkSpeed * 1.35f),
+                $"Left Shift sprint should exceed walking speed. walk={walkSpeed:F3}m/s, sprint={sprintSpeed:F3}m/s");
         }
     }
 }

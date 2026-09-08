@@ -1,5 +1,17 @@
 # 現在地・再開情報
 
+## M2 Astraレビュー（2026-09-08）
+
+- 担当: task 01a07fbb-3ac2-7a62-a049-19d919724625。Sol担当taskはidle/完了を確認し、ユーザー依頼のレビュー・不具合修正のみ引き継ぐ。
+- 対象: 9263d9e / 85fb0bf / 566e5e2のM1境界とM2中核。M2-04の新規シーン制作は今回の範囲外。
+- 発見／修正予定: 誘引でかご内から閉を押した後、閉扉中に外へ出て再開扉するとDiagnosisへ戻り、敷居越えが失われる。GAME-005/007に従いRevealと救済へ移す。
+- 対象ファイル／検証: BeatStateMachine、InteractionInputTests、本書。合成Mouse→Raycastの再現テストを先に実行し、修正後に全Play Mode・Consoleを確認する。既存未コミット素材・Sandbox等は保護。EditorはM1NormalRoute/Edit Mode、テスト実行なし、対象projectRoot一致。
+- 再現と追加発見: 誘引の再現は修正前に失敗（artifacts/astra-review/before-fix.json）、修正後の全回帰では当該テスト通過。全29件中、Sol追加の走行テストがwalk=0.117m/sprint=0.153mで失敗（artifacts/tests/20260908-063939-071/playmode.xml）。同フレーム数でも経過時間が異なるため、NormalRouteSceneTestsを実経過時間あたりの速度比較へ修正し、1.35倍の判定基準は維持した。
+- 乗っ取り追加修正: ElevatorControllerとは別のHijackAnomaly motorが初期正解後の停止中も再生されることを、合成クリックとAudioSource.isPlayingで再現（artifacts/astra-review/motor-before-fix.json）。Resolve開始時に既存Cleanupを呼び、motor・drift・jitterを停止する。音量・音色の聴感評価ではない。
+- 最終結果: レビュー・修正完了。Unityコンパイル後の全Play Mode 30/30（artifacts/tests/20260908-064251-862/playmode.xml）、Edit Mode 2/2（artifacts/tests/20260908-064332-273/editmode.xml）、Console Error 0（artifacts/astra-review/console-final.json）。追加2テストは修正前失敗→修正後合格を確認。対象4ファイルのdiff check合格。全体diff checkには既存Sandboxの末尾空白があり、今回変更せず保護した。
+- 画像／限界: 同回帰によるM1NormalRouteの最終Game View corridor.png（artifacts/m1-02/scene-input-20260908-064306-769、759x427）を実見。これはM1の合成Keyboard/Mouse一巡であり、M2の画面・実音・Windows Player・恐怖の合格ではない。コードは566e5e2＋今回4ファイル差分。M2-04配線と人の評価は未完のまま。
+- 停止時: EditorはM1NormalRoute/Edit Mode、実行中テストなしとの応答。状態resourceにstale表示があるため、それ単独での最新性は保証せず、完了XMLとConsole応答を併記する。今回4ファイルだけをWORK-005に従い保存し、既存未コミット5ファイルとResources.meta/Utilityは混ぜない。次工程は従来どおりM2-04。追加実装の自動継続は開始しない。
+
 ## M2-03 乗っ取りの期限・非常停止救済（2026-09-08）
 
 - 状態／担当: 中核実装・自動検証完了。現在のCodex task 01a07f7e-0cd8-7500-b2c1-afbb84a88bfb、このcheckout。
