@@ -64,6 +64,28 @@ Instance IDは例。毎回instancesの実値を使う。`call` は `--instance` 
 
 ## 異常時の手順
 
+### Windows Computer Useの接続確認
+
+Unityの編集はMCP優先。前面化・最終画面・Windows実入力が必要なときは、インストール済み `computer-use:computer-use` スキルの現在のSKILL.mdと参照手順を読み、Windows用プラグインを使う。以下は2026-09-08にこのPCで確認した接続経路で、モデル共通の手順。
+
+1. ツール一覧／検索から `mcp__node_repl__js` を探す。functions経由なら `ALL_TOOLS` を名前で絞り、返された宣言を確認して `tools.mcp__node_repl__js(...)` を呼ぶ。最初から見えていないだけで不存在と判断しない。
+2. **node_replのJavaScriptセッション**で次を初期化する（PowerShellやブラウザ用cua_replでは実行しない）。
+
+   ```js
+   if (!globalThis.sky) {
+     const { sky } = await import("@oai/sky");
+     globalThis.sky = sky;
+   }
+   ```
+
+3. 別セルで `globalThis.windows = await sky.list_windows(); nodeRepl.write(JSON.stringify(windows));` を実行。返されたapp・id・titleから目的のUnity／Playerウィンドウを一意に選び、スキルどおり `sky.get_window` → 必要な前面化 → `sky.get_window_state` へ進む。IDは毎回取得し、過去の値を固定しない。前面操作は事前に知らせる。
+4. `cua_repl` の `apps: []` や同ツールの `Native computer APIs are disabled` は、その経路の制限として扱う。別途提供されたWindowsプラグイン全体の利用不可や、Solの非対応とは推定しない。実際にWindows側で拒否された場合は迂回せず、その制限に従う。
+5. Windows用ツールの探索結果、import、列挙、対象選択、画面取得のどこで失敗したかと具体エラーを記録する。復旧はスキルの範囲で行い、公開された権限要求が必要なら実際の承認機構を使う。シェルの昇格承認をComputer Use権限と混同せず、存在しない権限APIを要求しない。独自SendInput／PowerShell UI操作やhelper直起動で代替しない。
+
+確認実績: task `01a07fbb-3ac2-7a62-a049-19d919724625` で、cua_replはapps空だった一方、上記Windows経路でUnityの列挙・前面化・画面取得に成功した。旧記録の「native app surfaceなし」はWindows経路未確認の判断であり、現在の不可判定に流用しない。過去に省略したPlayer実入力試験は、これで実施済みになるわけではない。利用可能なら必要な実画面／実入力検証を行い、起動ログや合成入力だけで代用しない。
+
+### Unity MCP・ビルドの復旧
+
 - **接続が切れた**: Statusでサーバーを確認し、UnityのConnectを実行する。起動直後・コンパイル・Play Mode切り替え中は待つ。同じプロジェクトに2つ目のEditorを起動しない。
 - **Startがバージョン違いを報告**: 8080の既存プロセスを勝手に終了せず、所有者と起動元を調べる。
 - **追加したスクリプトが認識されない**: `refresh_unity` は `scope=all, mode=force` を使って新規ファイルをインポートし、その後コンパイル完了を確認する。scriptsだけでは新規ファイルのインポートが済まないことがある。

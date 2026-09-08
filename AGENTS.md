@@ -25,6 +25,7 @@ Communicate in Japanese. Existing first-person atmospheric horror for Windows; U
 - Keep test/debug code out of ordinary release builds. Do not incidentally add production services, telemetry or runtime dependencies.
 - Save generated evidence outside Assets in artifacts/. Record scene, code version, input path, resolution and state. No automatic evidence deletion without an agreed policy.
 - Announce Computer Use foreground control. Check the selected Unity/Player window and final Game View composition, not just a camera-only render.
+- For Windows Computer Use, follow docs/DEVELOPMENT.md "Windows Computer Useの接続確認" and the installed computer-use skill: discover `mcp__node_repl__js`, initialize `@oai/sky`, then enumerate windows. An empty `cua_repl` app list or its native-API restriction does not establish that the separate Windows plugin is unavailable. Check the supported plugin route before reporting a blocker; never bypass an actual permission denial.
 
 ## Git workflow
 - 作業開始・再開時は `git status --short`、現在ブランチ、対象のunstaged/staged差分を確認する。既存変更と今回の変更を区別し、由来不明の差分を混ぜない。

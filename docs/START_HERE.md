@@ -24,6 +24,8 @@ Unityが開いていなければ同じ場所を開く。接続はCodexが既存M
 5. [DECISIONS.md](DECISIONS.md) と [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md): 決定理由、委任、保留。必要な項目を読む。
 6. Unity実装時はunity-verified-developmentスキル、[DEVELOPMENT.md](DEVELOPMENT.md)、[VALIDATION.md](VALIDATION.md)。体験検討時はhorror-design-reviewスキルと [PLAYTEST_PLAN.md](PLAYTEST_PLAN.md)。
 
+Windowsの実画面・実入力確認では、[DEVELOPMENT.md「Windows Computer Useの接続確認」](DEVELOPMENT.md#windows-computer-useの接続確認)を使う。`cua_repl`のアプリ一覧が空でも、Windows用の`node_repl`＋`@oai/sky`を確認するまで「Computer Use不可」と判断しない。ユーザーが毎回接続方法を指示する必要はない。
+
 仕様を作業メモに重複コピーして別の正本を作らない。短い進捗だけからゲームを想像し直さない。
 
 ## 利用枠を節約する運用 — WORK-003
