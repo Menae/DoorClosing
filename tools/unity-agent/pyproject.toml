@@ -1,0 +1,6 @@
+[project]
+name = "graduation-unity-agent-tools"
+version = "0.1.0"
+description = "Local development-only Unity MCP SDK client and pinned server runtime"
+requires-python = ">=3.10"
+dependencies = ["mcpforunityserver==10.2.0"]

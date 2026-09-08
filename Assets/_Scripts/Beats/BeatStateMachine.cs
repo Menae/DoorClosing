@@ -90,7 +90,15 @@ public class BeatStateMachine : MonoBehaviour
 
     public void SubmitAction(PlayerAction action, int floorNumber = -1)
     {
-        if (!acceptsPlayerAction)
+        if (!acceptsPlayerAction || hasPendingAction)
+        {
+            return;
+        }
+
+        // These controls are inert during encounter diagnosis/correction (GAME-006/008).
+        // Normal departure/open-door routing is handled separately from encounter responses.
+        if (action == PlayerAction.PressFloor || action == PlayerAction.None ||
+            (action == PlayerAction.PressOpen && currentBeat.Category != AnomalyCategory.Normal))
         {
             return;
         }
@@ -112,7 +120,15 @@ public class BeatStateMachine : MonoBehaviour
 
             SetState(BeatState.Diagnosis);
             currentAnomaly?.OnDiagnosisStart();
-            yield return WaitForDiagnosisCommit(def);
+            bool completedPassively = false;
+            yield return WaitForDiagnosisCommit(def, value => completedPassively = value);
+
+            if (completedPassively)
+            {
+                yield return ResolveAndDepart(def);
+                GameEvents.RaiseBeatResolved(BeatOutcome.Correct);
+                yield break;
+            }
 
             SetState(BeatState.Committed);
             GameEvents.RaisePlayerCommitted(pendingAction.Action);
@@ -204,7 +220,7 @@ public class BeatStateMachine : MonoBehaviour
         beatRoutine = null;
     }
 
-    private IEnumerator WaitForDiagnosisCommit(BeatDefinition def)
+    private IEnumerator WaitForDiagnosisCommit(BeatDefinition def, System.Action<bool> onPassiveCompletion)
     {
         ClearPendingAction();
         acceptsPlayerAction = true;
@@ -219,11 +235,19 @@ public class BeatStateMachine : MonoBehaviour
                 break;
             }
 
+            if (def.HasPassiveSuccess && elapsedSeconds >= def.PassiveSuccessSeconds)
+            {
+                acceptsPlayerAction = false;
+                onPassiveCompletion?.Invoke(true);
+                yield break;
+            }
+
             elapsedSeconds += Time.deltaTime;
             yield return null;
         }
 
         acceptsPlayerAction = false;
+        onPassiveCompletion?.Invoke(false);
     }
 
     private IEnumerator WaitForGraceRecovery(BeatDefinition def, System.Action<bool> onComplete)
@@ -255,7 +279,7 @@ public class BeatStateMachine : MonoBehaviour
         }
 
         acceptsPlayerAction = false;
-        onComplete?.Invoke(false);
+        onComplete?.Invoke(def.HasPassiveSuccess);
     }
 
     private BeatOutcome Evaluate(SubmittedAction submittedAction)

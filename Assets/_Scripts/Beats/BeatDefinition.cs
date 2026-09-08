@@ -15,6 +15,7 @@ public class BeatDefinition : ScriptableObject
     [SerializeField, Min(0f)] private float travelSeconds = 4f;
     [SerializeField, Min(0f)] private float revealSeconds = 2f;
     [SerializeField, Min(0f)] private float graceSeconds = 3f;
+    [SerializeField, Min(0f)] private float passiveSuccessSeconds;
     [SerializeField] private bool doorsStayClosed;
 
     [Header("Floor Display")]
@@ -31,9 +32,11 @@ public class BeatDefinition : ScriptableObject
     public float TravelSeconds => travelSeconds;
     public float RevealSeconds => revealSeconds;
     public float GraceSeconds => graceSeconds;
+    public float PassiveSuccessSeconds => passiveSuccessSeconds;
     public bool DoorsStayClosed => doorsStayClosed;
     public int DisplayFloor => displayFloor;
     public float HijackDeadlineSeconds => hijackDeadlineSeconds;
     public GameObject AnomalyPrefab => anomalyPrefab;
     public bool HasHijackDeadline => category == AnomalyCategory.Hijack && hijackDeadlineSeconds > 0f;
+    public bool HasPassiveSuccess => category == AnomalyCategory.Provocation && passiveSuccessSeconds > 0f;
 }

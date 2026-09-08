@@ -14,8 +14,12 @@ public class PlayerLook : MonoBehaviour
     [Header("Movement")]
     [SerializeField, Min(0f)] private float moveSpeed = 2.5f;
     [SerializeField] private bool lockCursorOnStart = true;
+    [SerializeField] private bool enableSprint;
+    [SerializeField, Min(0f)] private float sprintSpeed = 4f;
+    [SerializeField] private bool applyGravity;
 
     private float pitch;
+    private float verticalSpeed;
 
     private void Awake()
     {
@@ -95,10 +99,17 @@ public class PlayerLook : MonoBehaviour
 
         input = Vector2.ClampMagnitude(input, 1f);
         Vector3 move = transform.right * input.x + transform.forward * input.y;
-        move *= moveSpeed * Time.deltaTime;
+        float speed = enableSprint && Keyboard.current.leftShiftKey.isPressed ? sprintSpeed : moveSpeed;
+        move *= speed * Time.deltaTime;
 
         if (characterController != null)
         {
+            if (applyGravity)
+            {
+                if (characterController.isGrounded && verticalSpeed < 0f) verticalSpeed = -2f;
+                verticalSpeed += Physics.gravity.y * Time.deltaTime;
+                move.y = verticalSpeed * Time.deltaTime;
+            }
             characterController.Move(move);
             return;
         }

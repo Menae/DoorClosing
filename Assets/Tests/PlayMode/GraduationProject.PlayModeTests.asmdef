@@ -1,0 +1,7 @@
+{
+  "name": "GraduationProject.PlayModeTests",
+  "references": ["Unity.InputSystem", "Unity.InputSystem.TestFramework", "UnityEngine.UI"],
+  "optionalUnityReferences": ["TestAssemblies"],
+  "includePlatforms": [],
+  "autoReferenced": false
+}

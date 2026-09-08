@@ -54,3 +54,8 @@ sysinfo.txt
 # Personal work scenes (not for sharing)
 Assets/_Scenes/OutdoorShootingLocation_EffectWork.unity
 Assets/_Scenes/OutdoorShootingLocation_EffectWork.unity.meta
+# Reproducible local tooling, evidence and transient caches
+/artifacts/
+/tools/unity-agent/.venv/
+__pycache__/
+*.slnx

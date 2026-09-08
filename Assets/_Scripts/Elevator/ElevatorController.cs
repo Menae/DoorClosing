@@ -10,6 +10,12 @@ public class ElevatorController : MonoBehaviour
     [SerializeField] private Vector3 rightDoorOpenLocalOffset = new Vector3(0.75f, 0f, 0f);
     [SerializeField, Min(0f)] private float doorSlideSeconds = 1f;
     [SerializeField] private AnimationCurve doorCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+    [SerializeField] private BoxCollider doorSafetyZone;
+    [SerializeField] private CharacterController passengerBody;
+
+    public bool IsDoorMoving { get; private set; }
+    public bool IsDoorOpen { get; private set; }
+    public bool LastCloseObstructed { get; private set; }
 
     [Header("Travel Feel")]
     [SerializeField] private Transform cameraShakeTarget;
@@ -53,6 +59,7 @@ public class ElevatorController : MonoBehaviour
 
     public void CloseDoors()
     {
+        LastCloseObstructed = false;
         StartDoorMove(0f);
     }
 
@@ -91,11 +98,18 @@ public class ElevatorController : MonoBehaviour
             StopCoroutine(doorRoutine);
         }
 
+        IsDoorMoving = true;
         doorRoutine = StartCoroutine(MoveDoors(targetOpenAmount));
     }
 
     private IEnumerator MoveDoors(float targetOpenAmount)
     {
+        if (targetOpenAmount == 0f && IsDoorwayOccupied())
+        {
+            LastCloseObstructed = true;
+            yield return MoveDoors(1f);
+            yield break;
+        }
         Vector3 leftStart = leftDoor != null ? leftDoor.localPosition : Vector3.zero;
         Vector3 rightStart = rightDoor != null ? rightDoor.localPosition : Vector3.zero;
         Vector3 leftTarget = Vector3.Lerp(leftDoorClosedLocalPosition, leftDoorClosedLocalPosition + leftDoorOpenLocalOffset, targetOpenAmount);
@@ -104,6 +118,8 @@ public class ElevatorController : MonoBehaviour
         if (doorSlideSeconds <= 0f)
         {
             ApplyDoorPositions(leftTarget, rightTarget);
+            IsDoorOpen = targetOpenAmount == 1f;
+            IsDoorMoving = false;
             doorRoutine = null;
             yield break;
         }
@@ -111,6 +127,12 @@ public class ElevatorController : MonoBehaviour
         float elapsedSeconds = 0f;
         while (elapsedSeconds < doorSlideSeconds)
         {
+            if (targetOpenAmount == 0f && IsDoorwayOccupied())
+            {
+                LastCloseObstructed = true;
+                yield return MoveDoors(1f);
+                yield break;
+            }
             elapsedSeconds += Time.deltaTime;
             float normalizedTime = Mathf.Clamp01(elapsedSeconds / doorSlideSeconds);
             float eased = doorCurve != null ? doorCurve.Evaluate(normalizedTime) : normalizedTime;
@@ -119,7 +141,15 @@ public class ElevatorController : MonoBehaviour
         }
 
         ApplyDoorPositions(leftTarget, rightTarget);
+        IsDoorOpen = targetOpenAmount == 1f;
+        IsDoorMoving = false;
         doorRoutine = null;
+    }
+
+    private bool IsDoorwayOccupied()
+    {
+        return doorSafetyZone != null && passengerBody != null && passengerBody.enabled
+            && doorSafetyZone.bounds.Intersects(passengerBody.bounds);
     }
 
     private void ApplyDoorPositions(Vector3 leftPosition, Vector3 rightPosition)

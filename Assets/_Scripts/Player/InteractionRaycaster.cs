@@ -7,59 +7,57 @@ public class InteractionRaycaster : MonoBehaviour
     [Header("References")]
     [SerializeField] private Camera playerCamera;
     [SerializeField] private BeatStateMachine beatStateMachine;
-    [SerializeField] private Image holdGaugeImage;
+    [SerializeField] private NormalJourneyController normalJourney;
+    // Keep the existing scene reference so legacy gauges can be hidden without scene migration.
+    [SerializeField, HideInInspector] private Image holdGaugeImage;
 
     [Header("Raycast")]
     [SerializeField, Min(0f)] private float interactDistance = 2f;
     [SerializeField] private LayerMask interactableLayers;
 
-    [Header("Hold")]
-    [SerializeField, Min(0.01f)] private float holdSeconds = 1.2f;
-
     private Interactable currentTarget;
-    private BeatState currentBeatState = BeatState.Travel;
-    private float holdTimer;
-    private bool isHolding;
-    private bool submittedForCurrentPress;
-
-    private bool CanCommit => currentBeatState == BeatState.Diagnosis || currentBeatState == BeatState.Grace;
+    private int stateChangedFrame = -1;
+    private int processedPressFrame = -1;
 
     private void Awake()
     {
-        if (playerCamera == null)
-        {
-            playerCamera = Camera.main;
-        }
-
-        if (beatStateMachine == null)
-        {
-            beatStateMachine = FindFirstObjectByType<BeatStateMachine>();
-        }
-
-        if (interactableLayers.value == 0)
-        {
-            interactableLayers = LayerMask.GetMask("Interactable");
-        }
-
-        ConfigureGauge();
+        if (playerCamera == null) playerCamera = Camera.main;
+        if (beatStateMachine == null) beatStateMachine = FindFirstObjectByType<BeatStateMachine>();
+        if (interactableLayers.value == 0) interactableLayers = LayerMask.GetMask("Interactable");
+        HideLegacyGauge();
     }
 
     private void OnEnable()
     {
         GameEvents.OnBeatStateChanged += HandleBeatStateChanged;
+        stateChangedFrame = Time.frameCount;
+        HideLegacyGauge();
     }
 
     private void OnDisable()
     {
         GameEvents.OnBeatStateChanged -= HandleBeatStateChanged;
         SetCurrentTarget(null);
-        ResetHold();
+        HideLegacyGauge();
     }
 
     private void Update()
     {
         ScanForInteractable();
-        UpdateHold();
+        var mouse = Mouse.current;
+        if (mouse == null || !mouse.leftButton.wasPressedThisFrame || processedPressFrame == Time.frameCount)
+            return;
+
+        // Consume the edge even if the target/state is invalid. Never buffer a held press.
+        processedPressFrame = Time.frameCount;
+        // Input is processed before Update; a state opened this frame must not inherit that input.
+        if (Time.frameCount == stateChangedFrame || currentTarget == null)
+            return;
+
+        if (normalJourney != null && normalJourney.isActiveAndEnabled)
+            normalJourney.SubmitAction(currentTarget.ActionType, currentTarget.FloorNumber);
+        else if (beatStateMachine != null)
+            beatStateMachine.SubmitAction(currentTarget.ActionType, currentTarget.FloorNumber);
     }
 
     private void ScanForInteractable()
@@ -71,155 +69,29 @@ public class InteractionRaycaster : MonoBehaviour
         }
 
         Ray ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
-        if (Physics.Raycast(ray, out RaycastHit hit, interactDistance, interactableLayers, QueryTriggerInteraction.Ignore))
+        if (Physics.Raycast(ray, out RaycastHit hit, interactDistance, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)
+            && (interactableLayers.value & (1 << hit.collider.gameObject.layer)) != 0)
         {
-            Interactable interactable = hit.collider.GetComponentInParent<Interactable>();
-            SetCurrentTarget(interactable);
+            SetCurrentTarget(hit.collider.GetComponentInParent<Interactable>());
             return;
         }
-
         SetCurrentTarget(null);
-    }
-
-    private void UpdateHold()
-    {
-        if (Mouse.current == null)
-        {
-            ResetHold();
-            return;
-        }
-
-        if (Mouse.current.leftButton.wasReleasedThisFrame)
-        {
-            submittedForCurrentPress = false;
-            ResetHold();
-            return;
-        }
-
-        if (currentTarget == null || !CanCommit || submittedForCurrentPress)
-        {
-            ResetHold();
-            return;
-        }
-
-        if (Mouse.current.leftButton.wasPressedThisFrame)
-        {
-            BeginHold();
-        }
-
-        if (!Mouse.current.leftButton.isPressed)
-        {
-            ResetHold();
-            return;
-        }
-
-        if (!isHolding)
-        {
-            return;
-        }
-
-        holdTimer += Time.deltaTime;
-        SetGaugeFill(holdTimer / holdSeconds);
-
-        if (holdTimer >= holdSeconds)
-        {
-            CommitCurrentTarget();
-        }
-    }
-
-    private void BeginHold()
-    {
-        isHolding = true;
-        holdTimer = 0f;
-        SetGaugeVisible(true);
-        SetGaugeFill(0f);
-    }
-
-    private void CommitCurrentTarget()
-    {
-        if (beatStateMachine == null || currentTarget == null)
-        {
-            ResetHold();
-            return;
-        }
-
-        PlayerAction action = currentTarget.ActionType;
-        int floorNumber = currentTarget.FloorNumber;
-        Debug.Log($"[Interaction] Commit action={action} floor={floorNumber}", this);
-        beatStateMachine.SubmitAction(action, floorNumber);
-
-        submittedForCurrentPress = true;
-        ResetHold();
     }
 
     private void SetCurrentTarget(Interactable nextTarget)
     {
-        if (currentTarget == nextTarget)
-        {
-            return;
-        }
-
-        if (currentTarget != null)
-        {
-            currentTarget.SetHovered(false);
-        }
-
+        if (currentTarget == nextTarget) return;
+        if (currentTarget != null) currentTarget.SetHovered(false);
         currentTarget = nextTarget;
-
-        if (currentTarget != null)
-        {
-            currentTarget.SetHovered(true);
-        }
-
-        ResetHold();
+        if (currentTarget != null) currentTarget.SetHovered(true);
     }
 
-    private void HandleBeatStateChanged(BeatState newState)
+    private void HandleBeatStateChanged(BeatState newState) => stateChangedFrame = Time.frameCount;
+
+    private void HideLegacyGauge()
     {
-        currentBeatState = newState;
-
-        if (!CanCommit)
-        {
-            ResetHold();
-        }
-    }
-
-    private void ResetHold()
-    {
-        isHolding = false;
-        holdTimer = 0f;
-        SetGaugeFill(0f);
-        SetGaugeVisible(false);
-    }
-
-    private void ConfigureGauge()
-    {
-        if (holdGaugeImage == null)
-        {
-            return;
-        }
-
-        holdGaugeImage.type = Image.Type.Filled;
-        holdGaugeImage.fillMethod = Image.FillMethod.Radial360;
-        holdGaugeImage.fillOrigin = (int)Image.Origin360.Top;
-        holdGaugeImage.fillClockwise = false;
-        SetGaugeFill(0f);
-        SetGaugeVisible(false);
-    }
-
-    private void SetGaugeFill(float normalizedValue)
-    {
-        if (holdGaugeImage != null)
-        {
-            holdGaugeImage.fillAmount = Mathf.Clamp01(normalizedValue);
-        }
-    }
-
-    private void SetGaugeVisible(bool visible)
-    {
-        if (holdGaugeImage != null)
-        {
-            holdGaugeImage.gameObject.SetActive(visible);
-        }
+        if (holdGaugeImage == null) return;
+        holdGaugeImage.fillAmount = 0f;
+        holdGaugeImage.gameObject.SetActive(false);
     }
 }

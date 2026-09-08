@@ -2,8 +2,8 @@
 * text=auto
 
 # Unity specific LFS settings
-*.unity binary
-*.mat binary
+*.unity text eol=lf diff
+*.mat text eol=lf diff
 *.fbx filter=lfs diff=lfs merge=lfs -text
 *.obj filter=lfs diff=lfs merge=lfs -text
 *.png filter=lfs diff=lfs merge=lfs -text
@@ -22,3 +22,6 @@
 *.so filter=lfs diff=lfs merge=lfs -text
 *.exo filter=lfs diff=lfs merge=lfs -text
 *.mp4 filter=lfs diff=lfs merge=lfs -text
+# Review Unity YAML while retaining LFS for binary media
+*.prefab text eol=lf diff
+*.meta text eol=lf diff
