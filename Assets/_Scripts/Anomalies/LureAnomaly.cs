@@ -8,7 +8,7 @@ public class LureAnomaly : AnomalyBehaviour
     [SerializeField] private TMP_Text plateText;
     [SerializeField] private string fakePlateString = "708";
     [SerializeField] private Light hallwayLight;
-    [SerializeField] private Color revealColor = new Color(0.25f, 1f, 0.35f);
+    [SerializeField] private Color hallwayRevealColor = new Color(0.25f, 1f, 0.35f);
     [SerializeField] private AudioSource revealDrone;
 
     private const float RevealedLightIntensityScale = 0.3f;
@@ -37,7 +37,7 @@ public class LureAnomaly : AnomalyBehaviour
 
         if (HasReference(hallwayLight, nameof(hallwayLight)))
         {
-            hallwayLight.color = revealColor;
+            hallwayLight.color = hallwayRevealColor;
             hallwayLight.intensity *= RevealedLightIntensityScale;
         }
 

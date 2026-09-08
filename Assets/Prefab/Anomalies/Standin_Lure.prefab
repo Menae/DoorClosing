@@ -57,7 +57,7 @@ MonoBehaviour:
   plateText: {fileID: 0}
   fakePlateString: 708
   hallwayLight: {fileID: 0}
-  revealColor: {r: 1, g: 0, b: 0, a: 1}
+  hallwayRevealColor: {r: 1, g: 0, b: 0, a: 1}
   revealDrone: {fileID: 0}
 --- !u!1 &1158935321697248552
 GameObject:
