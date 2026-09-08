@@ -9,6 +9,7 @@ public class RunManager : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private BeatStateMachine beatStateMachine;
+    [SerializeField] private NormalJourneyController nightJourney;
     [SerializeField] private Image blackFadeImage;
     [SerializeField] private TMP_Text nightClearText;
 
@@ -39,6 +40,7 @@ public class RunManager : MonoBehaviour
     private Coroutine deathRoutine;
     private bool runClearInProgress;
     private bool deathRestartInProgress;
+    private bool awaitingHomeReturn;
 
     private void Awake()
     {
@@ -109,8 +111,26 @@ public class RunManager : MonoBehaviour
 
         runClearInProgress = false;
         deathRestartInProgress = false;
+        awaitingHomeReturn = false;
         PrepareClearUi();
         StartBeatAtIndex(0);
+    }
+
+    public void BeginEncounterRun()
+    {
+        StartRunFromBeginning();
+    }
+
+    public void CompleteRunAfterHome()
+    {
+        if (!awaitingHomeReturn || runClearInProgress)
+        {
+            Debug.LogWarning("[Run] Ignored home completion outside the post-encounter return.", this);
+            return;
+        }
+
+        awaitingHomeReturn = false;
+        CompleteRun();
     }
 
     private void StartBeatAtIndex(int beatIndex)
@@ -210,9 +230,11 @@ public class RunManager : MonoBehaviour
 
         if (IsFinalBeat())
         {
-            if (currentBeat != null && currentBeat.CorrectAction != PlayerAction.TouchHomeDoor)
+            if (nightJourney != null)
             {
-                Debug.LogWarning($"[Run] Final beat '{currentBeat.DebugLabel}' cleared with CorrectAction={currentBeat.CorrectAction}. Expected {PlayerAction.TouchHomeDoor}. Treating final success as run clear.", this);
+                awaitingHomeReturn = true;
+                nightJourney.PresentHomeAfterEncounters();
+                return;
             }
 
             CompleteRun();
@@ -280,7 +302,19 @@ public class RunManager : MonoBehaviour
         yield return FadeBlackImage(0f, 1f, deathFadeOutSeconds);
         yield return WaitForSecondsFromDefinition(deathBlackHoldSeconds);
 
-        StartRunFromBeginning();
+        if (nightJourney != null)
+        {
+            runClearInProgress = false;
+            awaitingHomeReturn = false;
+            currentBeatIndex = -1;
+            currentBeat = null;
+            PrepareClearUi();
+            nightJourney.RestartNightAtEntrance();
+        }
+        else
+        {
+            StartRunFromBeginning();
+        }
         deathRestartInProgress = true;
 
         blackFadeImage.gameObject.SetActive(true);

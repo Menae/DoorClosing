@@ -92,6 +92,20 @@ public class ElevatorController : MonoBehaviour
         }
     }
 
+    public void ResetDoorsClosed()
+    {
+        if (doorRoutine != null)
+        {
+            StopCoroutine(doorRoutine);
+            doorRoutine = null;
+        }
+
+        ApplyDoorPositions(leftDoorClosedLocalPosition, rightDoorClosedLocalPosition);
+        IsDoorMoving = false;
+        IsDoorOpen = false;
+        LastCloseObstructed = false;
+    }
+
     private void StartDoorMove(float targetOpenAmount)
     {
         if (doorRoutine != null)

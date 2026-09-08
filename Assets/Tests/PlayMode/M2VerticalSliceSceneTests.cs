@@ -20,11 +20,13 @@ namespace GraduationProject.Tests
         private Keyboard keyboard;
         private Transform player;
         private Camera camera;
+        private Component journey;
         private CursorLockMode savedLock;
         private bool savedVisible;
         private readonly List<string> states = new List<string>();
         private readonly List<string> outcomes = new List<string>();
         private readonly List<(EventInfo info, Delegate callback)> subscriptions = new List<(EventInfo, Delegate)>();
+        private string JourneyState => journey.GetType().GetProperty("State").GetValue(journey).ToString();
 
         public override void Setup()
         {
@@ -33,6 +35,8 @@ namespace GraduationProject.Tests
             savedVisible = Cursor.visible;
             mouse = InputSystem.AddDevice<Mouse>();
             keyboard = InputSystem.AddDevice<Keyboard>();
+            states.Clear();
+            outcomes.Clear();
             Subscribe("OnBeatStateChanged", "CaptureState");
             Subscribe("OnBeatResolved", "CaptureOutcome");
         }
@@ -87,6 +91,21 @@ namespace GraduationProject.Tests
             yield return null;
         }
 
+        private IEnumerator WalkTo(Vector3 point)
+        {
+            Vector3 horizontalTarget = point;
+            horizontalTarget.y = camera.transform.position.y;
+            yield return Aim(horizontalTarget);
+            Press(keyboard.wKey, queueEventOnly: true);
+            float deadline = Time.realtimeSinceStartup + 10f;
+            while (Vector2.Distance(new Vector2(player.position.x, player.position.z), new Vector2(point.x, point.z)) > 0.12f
+                && Time.realtimeSinceStartup < deadline) yield return null;
+            Release(keyboard.wKey, queueEventOnly: true);
+            yield return null;
+            Assert.That(Vector2.Distance(new Vector2(player.position.x, player.position.z), new Vector2(point.x, point.z)),
+                Is.LessThan(0.25f), "WASD route obstructed");
+        }
+
         private static IEnumerator Until(Func<bool> predicate, string description, float timeout = 12f)
         {
             float deadline = Time.realtimeSinceStartup + timeout;
@@ -105,16 +124,24 @@ namespace GraduationProject.Tests
             GameObject[] roots = fixtureScene.GetRootGameObjects();
             player = Array.Find(roots, go => go.name == "Player").transform;
             camera = player.GetComponentInChildren<Camera>();
-            Component normalJourney = Array.Find(roots, go => go.name == "NormalJourney")
+            journey = Array.Find(roots, go => go.name == "NormalJourney")
                 .GetComponent(GameAccess.Type("NormalJourneyController"));
-            Assert.That(normalJourney, Is.Not.Null);
-            Assert.That(((Behaviour)normalJourney).enabled, Is.False, "M2 scene must route clicks to BeatStateMachine");
+            Assert.That(journey, Is.Not.Null);
+            Assert.That(((Behaviour)journey).enabled, Is.True, "M2 night must begin at the entrance journey");
 
             string evidence = Path.GetFullPath(Path.Combine(Application.dataPath,
                 "../artifacts/m2-04/scene-input-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss-fff")));
             Directory.CreateDirectory(evidence);
 
+            ScreenCapture.CaptureScreenshot(Path.Combine(evidence, "entrance.png"));
+            yield return WalkTo(new Vector3(0f, 0.95f, 0.5f));
+            yield return ClickAt(new Vector3(1.25f, 1.5f, 1.82f));
+            yield return Until(() => JourneyState == "Boarding", "elevator call");
+            yield return new WaitForSeconds(1.1f);
+            yield return WalkTo(new Vector3(0f, 0.95f, 3.6f));
+            yield return ClickAt(new Vector3(0f, 1.6f, 4.88f));
             yield return Until(() => Count("Diagnosis") >= 1, "lure diagnosis");
+            Assert.That(((Behaviour)journey).enabled, Is.False, "Encounter input must route to BeatStateMachine");
             Component lure = FindGameComponent("LureAnomaly");
             Assert.That(lure, Is.Not.Null);
             Assert.That(lure.transform.lossyScale.y, Is.GreaterThan(2.5f), "Lure trial cue must read as a tall corridor obstruction");
@@ -163,14 +190,68 @@ namespace GraduationProject.Tests
             Assert.That(displayViewport.y, Is.InRange(0.2f, 0.8f));
             ScreenCapture.CaptureScreenshot(Path.Combine(evidence, "hijack-panel.png"));
             yield return ClickAt(new Vector3(0.65f, 1.35f, 4.88f));
-            yield return Until(() => outcomes.Contains("RunClear"), "three-encounter run clear");
+            yield return Until(() => JourneyState == "Arrived", "genuine floor after three encounters");
+            Assert.That(outcomes, Does.Not.Contain("RunClear"), "Three encounters alone must not clear the night");
+            yield return Aim(new Vector3(0f, 1.6f, -10f));
+            ScreenCapture.CaptureScreenshot(Path.Combine(evidence, "home-corridor.png"));
+            yield return WalkTo(new Vector3(0f, 0.95f, -10.7f));
+            yield return ClickAt(new Vector3(0f, 1.35f, -11.85f));
+            yield return Until(() => outcomes.Contains("RunClear"), "home door night clear");
             yield return new WaitForSeconds(1f);
             ScreenCapture.CaptureScreenshot(Path.Combine(evidence, "complete.png"));
             File.WriteAllText(Path.Combine(evidence, "context.txt"),
                 "Scene: Assets/Scenes/M2VerticalSlice.unity\n" +
                 "Input: synthetic Keyboard D + Mouse delta + short left clicks; no direct SubmitAction or transform teleport.\n" +
-                "Order: Lure close, Provocation no input, Hijack emergency stop.\n" +
+                "Order: entrance call/board/8, Lure close, Provocation no input, Hijack emergency stop, genuine corridor walk, home-door click.\n" +
                 "Resolution: " + Screen.width + "x" + Screen.height + "\nUnity: " + Application.unityVersion);
+        }
+
+        [UnityTest]
+        public IEnumerator DeathFade_RestartsAtNightEntranceWithResetView()
+        {
+            yield return UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(
+                "Assets/Scenes/M2VerticalSlice.unity", new LoadSceneParameters(LoadSceneMode.Single));
+            fixtureScene = SceneManager.GetSceneByPath("Assets/Scenes/M2VerticalSlice.unity");
+            SceneManager.SetActiveScene(fixtureScene);
+            GameObject[] roots = fixtureScene.GetRootGameObjects();
+            player = Array.Find(roots, go => go.name == "Player").transform;
+            camera = player.GetComponentInChildren<Camera>();
+            journey = Array.Find(roots, go => go.name == "NormalJourney")
+                .GetComponent(GameAccess.Type("NormalJourneyController"));
+            yield return null;
+
+            yield return WalkTo(new Vector3(0f, 0.95f, 0.5f));
+            yield return ClickAt(new Vector3(1.25f, 1.5f, 1.82f));
+            yield return Until(() => JourneyState == "Boarding", "elevator call before death");
+            yield return new WaitForSeconds(1.1f);
+            yield return WalkTo(new Vector3(0f, 0.95f, 3.6f));
+            yield return ClickAt(new Vector3(0f, 1.6f, 4.88f));
+            yield return Until(() => Count("Diagnosis") >= 1, "lure diagnosis before death");
+
+            yield return WalkTo(new Vector3(0f, 0.95f, 1.5f));
+            yield return Until(() => Count("Reveal") >= 1, "lure threshold reveal");
+            yield return WalkTo(new Vector3(0f, 0.95f, 3.6f));
+            yield return Until(() => Count("Grace") >= 1, "lure grace before second error");
+            yield return ClickAt(new Vector3(0.65f, 1.35f, 4.88f));
+            yield return Until(() => CountOutcome("Death") >= 1, "second error death");
+            yield return Until(() => JourneyState == "WaitingForCall", "night entrance restart");
+            yield return new WaitForSeconds(0.9f);
+
+            Assert.That(Vector3.Distance(player.position, new Vector3(0f, 0.95f, -1f)), Is.LessThan(0.15f));
+            Assert.That(Quaternion.Angle(player.rotation, Quaternion.identity), Is.LessThan(0.5f));
+            Assert.That(Quaternion.Angle(camera.transform.localRotation, Quaternion.identity), Is.LessThan(0.5f));
+            Assert.That(Array.Find(roots, go => go.name == "EntranceHall").activeSelf, Is.True);
+            Assert.That(Array.Find(roots, go => go.name == "HomeCorridor").activeSelf, Is.False);
+            Assert.That(outcomes, Does.Not.Contain("RunClear"));
+
+            string evidence = Path.GetFullPath(Path.Combine(Application.dataPath,
+                "../artifacts/m2-05/death-restart-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss-fff")));
+            Directory.CreateDirectory(evidence);
+            ScreenCapture.CaptureScreenshot(Path.Combine(evidence, "entrance-after-death.png"));
+            File.WriteAllText(Path.Combine(evidence, "context.txt"),
+                "Scene: Assets/Scenes/M2VerticalSlice.unity\nInput: synthetic Keyboard W + Mouse delta + short clicks.\n" +
+                "Death: Lure threshold crossing, return to cabin, second wrong Emergency click.\n" +
+                "Expected: fade then entrance position/view and night route reset.\nUnity: " + Application.unityVersion);
         }
 
         private int Count(string state) => states.FindAll(value => value == state).Count;

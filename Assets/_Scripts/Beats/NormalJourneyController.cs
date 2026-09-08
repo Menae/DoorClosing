@@ -17,6 +17,8 @@ public class NormalJourneyController : MonoBehaviour
     [SerializeField] private Image fade;
     [SerializeField] private TMP_Text completionText;
     [SerializeField] private PlayerLook playerLook;
+    [SerializeField] private RunManager encounterRun;
+    [SerializeField] private bool routeThroughEncounterRun;
     [SerializeField, Min(0.1f)] private float travelSeconds = 4f;
     [SerializeField, Min(0.1f)] private float emergencyStopSeconds = 1f;
     [SerializeField, Min(0f)] private float fadeSeconds = 0.75f;
@@ -27,20 +29,28 @@ public class NormalJourneyController : MonoBehaviour
     private float travelRemaining;
     private float stopRemaining;
     private bool homePresented;
+    private Vector3 nightStartPosition;
+    private Quaternion nightStartRotation;
 
     public bool IsBodyInside
     {
         get => CabinOccupancy.FullyContains(cabin, passenger);
     }
 
+    private void Awake()
+    {
+        if (passenger != null)
+        {
+            nightStartPosition = passenger.transform.position;
+            nightStartRotation = passenger.transform.rotation;
+        }
+    }
+
     private void Start()
     {
-        if (entranceHall != null) entranceHall.SetActive(true);
-        if (homeCorridor != null) homeCorridor.SetActive(false);
         if (fade != null) fade.gameObject.SetActive(false);
         if (completionText != null) completionText.gameObject.SetActive(false);
-        indicator?.SetFloor(1);
-        ChangeState(JourneyState.WaitingForCall);
+        RestartNightAtEntrance();
     }
 
     private void Update()
@@ -58,7 +68,19 @@ public class NormalJourneyController : MonoBehaviour
         {
             travelRemaining -= Time.deltaTime;
             indicator?.SetFloor(Mathf.Clamp(1 + Mathf.FloorToInt(7f * (1f - travelRemaining / travelSeconds)), 1, 8));
-            if (travelRemaining <= 0f) StartCoroutine(ArriveHome());
+            if (travelRemaining <= 0f)
+            {
+                if (routeThroughEncounterRun && encounterRun != null && !homePresented)
+                {
+                    ChangeState(JourneyState.Closing);
+                    enabled = false;
+                    encounterRun.BeginEncounterRun();
+                }
+                else
+                {
+                    StartCoroutine(ArriveHome());
+                }
+            }
         }
     }
 
@@ -94,8 +116,53 @@ public class NormalJourneyController : MonoBehaviour
         else if (State == JourneyState.Arrived && action == PlayerAction.TouchHomeDoor && !IsBodyInside)
         {
             ChangeState(JourneyState.Complete);
-            StartCoroutine(CompleteIntroduction());
+            if (routeThroughEncounterRun && encounterRun != null)
+            {
+                encounterRun.CompleteRunAfterHome();
+            }
+            else
+            {
+                StartCoroutine(CompleteIntroduction());
+            }
         }
+    }
+
+    public void PresentHomeAfterEncounters()
+    {
+        if (!routeThroughEncounterRun)
+        {
+            return;
+        }
+
+        enabled = true;
+        StartCoroutine(ArriveHome());
+    }
+
+    public void RestartNightAtEntrance()
+    {
+        StopAllCoroutines();
+        enabled = true;
+        homePresented = false;
+        travelRemaining = 0f;
+        stopRemaining = 0f;
+        elevator?.SetTravelling(false);
+        elevator?.ResetDoorsClosed();
+        indicator?.SetFloor(1);
+        if (entranceHall != null) entranceHall.SetActive(true);
+        if (homeCorridor != null) homeCorridor.SetActive(false);
+        if (completionText != null) completionText.gameObject.SetActive(false);
+
+        if (passenger != null)
+        {
+            bool wasEnabled = passenger.enabled;
+            passenger.enabled = false;
+            passenger.transform.SetPositionAndRotation(nightStartPosition, nightStartRotation);
+            passenger.enabled = wasEnabled;
+            Physics.SyncTransforms();
+        }
+
+        playerLook?.ResetView(nightStartRotation);
+        ChangeState(JourneyState.WaitingForCall);
     }
 
     private IEnumerator CloseAndTravel()

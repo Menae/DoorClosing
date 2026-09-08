@@ -1,5 +1,17 @@
 # 現在地・再開情報
 
+## M2-05 監査修正：死亡復帰と帰宅完了（2026-09-08）
+
+- 状態／担当: 実装・自動検証完了。現在のCodex task 01a07f7e-0cd8-7500-b2c1-afbb84a88bfb、このcheckout。ユーザー監査でM2-04の不足2件を確認して修正。
+- 不足／期待動作: 死亡fade後に座標・視点・空間状態が残ったまま怪異1へ戻る不具合を直し、現在夜の入口ホールへ復帰する。3怪異だけではクリアせず、本物8階を提示し、降車して自宅ドアを通常クリックした時だけ夜クリアにする。
+- 実装方針: 既存NormalJourneyControllerを夜の入口／本物8階区間にも再利用し、RunManagerは怪異列・死亡fade・夜完了を担当する。InteractionRaycasterは有効な通常Journeyを優先し、怪異中だけBeatStateMachineへ渡す既存境界を維持する。大型置換・新依存・保存形式追加なし。
+- 対象／検証: NormalJourneyController、RunManager、PlayerLook、M2 Builder/scene、M2 scene testと必要な分離テスト、DECISIONS、本書。入口からの通常入力、3怪異後RunClear未発火、実廊下の徒歩＋自宅クリック、死亡時の入口座標・視点・hall/corridor・beat index復帰、全Play/Edit、Game View、Windows Development Playerを分離確認する。
+- 開始時差分: `Assets/Scenes/M2VerticalSlice.unity` にUnityが追加したURP camera/light dataとTMP style hashの未コミット差分あり。ユーザー由来と断定せず保護し、scene修復後も必要なUnity正規化として残る場合は本単位へ明記して含める。
+- 実装: NormalJourneyControllerを入口→怪異列→本物8階→自宅の夜経路として接続。RunManagerは最終怪異成功時に帰宅区間を提示し、自宅ドア完了通知までRunClearを保留する。死亡fade後は怪異列を停止し、入口座標・body/camera回転・1階表示・閉扉・hall/corridor・完了UIを夜開始状態へ戻す。初期化時の閉扉はアニメーションせず即時復元し、開始直後の呼出クリックを落とさない。
+- 検証: 対象2/2合格（最終job `df9b505f054e47689800e1f40297564d`）。通常Keyboard/Mouse→Raycast経路で入口呼出・乗車・8階・3怪異・本物8階・徒歩・自宅クリックを通し、3怪異直後のRunClear未発火と自宅後発火を確認。死亡は誘引で敷居越え→帰還→2回目誤入力を通し、入口位置 `(0,0.95,-1)`・body/camera正面・WaitingForCall・hall表示・home非表示・RunClearなしを確認。全Play Mode 36件中34成功・0失敗・Unity Input System既知2件skip（job `7f700d52b6d042a89007c692127e9ba7`）、Edit Mode 2/2（job `cfdae30428f14aa096156c94e732f4db`）、scene validate 0 issue、Console Error 0。
+- 証跡／Windows: `artifacts/m2-04/scene-input-20260908-080426-417` のhome corridorと自宅後clear、`artifacts/m2-05/death-restart-20260908-080515-866` の死亡後入口を目視。最終Development Build `artifacts/builds/20260908-081517-491/build.json` は成功・0 errors / 0 warnings。Playerを実起動し応答あり、WaitingForCall到達、ログ例外なしを確認して終了。Computer Useにはnative app surfaceが公開されずPlayer画面へのOS操作は未実施。
+- 検証中断記録／限界: 最初の対象2件は起動時にアニメーション閉扉が走り呼出クリックを捨てて2/2失敗し、即時閉扉復元へ修正して解消。最初の全Play Mode job `6e7e23677b534e2eb751723bc3c5ae5c` は0件のまま初期化timeoutで失敗し、Edit ModeでEditor状態を更新後に再実行して上記全件結果を得た。URP追加dataとTMP hashはscene repair後もUnity正規化として残り本単位に含める。人の初見理解・難易度・恐怖は未評価で、M3の体験受入を代理認定しない。
+
 ## M2-04 3系統縦切りシーン（2026-09-08）
 
 - 状態／担当: 試作実装・自動検証完了。現在のCodex task 01a07f7e-0cd8-7500-b2c1-afbb84a88bfb、このcheckout。Astra修正 `a3e8447` のpush済み・全30件合格を確認して継続。

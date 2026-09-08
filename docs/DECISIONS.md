@@ -247,3 +247,11 @@
 - Trial values / trade-off: Lure travel 2秒、Provocation無操作5秒、Hijack初期期限6秒、順番・寸法・ASCII文言・生成音色は人の評価前の試作値。説明HUDは追加せず環境内提示に限定した。procedural toneは依存と素材権利を増やさない一方、正式な音響品質ではない。日本語font asset追加は今回行わず、試作文言をASCIIに限定した。
 - Proof / limits: 通常のWASD・マウス・短クリックで3系統一巡1/1、全Play Mode 31/31、Edit Mode 2/2、scene validate 0 issue、Console Error 0、Windows Development Build成功・Player応答とLure到達を確認。画像で柱、偽指示、9階表示を実見。Player画面の直接目視、OS入力一巡、聴感、初見理解、恐怖は未検証で、正式採用を意味しない。
 - Effects: `Assets/Scenes/M2VerticalSlice.unity`、M2 Builder/テスト/ビルドメニュー、BeatDefinition/BeatStateMachine、Provocation/Hijack presentation、3 Beat asset、PROJECT_STATUS。
+
+## IMPL-M2-05 — 夜経路の帰宅完了と死亡時の入口復帰
+
+- Status / date / owner: WORK-001・GAME-003〜009の承認内の監査修正、2026-09-08、Owner: Codex。
+- Context: M2-04は怪異列から直接開始し、3怪異終了だけでRunClearになっていた。死亡も怪異1へ戻すだけでPlayer位置・視点・空間が残り、承認済みの「入口から開始」「本物8階から帰宅」「死亡後は現在夜の入口」と不一致だった。
+- Decision / reason: 既存NormalJourneyControllerを入口と本物8階の両端に再利用し、怪異中だけ無効化してRunManagerへ入力所有権を渡す。RunManagerは最終怪異後を帰宅待ちとして保持し、自宅ドア通知だけでRunClearする。死亡fadeではPlayerの開始pose、階表示、扉、空間、UIを一括して入口状態へ復元する。新規夜FSMや依存を増やさず、既存の通常経路・怪異経路の責務を接続する。
+- Trade-off: 現在はシーン開始poseをAwakeで保持するため、将来の夜別spawnやsave再開を導入する際は明示的なcheckpointデータへ置き換える余地がある。M2範囲では単一シーン・現在夜入口の要件を満たす。
+- Proof / limits: 対象2/2、全Play Mode 34 pass / 0 fail / 2 known skip、Edit Mode 2/2、scene validate 0、Console Error 0、Windows Development Build成功・Player起動ログ正常。入口、帰宅廊下、帰宅後clear、死亡後入口を画像で目視。Windows OS実入力と人の理解・恐怖は未評価。

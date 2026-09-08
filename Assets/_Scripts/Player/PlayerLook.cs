@@ -117,6 +117,17 @@ public class PlayerLook : MonoBehaviour
         transform.position += move;
     }
 
+    public void ResetView(Quaternion bodyRotation)
+    {
+        transform.rotation = bodyRotation;
+        pitch = 0f;
+        verticalSpeed = 0f;
+        if (cameraTransform != null)
+        {
+            cameraTransform.localRotation = Quaternion.identity;
+        }
+    }
+
     private static void LockCursor()
     {
         Cursor.lockState = CursorLockMode.Locked;

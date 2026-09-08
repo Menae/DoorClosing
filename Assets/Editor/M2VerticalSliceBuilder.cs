@@ -60,16 +60,20 @@ namespace GraduationProject.EditorTools
             FloorIndicator indicator = system.GetComponent<FloorIndicator>();
             BoxCollider cabin = system.transform.Find("CabinBodyVolume").GetComponent<BoxCollider>();
 
-            normalJourney.enabled = false;
-            entranceHall.SetActive(false);
-            corridor.SetActive(true);
+            normalJourney.enabled = true;
+            entranceHall.SetActive(true);
+            corridor.SetActive(false);
             passenger.enabled = false;
-            player.transform.SetPositionAndRotation(new Vector3(0f, 0.95f, 3.6f), Quaternion.identity);
+            player.transform.SetPositionAndRotation(new Vector3(0f, 0.95f, -1f), Quaternion.identity);
             passenger.enabled = true;
             Set(elevator, "doorSlideSeconds", 0.75f);
 
-            Transform anomalyParent = new GameObject("EncounterPresentation").transform;
-            anomalyParent.SetParent(system.transform, false);
+            Transform anomalyParent = system.transform.Find("EncounterPresentation");
+            if (anomalyParent == null)
+            {
+                anomalyParent = new GameObject("EncounterPresentation").transform;
+                anomalyParent.SetParent(system.transform, false);
+            }
             ResponseEvaluator evaluator = system.GetComponent<ResponseEvaluator>() ?? system.AddComponent<ResponseEvaluator>();
             BeatStateMachine machine = system.GetComponent<BeatStateMachine>() ?? system.AddComponent<BeatStateMachine>();
             Set(machine, "responseEvaluator", evaluator);
@@ -83,21 +87,24 @@ namespace GraduationProject.EditorTools
             Set(machine, "resolveSeconds", 0.8f);
             Set(machine, "representedTravelSeconds", 1.5f);
 
-            Set(raycaster, "beatStateMachine", machine);
-            Set(raycaster, "normalJourney", null);
-
             RunManager run = system.GetComponent<RunManager>() ?? system.AddComponent<RunManager>();
             Set(run, "beatStateMachine", machine);
+            Set(run, "nightJourney", normalJourney);
             Set(run, "blackFadeImage", hud.transform.Find("Fade").GetComponent<Image>());
             TMP_Text clearText = hud.transform.Find("NightComplete").GetComponent<TMP_Text>();
             Set(run, "nightClearText", clearText);
             Set(run, "clearMessage", "M2 VERTICAL SLICE CLEAR");
             Set(run, "clearFadeSeconds", 0.8f);
-            Set(run, "startRunOnStart", true);
+            Set(run, "startRunOnStart", false);
             SetBeatList(run, lure, provocation, hijack);
 
-            GameObject homeDoor = GameObject.Find("HomeDoor");
-            if (homeDoor != null) homeDoor.layer = 0;
+            Set(normalJourney, "encounterRun", run);
+            Set(normalJourney, "routeThroughEncounterRun", true);
+            Set(raycaster, "beatStateMachine", machine);
+            Set(raycaster, "normalJourney", normalJourney);
+
+            Transform homeDoor = corridor.transform.Find("HomeDoor");
+            if (homeDoor != null) homeDoor.gameObject.layer = LayerMask.NameToLayer("Interactable");
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
