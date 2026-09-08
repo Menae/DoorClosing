@@ -238,7 +238,10 @@ public class BeatStateMachine : MonoBehaviour
     private IEnumerator ResolveAndDepart(BeatDefinition def, bool doorsAlreadyClosed = false)
     {
         SetState(BeatState.Resolve);
-        elevatorController?.SetTravelling(false);
+        if (def.Category != AnomalyCategory.Provocation)
+        {
+            elevatorController?.SetTravelling(false);
+        }
         yield return WaitForSecondsFromDefinition(resolveSeconds);
 
         SetState(BeatState.Depart);
@@ -246,6 +249,11 @@ public class BeatStateMachine : MonoBehaviour
         {
             elevatorController?.CloseDoors();
             yield return WaitForSecondsFromDefinition(doorCloseSeconds);
+        }
+
+        if (def.Category != AnomalyCategory.Normal)
+        {
+            elevatorController?.SetTravelling(true);
         }
 
         CleanupCurrentAnomaly();

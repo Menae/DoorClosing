@@ -16,6 +16,7 @@ public class ElevatorController : MonoBehaviour
     public bool IsDoorMoving { get; private set; }
     public bool IsDoorOpen { get; private set; }
     public bool LastCloseObstructed { get; private set; }
+    public bool IsTravelling => isTravelling;
 
     [Header("Travel Feel")]
     [SerializeField] private Transform cameraShakeTarget;

@@ -12,14 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 87e5e7fc8b334193b0f5575d786e27ac, type: 3}
   m_Name: hijack2
   m_EditorClassIdentifier: Assembly-CSharp::BeatDefinition
-  debugLabel: Beat
+  debugLabel: Hijack - Prototype B
   category: 2
-  correctAction: 1
+  correctAction: 3
   correctFloorNumber: -1
   travelSeconds: 4
   revealSeconds: 2
   graceSeconds: 3
-  doorsStayClosed: 0
-  displayFloor: 1
-  hijackDeadlineSeconds: 0
+  passiveSuccessSeconds: 0
+  doorsStayClosed: 1
+  displayFloor: 8
+  hijackDeadlineSeconds: 6
   anomalyPrefab: {fileID: 4625319245853077497, guid: dfc5d947f0d28ca448d19daca581ad00, type: 3}

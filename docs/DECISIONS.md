@@ -230,3 +230,11 @@
 - Decision / reason: 通常帰宅と誘引でCharacterControllerの水平完全内包判定を `CabinOccupancy` に共有する。誘引は敷居越えを合成 `ExitCab` 誤答として既存Revealへ渡し、かご内の閉受理後はGrace消費を止め、実際の閉扉完了時だけ生還とする。閉塞で再開扉した場合は保存した残時間から入力受付を再開し、外からの閉は閉扉完了後に死亡させる。
 - Alternative / trade-off: 誘引専用MonoBehaviourへ状態を分離する案は扉所有権と共通Reveal/Death進行を二重化するため今回は採らない。FSM内の系統分岐が今後さらに増え、同じ扉待機処理が複数系統へ広がる場合は、回答ポリシーを専用Strategyへ抽出する。
 - Proof / limits: 誘引対象Play Mode 5/5、全Play Mode 23/23、Edit Mode serialization 2/2、Console Error 0。合成Input System→Raycastと身体座標で境界を固定した。実シーン配線、Windows Player実入力、演出品質と恐怖は未検証。
+
+## IMPL-M2-03 — 乗っ取りの期限と停止後の走行復帰
+
+- Status / date / owner: WORK-001・GAME-005・006・008・015の承認内の可逆的実装選択、2026-09-08、Owner: Codex。
+- Context: FSMには未使用の乗っ取り期限分岐があったが、既存2アセットは正解が閉ボタン、開扉、期限0で仕様と逆だった。また正解後に走行状態を復帰する責務が次Beat開始へ暗黙依存していた。
+- Decision / reason: 初期期限超過を内部 `None` 誤答として共通Revealへ渡し、Graceは既存の独立期限で非常停止だけを救済とする。乗っ取り正解時はResolve中だけ走行を止め、解決完了前に再走行させる。挑発は無操作成功時に不要な停止を入れない。2アセットは非常停止正解・閉扉走行・表示8から上昇・初期期限6秒へ修正した。
+- Trial value / trade-off: 6秒はGAME-015に基づく初期試作値で、2表現とも同値にして表現差と難易度差を混ぜない。人の実プレイで識別時間と操作距離を測り、後半夜の短縮値を別途決める。各系統専用FSMは共通Reveal/Grace/Deathを重複させるため採らない。
+- Proof / limits: 乗っ取り対象Play Mode 5/5、全Play Mode 28/28、Edit Mode serialization 2/2、Console Error 0。合成Input System→Raycastで期限前停止、一時停止からの再走行、期限超過、Grace救済、二度目誤答とGrace期限死を確認。実シーンの表示・音、Windows Player実入力、難易度・恐怖は未検証。

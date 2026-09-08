@@ -49,6 +49,7 @@ namespace GraduationProject.Tests
         private static readonly Vector3 OccupancyOrigin = new Vector3(520, 500, 500);
         private bool DoorMoving => (bool)elevator.GetType().GetProperty("IsDoorMoving").GetValue(elevator);
         private bool DoorOpen => (bool)elevator.GetType().GetProperty("IsDoorOpen").GetValue(elevator);
+        private bool Travelling => (bool)elevator.GetType().GetProperty("IsTravelling").GetValue(elevator);
 
         public override void Setup()
         {
@@ -291,6 +292,15 @@ namespace GraduationProject.Tests
             Physics.SyncTransforms();
         }
 
+        private void ConfigureHijack(float diagnosisDeadline, float graceDeadline)
+        {
+            GameAccess.Set(beat, "category", GameAccess.Enum("AnomalyCategory", "Hijack"));
+            GameAccess.Set(beat, "correctAction", GameAccess.Enum("PlayerAction", "PressEmergencyStop"));
+            GameAccess.Set(beat, "doorsStayClosed", true);
+            GameAccess.Set(beat, "hijackDeadlineSeconds", diagnosisDeadline);
+            GameAccess.Set(beat, "graceSeconds", graceDeadline);
+        }
+
         [UnityTest]
         public IEnumerator InvalidButtons_DoNotCommitOrCountAsSecondError()
         {
@@ -438,6 +448,69 @@ namespace GraduationProject.Tests
             Physics.SyncTransforms();
             yield return ClickAction("PressClose");
             yield return Until(() => outcomes.Contains("GraceRecovered"), "fresh close within remaining grace");
+        }
+
+        [UnityTest]
+        public IEnumerator Hijack_EmergencyStopBeforeDeadline_PausesThenResumesTravel()
+        {
+            ConfigureHijack(0.4f, 0.2f);
+            GameAccess.Set(machine, "resolveSeconds", 0.1f);
+            yield return Diagnose();
+            Assert.That(Travelling, Is.True);
+            yield return ClickAction("PressEmergencyStop");
+            yield return Until(() => states.Contains("Resolve"), "hijack emergency stop");
+            Assert.That(Travelling, Is.False, "Accepted emergency stop must pause travel");
+            yield return Until(() => outcomes.Contains("Correct"), "hijack travel resumes");
+            Assert.That(Travelling, Is.True);
+            Assert.That(commits, Is.EqualTo(new[] { "PressEmergencyStop" }));
+        }
+
+        [UnityTest]
+        public IEnumerator Hijack_InitialDeadline_RevealsThenEmergencyStopRecovers()
+        {
+            ConfigureHijack(0.08f, 0.25f);
+            yield return Diagnose();
+            yield return Until(() => states.Contains("Grace"), "hijack deadline reveal");
+            Assert.That(commits, Is.EqualTo(new[] { "None" }));
+            Assert.That(outcomes, Does.Contain("WrongRevealed"));
+            yield return ClickAction("PressEmergencyStop");
+            yield return Until(() => outcomes.Contains("GraceRecovered"), "hijack grace recovery");
+            Assert.That(Travelling, Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator Hijack_CloseThenEmergencyStopWithinGrace_Recovers()
+        {
+            ConfigureHijack(0.4f, 0.25f);
+            yield return Diagnose();
+            yield return ClickAction("PressClose");
+            yield return Until(() => states.Contains("Grace"), "hijack close reveal");
+            yield return ClickAction("PressEmergencyStop");
+            yield return Until(() => outcomes.Contains("GraceRecovered"), "hijack correction");
+            Assert.That(commits, Is.EqualTo(new[] { "PressClose", "PressEmergencyStop" }));
+            Assert.That(outcomes, Does.Not.Contain("Death"));
+        }
+
+        [UnityTest]
+        public IEnumerator Hijack_SecondCloseDuringGrace_CausesImmediateDeath()
+        {
+            ConfigureHijack(0.4f, 0.25f);
+            yield return Diagnose();
+            yield return ClickAction("PressClose");
+            yield return Until(() => states.Contains("Grace"), "hijack grace");
+            yield return ClickAction("PressClose");
+            yield return Until(() => outcomes.Contains("Death"), "hijack second close death");
+            Assert.That(commits, Is.EqualTo(new[] { "PressClose", "PressClose" }));
+        }
+
+        [UnityTest]
+        public IEnumerator Hijack_GraceDeadlineWithoutEmergencyStop_CausesDeath()
+        {
+            ConfigureHijack(0.06f, 0.08f);
+            yield return Diagnose();
+            yield return Until(() => outcomes.Contains("Death"), "hijack grace timeout death");
+            Assert.That(commits, Is.EqualTo(new[] { "None" }));
+            Assert.That(outcomes, Is.EqualTo(new[] { "WrongRevealed", "Death" }));
         }
 
         [UnityTest]
