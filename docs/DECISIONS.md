@@ -255,3 +255,10 @@
 - Decision / reason: 既存NormalJourneyControllerを入口と本物8階の両端に再利用し、怪異中だけ無効化してRunManagerへ入力所有権を渡す。RunManagerは最終怪異後を帰宅待ちとして保持し、自宅ドア通知だけでRunClearする。死亡fadeではPlayerの開始pose、階表示、扉、空間、UIを一括して入口状態へ復元する。新規夜FSMや依存を増やさず、既存の通常経路・怪異経路の責務を接続する。
 - Trade-off: 現在はシーン開始poseをAwakeで保持するため、将来の夜別spawnやsave再開を導入する際は明示的なcheckpointデータへ置き換える余地がある。M2範囲では単一シーン・現在夜入口の要件を満たす。
 - Proof / limits: 対象2/2、全Play Mode 34 pass / 0 fail / 2 known skip、Edit Mode 2/2、scene validate 0、Console Error 0、Windows Development Build成功・Player起動ログ正常。入口、帰宅廊下、帰宅後clear、死亡後入口を画像で目視。Windows OS実入力と人の理解・恐怖は未評価。
+
+## IMPL-M2-06 — 誘引の画面内Reveal・Grace試作
+
+- Status / date / owner: GAME-004〜007・012・015内の可逆的演出試作、2026-09-08、Owner: Codex。
+- Context: 誘引の機能遷移と死亡復帰はテストできたが、既存stand-inはReveal用Light/drone参照がなく、状態ログ以外ではReveal・Graceの差が弱かった。通常中の正誤ラベル・説明overlayは禁止されている。
+- Decision / reason: 未配線時だけruntime Point Lightと生成droneを補完し、初回誤答は赤、救済猶予は橙、救済完了は閉扉と怪異消失、死亡は既存黒fade、再挑戦は既存1階ホールで示す。環境の因果を保ち、説明UIや外部素材を増やさない。
+- Trial / limits: Light強度5.0/3.5、色、生成drone音量0.28・pitch 0.65は人の評価前の試作値。Game Viewの連続画像と自動状態を照合済みだが、初見理解・聴感・恐怖・正式採用は人の実プレイ待ち。

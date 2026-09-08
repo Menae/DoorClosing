@@ -106,6 +106,14 @@ namespace GraduationProject.Tests
                 Is.LessThan(0.25f), "WASD route obstructed");
         }
 
+        private static IEnumerator Capture(string path)
+        {
+            ScreenCapture.CaptureScreenshot(path);
+            yield return new WaitForEndOfFrame();
+            yield return null;
+            Assert.That(File.Exists(path), Is.True, "Screenshot was not written: " + path);
+        }
+
         private static IEnumerator Until(Func<bool> predicate, string description, float timeout = 12f)
         {
             float deadline = Time.realtimeSinceStartup + timeout;
@@ -207,6 +215,52 @@ namespace GraduationProject.Tests
         }
 
         [UnityTest]
+        public IEnumerator LureGraceRecovery_HasVisibleRevealGraceAndResolution()
+        {
+            yield return UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(
+                "Assets/Scenes/M2VerticalSlice.unity", new LoadSceneParameters(LoadSceneMode.Single));
+            fixtureScene = SceneManager.GetSceneByPath("Assets/Scenes/M2VerticalSlice.unity");
+            SceneManager.SetActiveScene(fixtureScene);
+            GameObject[] roots = fixtureScene.GetRootGameObjects();
+            player = Array.Find(roots, go => go.name == "Player").transform;
+            camera = player.GetComponentInChildren<Camera>();
+            journey = Array.Find(roots, go => go.name == "NormalJourney")
+                .GetComponent(GameAccess.Type("NormalJourneyController"));
+            yield return null;
+
+            string evidence = Path.GetFullPath(Path.Combine(Application.dataPath,
+                "../artifacts/m2-06/lure-recovery-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss-fff")));
+            Directory.CreateDirectory(evidence);
+
+            yield return WalkTo(new Vector3(0f, 0.95f, 0.5f));
+            yield return ClickAt(new Vector3(1.25f, 1.5f, 1.82f));
+            yield return Until(() => JourneyState == "Boarding", "elevator call before recovery");
+            yield return new WaitForSeconds(1.1f);
+            yield return WalkTo(new Vector3(0f, 0.95f, 3.6f));
+            yield return ClickAt(new Vector3(0f, 1.6f, 4.88f));
+            yield return Until(() => Count("Diagnosis") >= 1, "lure diagnosis before recovery");
+
+            yield return WalkTo(new Vector3(0f, 0.95f, 1.5f));
+            yield return Until(() => Count("Reveal") >= 1, "lure reveal before recovery");
+            yield return WalkTo(new Vector3(0f, 0.95f, 3.6f));
+            yield return Aim(new Vector3(0f, 1.6f, -6f));
+            yield return Capture(Path.Combine(evidence, "01-reveal.png"));
+            yield return Until(() => Count("Grace") >= 1, "lure grace before recovery");
+            yield return Aim(new Vector3(0f, 1.6f, -6f));
+            yield return Capture(Path.Combine(evidence, "02-grace.png"));
+            yield return ClickAt(new Vector3(0f, 1.1f, 4.88f));
+            yield return Until(() => Count("Resolve") >= 1, "lure recovery resolution");
+            yield return Aim(new Vector3(0f, 1.6f, -6f));
+            yield return Capture(Path.Combine(evidence, "03-recovered.png"));
+            yield return Until(() => CountOutcome("GraceRecovered") >= 1, "lure grace recovery outcome");
+
+            File.WriteAllText(Path.Combine(evidence, "context.txt"),
+                "Scene: Assets/Scenes/M2VerticalSlice.unity\nInput: synthetic Keyboard W + Mouse delta + short clicks.\n" +
+                "Sequence: cross threshold, visible reveal, return during grace, close doors, visible recovery/departure.\n" +
+                "No direct SubmitAction or transform teleport.\nUnity: " + Application.unityVersion);
+        }
+
+        [UnityTest]
         public IEnumerator DeathFade_RestartsAtNightEntranceWithResetView()
         {
             yield return UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(
@@ -220,6 +274,10 @@ namespace GraduationProject.Tests
                 .GetComponent(GameAccess.Type("NormalJourneyController"));
             yield return null;
 
+            string evidence = Path.GetFullPath(Path.Combine(Application.dataPath,
+                "../artifacts/m2-06/death-retry-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss-fff")));
+            Directory.CreateDirectory(evidence);
+
             yield return WalkTo(new Vector3(0f, 0.95f, 0.5f));
             yield return ClickAt(new Vector3(1.25f, 1.5f, 1.82f));
             yield return Until(() => JourneyState == "Boarding", "elevator call before death");
@@ -231,9 +289,15 @@ namespace GraduationProject.Tests
             yield return WalkTo(new Vector3(0f, 0.95f, 1.5f));
             yield return Until(() => Count("Reveal") >= 1, "lure threshold reveal");
             yield return WalkTo(new Vector3(0f, 0.95f, 3.6f));
+            yield return Aim(new Vector3(0f, 1.6f, -6f));
+            yield return Capture(Path.Combine(evidence, "01-reveal.png"));
             yield return Until(() => Count("Grace") >= 1, "lure grace before second error");
+            yield return Aim(new Vector3(0f, 1.6f, -6f));
+            yield return Capture(Path.Combine(evidence, "02-grace.png"));
             yield return ClickAt(new Vector3(0.65f, 1.35f, 4.88f));
             yield return Until(() => CountOutcome("Death") >= 1, "second error death");
+            yield return new WaitForSeconds(0.9f);
+            yield return Capture(Path.Combine(evidence, "03-death-blackout.png"));
             yield return Until(() => JourneyState == "WaitingForCall", "night entrance restart");
             yield return new WaitForSeconds(0.9f);
 
@@ -244,13 +308,10 @@ namespace GraduationProject.Tests
             Assert.That(Array.Find(roots, go => go.name == "HomeCorridor").activeSelf, Is.False);
             Assert.That(outcomes, Does.Not.Contain("RunClear"));
 
-            string evidence = Path.GetFullPath(Path.Combine(Application.dataPath,
-                "../artifacts/m2-05/death-restart-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss-fff")));
-            Directory.CreateDirectory(evidence);
-            ScreenCapture.CaptureScreenshot(Path.Combine(evidence, "entrance-after-death.png"));
+            yield return Capture(Path.Combine(evidence, "04-entrance-retry.png"));
             File.WriteAllText(Path.Combine(evidence, "context.txt"),
                 "Scene: Assets/Scenes/M2VerticalSlice.unity\nInput: synthetic Keyboard W + Mouse delta + short clicks.\n" +
-                "Death: Lure threshold crossing, return to cabin, second wrong Emergency click.\n" +
+                "Sequence: reveal, grace, second wrong Emergency click, death blackout, entrance retry.\n" +
                 "Expected: fade then entrance position/view and night route reset.\nUnity: " + Application.unityVersion);
         }
 

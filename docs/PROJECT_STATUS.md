@@ -1,5 +1,15 @@
 # 現在地・再開情報
 
+## M2-06 救済・死亡・再挑戦の画面証跡（2026-09-08）
+
+- 状態／担当: 試作実装・自動検証完了、人の体験評価待ち。現在のCodex task 01a07f7e-0cd8-7500-b2c1-afbb84a88bfb、このcheckout。ユーザー指示によりM3へ進まずM2-04の画面理解を最優先した。
+- 目的／見える行動: 誘引の初回誤答で怪異が明瞭に変貌し、帰還＋閉で救済されて怪異が去ること、2回目誤答で死亡暗転し夜入口から再挑戦になることを、一連のGame View画像で比較できるようにする。通常プレイ中の正誤ラベルや説明HUDは追加しない。
+- 対象／検証: M2 scene PlayMode testと必要時のみ既存Anomaly/Run presentation・Builder/scene。合成Keyboard/Mouse→RaycastでReveal、Grace、Resolve、Death fade、入口復帰を撮影し、画像を実見する。全Play/Edit、Console、scene validate、Windows buildは製品変更が生じた場合に再実行する。
+- 実装: 誘引stand-inの未配線だったReveal用Lightとdroneをruntime試作として補完。初回誤答の赤い照明、Graceの橙照明、閉扉救済後の消失を環境内だけで示す。正誤ラベル・説明HUD・外部素材・新依存は追加していない。色・強度・生成音はGAME-015の試作値で正式採用前。
+- 画面証跡: `artifacts/m2-06/lure-recovery-20260908-083340-699` で赤Reveal→橙Grace→閉扉Resolve、`artifacts/m2-06/death-retry-20260908-083325-672` で赤Reveal→橙Grace→黒い死亡暗転→1階入口を目視。最初の撮影は次フレームの移動で構図がずれたため成功扱いせず、captureをEndOfFrame同期して再撮影した。
+- 検証: 対象2/2（job `a593c6ba193b47ea842d9130e822d41e`）、全Play Mode 37件中35成功・0失敗・Unity Input System既知2件skip（job `365e2c9df63d40568a7f99c9c42225ac`）、Edit Mode 2/2（job `8ae3f0a948c348e6a417c121f8144b69`）、Console Error 0。Development Build `artifacts/builds/20260908-083658-046/build.json` は成功・0 errors / 0 warnings。Player実起動は応答あり・ログ例外なしで終了。
+- 限界／次: 画面上の状態差は確認したが、仮形状・試作色・生成音のため正式な見た目や聴感ではない。人が操作して怪異・救済・死亡・再挑戦を理解できるか、怖さ・理不尽さ・猶予は未評価。M3依存はこの人間評価後に判定する。
+
 ## M2-05 監査修正：死亡復帰と帰宅完了（2026-09-08）
 
 - 状態／担当: 実装・自動検証完了。現在のCodex task 01a07f7e-0cd8-7500-b2c1-afbb84a88bfb、このcheckout。ユーザー監査でM2-04の不足2件を確認して修正。
