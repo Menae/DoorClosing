@@ -8,6 +8,7 @@ public class FloorIndicator : MonoBehaviour
 
     [Header("References")]
     [SerializeField] private TMP_Text floorText;
+    [SerializeField] private TMP_Text[] additionalDisplays = new TMP_Text[0];
 
     [Header("Display")]
     [SerializeField] private string displayFormat = "{0}";
@@ -100,13 +101,13 @@ public class FloorIndicator : MonoBehaviour
 
         for (int i = 0; i < flickerCount; i++)
         {
-            floorText.enabled = false;
+            SetDisplaysEnabled(false);
             yield return new WaitForSeconds(flickerIntervalSeconds);
-            floorText.enabled = true;
+            SetDisplaysEnabled(true);
             yield return new WaitForSeconds(flickerIntervalSeconds);
         }
 
-        floorText.enabled = true;
+        SetDisplaysEnabled(true);
         flickerRoutine = null;
     }
 
@@ -116,5 +117,14 @@ public class FloorIndicator : MonoBehaviour
         {
             floorText.text = string.Format(displayFormat, displayedFloor);
         }
+        foreach (var display in additionalDisplays)
+            if (display != null) display.text = string.Format(displayFormat, displayedFloor);
+    }
+
+    private void SetDisplaysEnabled(bool visible)
+    {
+        if (floorText != null) floorText.enabled = visible;
+        foreach (var display in additionalDisplays)
+            if (display != null) display.enabled = visible;
     }
 }

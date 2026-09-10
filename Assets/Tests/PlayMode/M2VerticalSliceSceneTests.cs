@@ -82,6 +82,19 @@ namespace GraduationProject.Tests
             yield return null;
         }
 
+        private Vector3 Control(string name) => fixtureScene.GetRootGameObjects()
+            .SelectMany(root => root.GetComponentsInChildren<Transform>())
+            .Single(t => t.name == name).GetComponent<Collider>().bounds.center;
+
+        private IEnumerator WaitForDoors()
+        {
+            var elevator = journey.GetComponent(GameAccess.Type("ElevatorController"));
+            float end = Time.realtimeSinceStartup + 4;
+            while ((bool)elevator.GetType().GetProperty("IsDoorMoving").GetValue(elevator)
+                && Time.realtimeSinceStartup < end) yield return null;
+            Assert.That((bool)elevator.GetType().GetProperty("IsDoorMoving").GetValue(elevator), Is.False);
+        }
+
         private IEnumerator ClickAt(Vector3 point)
         {
             yield return Aim(point);
@@ -145,10 +158,10 @@ namespace GraduationProject.Tests
             yield return WalkTo(new Vector3(0f, 0.95f, 0.5f));
             yield return ClickAt(new Vector3(1.25f, 1.5f, 1.82f));
             yield return Until(() => JourneyState == "Boarding", "elevator call");
-            yield return new WaitForSeconds(1.1f);
+            yield return WaitForDoors();
             yield return WalkTo(new Vector3(0f, 0.95f, 3.6f));
-            yield return ClickAt(new Vector3(0f, 1.6f, 4.88f));
-            yield return Until(() => Count("Diagnosis") >= 1, "lure diagnosis");
+            yield return ClickAt(Control("Floor8"));
+            yield return Until(() => Count("Diagnosis") >= 1, "lure diagnosis", 40f);
             Assert.That(((Behaviour)journey).enabled, Is.False, "Encounter input must route to BeatStateMachine");
             Component lure = FindGameComponent("LureAnomaly");
             Assert.That(lure, Is.Not.Null);
@@ -161,7 +174,7 @@ namespace GraduationProject.Tests
             Release(keyboard.dKey, queueEventOnly: true);
             yield return null;
             Assert.That(Vector3.Distance(beforeStep, player.position), Is.GreaterThan(0.1f), "Authored player must accept WASD");
-            yield return ClickAt(new Vector3(0f, 1.1f, 4.88f));
+            yield return ClickAt(Control("SideRightClose"));
             yield return Until(() => CountOutcome("Correct") >= 1, "lure close resolution");
 
             yield return Until(() => Count("Diagnosis") >= 2, "provocation diagnosis");
@@ -197,7 +210,7 @@ namespace GraduationProject.Tests
             Assert.That(displayViewport.x, Is.InRange(0.2f, 0.8f));
             Assert.That(displayViewport.y, Is.InRange(0.2f, 0.8f));
             ScreenCapture.CaptureScreenshot(Path.Combine(evidence, "hijack-panel.png"));
-            yield return ClickAt(new Vector3(0.65f, 1.35f, 4.88f));
+            yield return ClickAt(Control("SideRightEmergency"));
             yield return Until(() => JourneyState == "Arrived", "genuine floor after three encounters");
             Assert.That(outcomes, Does.Not.Contain("RunClear"), "Three encounters alone must not clear the night");
             yield return Aim(new Vector3(0f, 1.6f, -10f));
@@ -235,10 +248,10 @@ namespace GraduationProject.Tests
             yield return WalkTo(new Vector3(0f, 0.95f, 0.5f));
             yield return ClickAt(new Vector3(1.25f, 1.5f, 1.82f));
             yield return Until(() => JourneyState == "Boarding", "elevator call before recovery");
-            yield return new WaitForSeconds(1.1f);
+            yield return WaitForDoors();
             yield return WalkTo(new Vector3(0f, 0.95f, 3.6f));
-            yield return ClickAt(new Vector3(0f, 1.6f, 4.88f));
-            yield return Until(() => Count("Diagnosis") >= 1, "lure diagnosis before recovery");
+            yield return ClickAt(Control("Floor8"));
+            yield return Until(() => Count("Diagnosis") >= 1, "lure diagnosis before recovery", 40f);
 
             yield return WalkTo(new Vector3(0f, 0.95f, 1.5f));
             yield return Until(() => Count("Reveal") >= 1, "lure reveal before recovery");
@@ -248,7 +261,7 @@ namespace GraduationProject.Tests
             yield return Until(() => Count("Grace") >= 1, "lure grace before recovery");
             yield return Aim(new Vector3(0f, 1.6f, -6f));
             yield return Capture(Path.Combine(evidence, "02-grace.png"));
-            yield return ClickAt(new Vector3(0f, 1.1f, 4.88f));
+            yield return ClickAt(Control("SideRightClose"));
             yield return Until(() => Count("Resolve") >= 1, "lure recovery resolution");
             yield return Aim(new Vector3(0f, 1.6f, -6f));
             yield return Capture(Path.Combine(evidence, "03-recovered.png"));
@@ -281,10 +294,10 @@ namespace GraduationProject.Tests
             yield return WalkTo(new Vector3(0f, 0.95f, 0.5f));
             yield return ClickAt(new Vector3(1.25f, 1.5f, 1.82f));
             yield return Until(() => JourneyState == "Boarding", "elevator call before death");
-            yield return new WaitForSeconds(1.1f);
+            yield return WaitForDoors();
             yield return WalkTo(new Vector3(0f, 0.95f, 3.6f));
-            yield return ClickAt(new Vector3(0f, 1.6f, 4.88f));
-            yield return Until(() => Count("Diagnosis") >= 1, "lure diagnosis before death");
+            yield return ClickAt(Control("Floor8"));
+            yield return Until(() => Count("Diagnosis") >= 1, "lure diagnosis before death", 40f);
 
             yield return WalkTo(new Vector3(0f, 0.95f, 1.5f));
             yield return Until(() => Count("Reveal") >= 1, "lure threshold reveal");
@@ -294,7 +307,7 @@ namespace GraduationProject.Tests
             yield return Until(() => Count("Grace") >= 1, "lure grace before second error");
             yield return Aim(new Vector3(0f, 1.6f, -6f));
             yield return Capture(Path.Combine(evidence, "02-grace.png"));
-            yield return ClickAt(new Vector3(0.65f, 1.35f, 4.88f));
+            yield return ClickAt(Control("SideRightEmergency"));
             yield return Until(() => CountOutcome("Death") >= 1, "second error death");
             yield return new WaitForSeconds(0.9f);
             yield return Capture(Path.Combine(evidence, "03-death-blackout.png"));

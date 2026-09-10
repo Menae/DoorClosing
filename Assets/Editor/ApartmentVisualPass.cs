@@ -9,7 +9,7 @@ using UnityEngine.SceneManagement;
 
 namespace GraduationProject.EditorTools
 {
-    // Collider-free dressing plus explicit button-size trials. Journey and button positions stay intact.
+    // Reversible interior dressing, with the real-world control layout applied by ElevatorRealismPass.
     public static class ApartmentVisualPass
     {
         private const string Folder = "Assets/ApartmentVisuals";
@@ -32,6 +32,7 @@ namespace GraduationProject.EditorTools
             DressCabin(building);
             DressHall(hall, false);
             DressHall(corridor, true);
+            ElevatorRealismPass.Apply(building, hall, roots);
             foreach (var root in roots)
             foreach (var text in root.GetComponentsInChildren<TMP_Text>(true))
             {
@@ -91,14 +92,14 @@ namespace GraduationProject.EditorTools
             Box(v,"DisplayBacking",new Vector3(0,2.3f,4.955f),new Vector3(.52f,.32f,.035f),dark);
             var indicator=b.Find("FloorDisplay").GetComponent<TMP_Text>();
             indicator.fontSize=2.5f;indicator.rectTransform.sizeDelta=new Vector2(.48f,.28f);
-            foreach (string n in new[]{"Floor8","Floor7","Open","Close","Emergency","Call"})
+            foreach (string n in new[]{"Call"})
             {
-                var target = b.Find(n);
+                var target = b.GetComponentsInChildren<Transform>(true).Single(t => t.name == n);
                 // Trial 140 x 120 mm faces: smaller than the blockout, still legible at interaction distance.
                 // Scale the original collider together with its visible face; never leave invisible oversized targets.
                 target.localScale = new Vector3(.4f,.4f,1);
                 target.GetComponent<Renderer>().sharedMaterial = n == "Emergency" ? red : dark;
-                var text = target.GetComponentInChildren<TMP_Text>();
+                var text = target.GetComponentInChildren<TMP_Text>(true);
                 text.font = font; text.enableAutoSizing = false;
                 text.fontSize = n == "Emergency" ? 1.15f : 2.2f;
                 text.textWrappingMode = TextWrappingModes.NoWrap;
@@ -295,12 +296,12 @@ namespace GraduationProject.EditorTools
             return mesh;
         }
 
-        private static Transform Group(Transform parent,string name)
+        internal static Transform Group(Transform parent,string name)
         {
             var t=parent.Find(name); if(t!=null)return t;
             t=new GameObject(name).transform;t.SetParent(parent,false);return t;
         }
-        private static GameObject Box(Transform p,string n,Vector3 pos,Vector3 size,Material m)
+        internal static GameObject Box(Transform p,string n,Vector3 pos,Vector3 size,Material m)
         {
             var t=p.Find(n);GameObject go;
             if(t==null){go=GameObject.CreatePrimitive(PrimitiveType.Cube);go.name=n;go.transform.SetParent(p,false);UnityEngine.Object.DestroyImmediate(go.GetComponent<Collider>());}
@@ -311,7 +312,7 @@ namespace GraduationProject.EditorTools
         {
             var t=p.Find(name);if(t!=null)t.GetComponent<Renderer>().sharedMaterial=m;
         }
-        private static TMP_Text Label(Transform p,string n,string content,Vector3 position,Vector2 bounds,float size,Color color)
+        internal static TMP_Text Label(Transform p,string n,string content,Vector3 position,Vector2 bounds,float size,Color color)
         {
             var t=Group(p,n);var text=t.GetComponent<TextMeshPro>();
             if(text==null) text=t.gameObject.AddComponent<TextMeshPro>();

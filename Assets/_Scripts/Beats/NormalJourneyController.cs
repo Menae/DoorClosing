@@ -67,6 +67,7 @@ public class NormalJourneyController : MonoBehaviour
         else if (State == JourneyState.Travelling)
         {
             travelRemaining -= Time.deltaTime;
+            elevator.SetTravelProgress(1f - travelRemaining / travelSeconds);
             indicator?.SetFloor(Mathf.Clamp(1 + Mathf.FloorToInt(7f * (1f - travelRemaining / travelSeconds)), 1, 8));
             if (travelRemaining <= 0f)
             {
@@ -197,6 +198,7 @@ public class NormalJourneyController : MonoBehaviour
         ChangeState(JourneyState.Closing); // Discard arrival-transition clicks.
         elevator.SetTravelling(false);
         indicator?.SetFloor(8);
+        elevator.PlayArrival();
         homePresented = true;
         if (entranceHall != null) entranceHall.SetActive(false);
         if (homeCorridor != null) homeCorridor.SetActive(true);

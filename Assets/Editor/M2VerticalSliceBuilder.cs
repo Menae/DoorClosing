@@ -66,7 +66,7 @@ namespace GraduationProject.EditorTools
             passenger.enabled = false;
             player.transform.SetPositionAndRotation(new Vector3(0f, 0.95f, -1f), Quaternion.identity);
             passenger.enabled = true;
-            Set(elevator, "doorSlideSeconds", 0.75f);
+            Set(elevator, "doorSlideSeconds", 2.4f);
 
             Transform anomalyParent = system.transform.Find("EncounterPresentation");
             if (anomalyParent == null)

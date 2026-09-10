@@ -119,6 +119,11 @@ namespace GraduationProject.EditorTools
         [MenuItem("Tools/Unity Agent/Run Input Regression Tests")]
         public static void RunInputTests()
         {
+            RunInputTests(null);
+        }
+
+        public static void RunInputTests(string[] testNames)
+        {
             RequireCleanEditMode();
             RecordExistingTestMetadata();
             var directory = Path.Combine(Root, "artifacts", "tests", DateTime.UtcNow.ToString("yyyyMMdd-HHmmss-fff"));
@@ -127,6 +132,7 @@ namespace GraduationProject.EditorTools
             Runner.Execute(new ExecutionSettings(new Filter
             {
                 testMode = TestMode.PlayMode,
+                testNames = testNames,
                 assemblyNames = new[] { "GraduationProject.PlayModeTests" }
             }));
             Debug.Log("[Unity Agent] Input regression requested; results: " + directory);

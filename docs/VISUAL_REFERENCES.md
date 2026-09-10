@@ -28,7 +28,22 @@ Adopt: 導入済みURP Lit/TMP。Extend: 既存シーンへの再適用可能な
 
 写真の丸穴天井を参考に、透ける丸穴を持つ共有Mesh `PerforatedCeiling.asset` をEditorコードで作成。画像加工や追加shaderは不要。既存の天井ルーバーは無効化し、穴の奥の発光板を見せる。操作対象は同じ位置と当たり判定のまま金属縁・固定金具を追加した。廊下の住戸扉4枚は壁面の非操作装飾、玄関の郵便口・ドアクローザー・覗き穴を追加。「８階」は壁に固定し、白色照明と環境光を調整した。すべてGAME-015の試作で、正式なアート承認ではない。
 
-VIS-02時点の品質課題は、大きい操作ボタンと車内の寸法感、金属の粗さ・傷、壁材の単調さ。VIS-03でボタン・表示の比率と金属base colorを修正した。次の限定的な小物・貼り紙仕上げはSolへ引継ぎ可能（PROJECT_STATUS参照）。小物追加だけで『8番出口』程度の写実度に届くとは扱わず、車内寸法・専用法線／粗さ素材は残課題とする。M3開始・品質受入は今回決定しない。
+VIS-02時点の品質課題は、大きい操作ボタンと車内の寸法感、金属の粗さ・傷、壁材の単調さ。VIS-03でボタン・表示の比率と金属base colorを修正した。この時点のSol引継ぎ提案はVIS-04でユーザーが否定したため撤回。Astraが継続する。小物追加だけで『8番出口』程度の写実度に届くとは扱わず、車内寸法・専用法線／粗さ素材は残課題とする。M3開始・品質受入は今回決定しない。
 
 `Assets/ApartmentVisuals/FloorTiles.png` もbuilt-in image_genで生成。初期の立体目地は遠景でちらついたため無効化し、mipmap付き床素材へ切り替えた。生成プロンプト:
 > Single square seamless PBR base-color texture for a realistic inhabited old Japanese apartment hallway floor. Orthographic perfectly flat scan, no perspective. Four square greige light gray-beige matte stone composite floor tiles in a precise 2x2 grid. Very thin dark gray grout, 3 millimeter wide relative to 60cm tiles; half-width grout at exterior edges so texture repeats seamlessly. Subtle small stone flecks, mild scuffs and slight tone variation across tiles. Desaturated neutral color, evenly lit albedo only, no cast shadows, no glossy highlights, no vignetting, no objects, no text. Photographic fine surface detail. 1024 square PNG game-ready tileable texture.
+
+## VIS-04 実物資料による再設計（2026-09-11、Astra作業中）
+
+ユーザーの明示依頼により、従来の「操作位置維持」を変更。IMG_3783.CR3 / IMG_3821.CR3内の6000×4000 JPEGを無加工抽出し実見した。前者は縦長の金属盤、2列の階ボタン、表示器、スピーカー、下部保守蓋。後者は縦長白紙に見出し・本文・連絡先の階層、上端2片のテープ。実在会社・電話番号は転記しない。
+
+メーカー比較（2026-09-11確認）:
+- [三菱電機ビルソリューションズ](https://www.mebs.co.jp/useful/safety/ev_wheelchair.html): 出入口脇主操作盤＋両側壁の操作盤。本文と配置図を実見。開放保持4/10秒という説明は扉のスライド所要時間とは別。
+- [日立ビルシステム](https://www.hbs.co.jp/products/elevator/new/order/passenger/design/cage_design.html): 主操作盤と横型主／副操作盤の形式、ステンレスヘアライン。製品素材はコピーしていない。
+- [三菱AXIEZ-LINKSカタログ](https://www.mitsubishielectric.co.jp/elevator/catalog/pdf/c-c01-0-ca539.pdf): 45/60m毎分の住宅向け例と側面操作盤の高さ約1000mmを参照。写真の機種の性能と同定したものではない。
+
+Adopt: 既存URP/TMP/Input System。Extend: 再適用可能なEditor造作、同期表示とAudioSource。Build: 固有寸法の操作盤とオリジナル合成音。外部システムのFork・runtime依存は不要。主盤290×1950mm、側面盤1080×340mm・操作中心約1100mm、階ボタン約70mm。A4相当210×297mm、余白付き黒文字の掲示へ変更。8階以外のボタンは既存のゲーム規則どおり反応がない状態を保持し、非常停止もゲーム固有仕様（実機安全設計の再現ではない）。
+
+通常の1→8階は24秒、扉スライド2.4秒の試作値。約20mを1m/s前後＋加減速という概算であり実測値ではない。既存の物理キャビン自体は上下に移動せず、階数・音・扉・ホール切替で乗車を表現する。怪異側も実際の扉完了を待つよう修正。
+
+`tools/generate-elevator-audio.py`がPCM WAVを生成。低い駆動ハム・倍音・機械雑音、扉ローラー、2音の着床チャイムを別ソースで再生。駆動は1.5秒の立上がりと終盤の減速音量／ピッチ変化。外部録音・第三者サンプルなし。信号の存在と聴感の自然さは別の検証として扱う。

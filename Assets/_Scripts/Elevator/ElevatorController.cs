@@ -23,6 +23,11 @@ public class ElevatorController : MonoBehaviour
     [SerializeField, Min(0f)] private float cameraShakeAmplitude = 0.015f;
     [SerializeField, Min(0f)] private float cameraShakeFrequency = 18f;
     [SerializeField] private AudioSource travelLoopAudioSource;
+    [SerializeField] private AudioSource doorAudioSource;
+    [SerializeField] private AudioSource arrivalAudioSource;
+    private float driveVolume;
+    private float driveEnvelope;
+    private float driveTarget = 1f;
 
     private Vector3 leftDoorClosedLocalPosition;
     private Vector3 rightDoorClosedLocalPosition;
@@ -32,6 +37,7 @@ public class ElevatorController : MonoBehaviour
 
     private void Awake()
     {
+        driveVolume = travelLoopAudioSource != null ? travelLoopAudioSource.volume : 0f;
         if (leftDoor != null)
         {
             leftDoorClosedLocalPosition = leftDoor.localPosition;
@@ -51,6 +57,13 @@ public class ElevatorController : MonoBehaviour
     private void Update()
     {
         UpdateTravelShake();
+        driveEnvelope = Mathf.MoveTowards(driveEnvelope, isTravelling ? driveTarget : 0f, Time.deltaTime / 1.5f);
+        if (travelLoopAudioSource != null)
+        {
+            travelLoopAudioSource.volume = driveVolume * driveEnvelope;
+            travelLoopAudioSource.pitch = Mathf.Lerp(.65f, 1f, driveEnvelope);
+            if (!isTravelling && driveEnvelope <= 0f) travelLoopAudioSource.Stop();
+        }
     }
 
     public void OpenDoors()
@@ -72,17 +85,14 @@ public class ElevatorController : MonoBehaviour
         }
 
         isTravelling = travelling;
+        driveTarget = 1f;
 
         if (travelLoopAudioSource != null)
         {
             if (isTravelling)
             {
                 travelLoopAudioSource.loop = true;
-                travelLoopAudioSource.Play();
-            }
-            else
-            {
-                travelLoopAudioSource.Stop();
+                if (!travelLoopAudioSource.isPlaying) travelLoopAudioSource.Play();
             }
         }
 
@@ -94,6 +104,10 @@ public class ElevatorController : MonoBehaviour
 
     public void ResetDoorsClosed()
     {
+        if (doorAudioSource != null) doorAudioSource.Stop();
+        if (arrivalAudioSource != null) arrivalAudioSource.Stop();
+        if (travelLoopAudioSource != null) travelLoopAudioSource.Stop();
+        driveEnvelope = 0f;
         if (doorRoutine != null)
         {
             StopCoroutine(doorRoutine);
@@ -129,9 +143,12 @@ public class ElevatorController : MonoBehaviour
         Vector3 rightStart = rightDoor != null ? rightDoor.localPosition : Vector3.zero;
         Vector3 leftTarget = Vector3.Lerp(leftDoorClosedLocalPosition, leftDoorClosedLocalPosition + leftDoorOpenLocalOffset, targetOpenAmount);
         Vector3 rightTarget = Vector3.Lerp(rightDoorClosedLocalPosition, rightDoorClosedLocalPosition + rightDoorOpenLocalOffset, targetOpenAmount);
+        bool hasDistance = (leftStart-leftTarget).sqrMagnitude + (rightStart-rightTarget).sqrMagnitude > .00001f;
+        if (doorAudioSource != null && hasDistance && doorSlideSeconds > 0f) doorAudioSource.Play();
 
-        if (doorSlideSeconds <= 0f)
+        if (doorSlideSeconds <= 0f || (!hasDistance && leftDoor != null && rightDoor != null))
         {
+            if (doorAudioSource != null) doorAudioSource.Stop();
             ApplyDoorPositions(leftTarget, rightTarget);
             IsDoorOpen = targetOpenAmount == 1f;
             IsDoorMoving = false;
@@ -156,6 +173,7 @@ public class ElevatorController : MonoBehaviour
         }
 
         ApplyDoorPositions(leftTarget, rightTarget);
+        if (doorAudioSource != null) doorAudioSource.Stop();
         IsDoorOpen = targetOpenAmount == 1f;
         IsDoorMoving = false;
         doorRoutine = null;
@@ -165,6 +183,17 @@ public class ElevatorController : MonoBehaviour
     {
         return doorSafetyZone != null && passengerBody != null && passengerBody.enabled
             && doorSafetyZone.bounds.Intersects(passengerBody.bounds);
+    }
+
+    // Normal travel supplies its final braking envelope; encounters retain their own timing.
+    public void SetTravelProgress(float progress)
+    {
+        driveTarget = Mathf.Lerp(1f, .15f, Mathf.InverseLerp(.88f, 1f, progress));
+    }
+
+    public void PlayArrival()
+    {
+        if (arrivalAudioSource != null) arrivalAudioSource.Play();
     }
 
     private void ApplyDoorPositions(Vector3 leftPosition, Vector3 rightPosition)

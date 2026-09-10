@@ -63,6 +63,19 @@ namespace GraduationProject.Tests
             Assert.That(Vector2.Distance(new Vector2(player.position.x, player.position.z), new Vector2(point.x, point.z)), Is.LessThan(0.25f), "WASD route obstructed");
         }
 
+        private Vector3 Control(string name) => fixtureScene.GetRootGameObjects()
+            .SelectMany(root => root.GetComponentsInChildren<Transform>())
+            .Single(t => t.name == name).GetComponent<Collider>().bounds.center;
+
+        private IEnumerator WaitForDoors()
+        {
+            var elevator = journey.GetComponent(GameAccess.Type("ElevatorController"));
+            float end = Time.realtimeSinceStartup + 4;
+            while ((bool)elevator.GetType().GetProperty("IsDoorMoving").GetValue(elevator)
+                && Time.realtimeSinceStartup < end) yield return null;
+            Assert.That((bool)elevator.GetType().GetProperty("IsDoorMoving").GetValue(elevator), Is.False);
+        }
+
         private IEnumerator ClickAt(Vector3 point)
         {
             yield return Aim(point);
@@ -74,7 +87,7 @@ namespace GraduationProject.Tests
 
         private IEnumerator WaitState(string expected)
         {
-            float end = Time.realtimeSinceStartup + 8;
+            float end = Time.realtimeSinceStartup + (expected == "Arrived" ? 32 : 8);
             while (State != expected && Time.realtimeSinceStartup < end) yield return null;
             Assert.That(State, Is.EqualTo(expected));
             yield return null;
@@ -95,16 +108,44 @@ namespace GraduationProject.Tests
             string evidence = Path.GetFullPath(Path.Combine(Application.dataPath, "../artifacts/m1-02/scene-input-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss-fff")));
             Directory.CreateDirectory(evidence);
             ScreenCapture.CaptureScreenshot(Path.Combine(evidence, "entrance.png"));
+            yield return WalkTo(new Vector3(2.3f,.95f,1.3f));
+            yield return Aim(new Vector3(2.3f,1.56f,1.875f));
+            ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"contact-sheet.png"));
+            yield return null;
             yield return WalkTo(new Vector3(0, 0.95f, 0.5f));
             yield return ClickAt(new Vector3(1.25f, 1.5f, 1.82f));
             yield return WaitState("Boarding");
-            yield return new WaitForSeconds(1.1f);
+            yield return WaitForDoors();
             yield return WalkTo(new Vector3(0, 0.95f, 3.6f));
-            yield return Aim(new Vector3(0, 1.6f, 4.88f));
+            foreach (string prefix in new[]{"SideLeft", "SideRight", ""})
+            {
+                yield return ClickAt(Control(prefix+"Floor7"));
+                Assert.That(State, Is.EqualTo("Boarding"), "Non-destination floors remain inert in the introduction");
+                var raycaster=player.GetComponent(GameAccess.Type("InteractionRaycaster"));
+                var target=raycaster.GetType().GetField("currentTarget",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).GetValue(raycaster) as Component;
+                Assert.That(target,Is.Not.Null,"Real collider must be reached by the view ray");
+                Assert.That(target.name,Is.EqualTo(prefix+"Floor7"));
+                ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"panel-"+(prefix==""?"main":prefix)+".png"));
+                yield return null;
+            }
+            yield return Aim(Control("Floor8"));
             ScreenCapture.CaptureScreenshot(Path.Combine(evidence, "panel-hover.png"));
             yield return null;
-            yield return ClickAt(new Vector3(0, 1.6f, 4.88f));
+            yield return ClickAt(Control("Floor8"));
+            yield return WaitState("Travelling");
+            float travelStarted=Time.time;
+            yield return new WaitForSeconds(2);
+            var drive=roots.Single(go=>go.name=="Building").GetComponentsInChildren<AudioSource>().Single(a=>a.name=="Drive");
+            Assert.That(drive.isPlaying,Is.True,"The normal journey must drive the motor source");
+            Assert.That(drive.volume,Is.GreaterThan(.1f));
+            float[] signal=new float[1024];
+            float signalDeadline=Time.realtimeSinceStartup+1;
+            do { drive.GetOutputData(signal,0); yield return null; }
+            while(signal.Sum(x=>x*x)<=.00001f && Time.realtimeSinceStartup<signalDeadline);
+            Assert.That(signal.Sum(x=>x*x),Is.GreaterThan(.00001f),
+                $"Drive must produce audio samples. virtual={drive.isVirtual}, load={drive.clip.loadState}, listenerPause={AudioListener.pause}, listenerVolume={AudioListener.volume}");
             yield return WaitState("Arrived");
+            Assert.That(Time.time-travelStarted,Is.GreaterThanOrEqualTo(23.5f),"Seven-floor travel must not regress to the four-second blockout");
             yield return Aim(new Vector3(0, 1.6f, -10));
             ScreenCapture.CaptureScreenshot(Path.Combine(evidence, "corridor.png"));
             yield return WalkTo(new Vector3(0, 0.95f, -10.7f));

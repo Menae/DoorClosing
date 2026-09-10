@@ -115,6 +115,7 @@ public class BeatStateMachine : MonoBehaviour
     {
         SetState(BeatState.Travel);
         elevatorController?.CloseDoors();
+        while (elevatorController != null && elevatorController.IsDoorMoving) yield return null;
         elevatorController?.SetTravelling(true);
         yield return WaitForSecondsFromDefinition(def.TravelSeconds);
 
@@ -233,8 +234,10 @@ public class BeatStateMachine : MonoBehaviour
         }
 
         elevatorController?.SetTravelling(false);
+        elevatorController?.PlayArrival();
         elevatorController?.OpenDoors();
         yield return WaitForSecondsFromDefinition(doorOpenSeconds);
+        while (elevatorController != null && elevatorController.IsDoorMoving) yield return null;
     }
 
     private IEnumerator RepresentSameBeat()
@@ -246,6 +249,7 @@ public class BeatStateMachine : MonoBehaviour
         SetState(BeatState.Depart);
         elevatorController?.CloseDoors();
         yield return WaitForSecondsFromDefinition(doorCloseSeconds);
+        while (elevatorController != null && elevatorController.IsDoorMoving) yield return null;
 
         SetState(BeatState.Travel);
         elevatorController?.SetTravelling(true);
@@ -272,6 +276,7 @@ public class BeatStateMachine : MonoBehaviour
         {
             elevatorController?.CloseDoors();
             yield return WaitForSecondsFromDefinition(doorCloseSeconds);
+            while (elevatorController != null && elevatorController.IsDoorMoving) yield return null;
         }
 
         if (def.Category != AnomalyCategory.Normal)

@@ -1,11 +1,18 @@
 # Decisions
 
+## VIS-004 — 実物基準の操作盤移設・掲示・動作音
+- Status: ユーザーが方向を明示指定。具体寸法・速度・音色はGAME-015内の試作、品質受入は未了。
+- Date: 2026-09-11; Owner: user（実装Astra）
+- Decision: 出入口脇の縦長主操作盤＋左右側壁の横型操作盤へ移設。写真とメーカー資料を参照して実寸A4掲示と日本語階層を作成。通常7階分の移動24秒、扉2.4秒、駆動・扉・着床音を追加。実機の非常通話ではなく本作の非常停止規則を維持する。
+- Reason: ユーザーが奥壁の操作位置・巨大なゲーム風掲示・高速無音の移動を不適切と指摘した。VIS-003の限定引継ぎ提案を撤回しAstra継続。
+- Effects: ElevatorRealismPass、ApartmentVisualPass、M1/M2、FloorIndicator同期、ElevatorController音声、NormalJourney時間、BeatStateMachine扉完了待ち、通常入力回帰、Audio素材。外部runtime依存なし。出典と試作寸法はVISUAL_REFERENCES。
+
 ## VIS-003 — 操作盤の比率調整と限定引継ぎ
 - Status: GAME-015の委任内試作。正式品質・人の押しやすさ評価は未了。
 - Date: 2026-09-11; Owner: Astra
 - Decision: 既存位置でボタン面とColliderを140×120mmへ同率縮小、非常停止は二段表示。操作盤・階数板・銘板を整理し、生成した金属base colorと抑えた反射を使う。配置／移動経路／猶予は維持。
 - Trade-off: 試作の大きなボタンは改善したが実物寸法を完全再現していない。文字とクリック許容幅を優先。3.4m幅の車内や仮の怪異造形は残る。
-- Handoff: 次の限定的な素材・貼り紙・小物調整と回帰はSolへ引継ぎ可能。空間・操作配置の全面変更、M3の自動開始、写実度の完成認定は含めない。具体的な残作業と確認条件はPROJECT_STATUS。Astra常時監督を必須としない。
+- Handoff（VIS-004により撤回）: 当時は次の限定的な素材・貼り紙・小物調整と回帰をSolへ引継ぎ可能と判断した。空間・操作配置の全面変更、M3の自動開始、写実度の完成認定は含めない。具体的な残作業と確認条件はPROJECT_STATUS。Astra常時監督を必須としない。
 - Effects: ApartmentVisualPass、BrushedSteel.png、SatinSteel.mat、M1/M2 scenes、VISUAL_REFERENCES、PROJECT_STATUS。
 
 ## VIS-002 — 造作の試作と次担当の判断
