@@ -9,7 +9,7 @@ using UnityEngine.SceneManagement;
 
 namespace GraduationProject.EditorTools
 {
-    // Additive, collider-free dressing. Existing journey and interaction transforms stay intact.
+    // Collider-free dressing plus explicit button-size trials. Journey and button positions stay intact.
     public static class ApartmentVisualPass
     {
         private const string Folder = "Assets/ApartmentVisuals";
@@ -64,7 +64,9 @@ namespace GraduationProject.EditorTools
             if (texture == null) throw new InvalidOperationException("Import Laminate.png before applying.");
             plaster = Mat("WarmPlaster", new Color(.8f,.8f,.75f), 0, .15f, texture, 3);
             laminate = Mat("IvoryLaminate", new Color(.82f,.75f,.61f), 0, .28f, texture, 1);
-            steel = Mat("SatinSteel", new Color(.63f,.65f,.64f), .8f, .58f);
+            var steelTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(Folder + "/BrushedSteel.png");
+            if (steelTexture == null) throw new InvalidOperationException("Import BrushedSteel.png before applying.");
+            steel = Mat("SatinSteel", new Color(.85f,.86f,.85f), .72f, .34f, steelTexture);
             dark = Mat("Charcoal", new Color(.065f,.077f,.074f), .2f, .3f);
             var floorTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(Folder + "/FloorTiles.png");
             if (floorTexture == null) throw new InvalidOperationException("Import FloorTiles.png before applying.");
@@ -85,24 +87,30 @@ namespace GraduationProject.EditorTools
             foreach (string n in new[]{"FrontLeft","FrontRight","OuterFrontLeft","OuterFrontRight"}) Surface(b,n,ink);
             Surface(b,"CabFloor",tile); Surface(b,"CabCeiling",dark);
             var v = Group(b,"InteriorVisuals");
-            Box(v,"PanelBacking",new Vector3(.06f,1.45f,4.967f),new Vector3(1.85f,1.7f,.045f),steel);
-            Box(v,"DisplayBacking",new Vector3(0,2.3f,4.955f),new Vector3(.84f,.44f,.035f),dark);
+            Box(v,"PanelBacking",new Vector3(.05f,1.375f,4.967f),new Vector3(1.5f,1.04f,.045f),steel);
+            Box(v,"DisplayBacking",new Vector3(0,2.3f,4.955f),new Vector3(.52f,.32f,.035f),dark);
+            var indicator=b.Find("FloorDisplay").GetComponent<TMP_Text>();
+            indicator.fontSize=2.5f;indicator.rectTransform.sizeDelta=new Vector2(.48f,.28f);
             foreach (string n in new[]{"Floor8","Floor7","Open","Close","Emergency","Call"})
             {
                 var target = b.Find(n);
+                // Trial 140 x 120 mm faces: smaller than the blockout, still legible at interaction distance.
+                // Scale the original collider together with its visible face; never leave invisible oversized targets.
+                target.localScale = new Vector3(.4f,.4f,1);
                 target.GetComponent<Renderer>().sharedMaterial = n == "Emergency" ? red : dark;
                 var text = target.GetComponentInChildren<TMP_Text>();
                 text.font = font; text.enableAutoSizing = false;
-                text.fontSize = n == "Emergency" ? 1.05f : 2.2f;
+                text.fontSize = n == "Emergency" ? 1.15f : 2.2f;
                 text.textWrappingMode = TextWrappingModes.NoWrap;
                 text.color = new Color(.96f,.96f,.9f);
                 if (n == "Call") text.text = "呼";
-                // The existing face and collider retain their dimensions and input feedback.
-                Box(v,n+"Bezel",target.position+Vector3.forward*.016f,new Vector3(.39f,.34f,.055f),steel);
+                if (n == "Emergency") text.text = "非常\n停止";
+                // Non-interactive trim sits behind the original face and its input feedback.
+                Box(v,n+"Bezel",target.position+Vector3.forward*.016f,new Vector3(.165f,.145f,.055f),steel);
             }
             for(int x=-1;x<=1;x+=2)
             for(int y=-1;y<=1;y+=2)
-                Screw(v,"PanelScrew"+x+"_"+y,new Vector3(.06f+x*.86f,1.45f+y*.78f,4.936f),Quaternion.identity);
+                Screw(v,"PanelScrew"+x+"_"+y,new Vector3(.05f+x*.69f,1.375f+y*.46f,4.936f),Quaternion.identity);
             // Keep trim clear of button faces and the doorway safety volume.
             for (int side = -1; side <= 1; side += 2)
             {
@@ -137,8 +145,9 @@ namespace GraduationProject.EditorTools
                 if(renderer==null)renderer=perforated.gameObject.AddComponent<MeshRenderer>();
                 renderer.sharedMaterial=dark;
             }
-            Label(v,"CabinCapacity","定員 ９名　積載 ６００kg",new Vector3(0,2.65f,4.963f),new Vector2(1.6f,.18f),.8f,Color.black);
-            Label(v,"PanelCaption","行先階",new Vector3(-.28f,1.93f,4.935f),new Vector2(.65f,.16f),.9f,Color.black);
+            Box(v,"CapacityPlate",new Vector3(0,2.65f,4.963f),new Vector3(1.20f,.16f,.012f),steel);
+            Label(v,"CabinCapacity","定員９名　積載６００kg",new Vector3(0,2.65f,4.951f),new Vector2(1.16f,.14f),.65f,Color.black);
+            Label(v,"PanelCaption","行先階",new Vector3(-.25f,1.78f,4.935f),new Vector2(.45f,.11f),.65f,Color.black);
             Notice(v,"CabinNotice","扉に注意\n<color=#292923><size=70%>指を挟まない\nように</size></color>",new Vector3(1.27f,1.75f,4.968f),new Vector2(.49f,.46f),.86f,new Color(.55f,.035f,.025f));
             foreach(var lamp in b.GetComponentsInChildren<Light>(true)) { lamp.intensity=2.2f; lamp.color=new Color(.94f,.96f,1); lamp.range=5; lamp.shadows=LightShadows.Soft; }
             var probeObject = Group(v,"CabinReflection").gameObject;

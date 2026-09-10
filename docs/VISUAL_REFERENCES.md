@@ -10,6 +10,13 @@ Adopt: 導入済みURP Lit/TMP。Extend: 既存シーンへの再適用可能な
 
 ## 生成素材
 
+### VIS-03 金属（2026-09-11）
+
+`Assets/ApartmentVisuals/BrushedSteel.png` はbuilt-in image_genで新規生成したbase color。元画像を保持してworkspaceへコピー。既存SatinSteelへ適用しmetallic .72 / smoothness .34とした。法線／粗さマップは未作成。操作面は140×120mm、表示板520×320mmの試作値。既存の対象位置は維持し、見た目とColliderを同率縮小した。実物の寸法保証ではなく、ゲーム中の可読性と押しやすさとの妥協である。
+
+生成プロンプト:
+> Use case: photorealistic-natural. Asset type: single square seamless game material base-color texture, 1024x1024 PNG. Flat orthographic scan of satin brushed stainless steel in an inhabited older Japanese apartment elevator. Neutral light gray metal, very fine vertical hairline grain, subtle scattered tiny surface scuffs and faint fingerprints, restrained low contrast. Perfectly even diffuse albedo illumination. No reflection of any environment, no highlights, no gradients, no cast shadows, no border, no seams, no objects, no text or logo, no rust. Entire image one continuous material, seamless on all four sides. This is a texture map to be lit by Unity, NOT a rendered room, metal plate, material sphere, or presentation.
+
 `Assets/ApartmentVisuals/Laminate.png` はbuilt-in image_genで新規生成した化粧板用base color。写真の直接切抜きなし。元の生成画像を保持してプロジェクトへコピー。日本語は画像生成に任せずTMPで描画する。
 
 生成プロンプト:
@@ -21,7 +28,7 @@ Adopt: 導入済みURP Lit/TMP。Extend: 既存シーンへの再適用可能な
 
 写真の丸穴天井を参考に、透ける丸穴を持つ共有Mesh `PerforatedCeiling.asset` をEditorコードで作成。画像加工や追加shaderは不要。既存の天井ルーバーは無効化し、穴の奥の発光板を見せる。操作対象は同じ位置と当たり判定のまま金属縁・固定金具を追加した。廊下の住戸扉4枚は壁面の非操作装飾、玄関の郵便口・ドアクローザー・覗き穴を追加。「８階」は壁に固定し、白色照明と環境光を調整した。すべてGAME-015の試作で、正式なアート承認ではない。
 
-次の品質課題は、大きい操作ボタンと車内の寸法感、金属の粗さ・傷、壁材の単調さ。小物を増やすだけでは『8番出口』程度の写実度に届かない。Astraで実寸感と材質の基準をもう一段詰め、その基準が成立してからSolへ反復配置・回帰検証を引き継ぐ。M3開始・品質受入は今回決定しない。
+VIS-02時点の品質課題は、大きい操作ボタンと車内の寸法感、金属の粗さ・傷、壁材の単調さ。VIS-03でボタン・表示の比率と金属base colorを修正した。次の限定的な小物・貼り紙仕上げはSolへ引継ぎ可能（PROJECT_STATUS参照）。小物追加だけで『8番出口』程度の写実度に届くとは扱わず、車内寸法・専用法線／粗さ素材は残課題とする。M3開始・品質受入は今回決定しない。
 
 `Assets/ApartmentVisuals/FloorTiles.png` もbuilt-in image_genで生成。初期の立体目地は遠景でちらついたため無効化し、mipmap付き床素材へ切り替えた。生成プロンプト:
 > Single square seamless PBR base-color texture for a realistic inhabited old Japanese apartment hallway floor. Orthographic perfectly flat scan, no perspective. Four square greige light gray-beige matte stone composite floor tiles in a precise 2x2 grid. Very thin dark gray grout, 3 millimeter wide relative to 60cm tiles; half-width grout at exterior edges so texture repeats seamlessly. Subtle small stone flecks, mild scuffs and slight tone variation across tiles. Desaturated neutral color, evenly lit albedo only, no cast shadows, no glossy highlights, no vignetting, no objects, no text. Photographic fine surface detail. 1024 square PNG game-ready tileable texture.

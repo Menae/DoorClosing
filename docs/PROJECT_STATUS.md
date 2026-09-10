@@ -1,5 +1,16 @@
 # 現在地・再開情報
 
+## VIS-03 操作盤の比率・金属材質（2026-09-11）
+
+- 状態／担当: VIS-03の実装・下記検証を完了し区切り。Astra task 01a07fbb-3ac2-7a62-a049-19d919724625。直前VIS-02から継続、開始時main clean。終了時M2 Edit Mode、検証Player終了。Solは次回開始時に所有を確認して下記範囲を続けられる。
+- 範囲／委任: 継続依頼とGAME-015の試作内で、操作位置を維持しつつボタン面と当たり判定を同じ比率で小型化、表示板・金属板・銘板を整理する。金属base colorを追加し反射を調整。移動空間／猶予／進行ルールは維持。実寸の完全再現よりも操作距離での可読性を優先して評価する。
+- 対象／検証: ApartmentVisualPass、ApartmentVisuals、M1/M2 scenes、必要な入力試験。通常Keyboard/Mouse→Raycast、誤答救済、Game Viewの文字・位置・材質、Windows buildを確認。小型化で操作しづらくなることが主なリスク。正式品質受入と人の押しやすさ評価は別。
+- 中間結果: 小型化後Play Mode 33/33成功、失敗skipなし（artifacts/tests/20260910-150530-393）。M1 panel-hover画面で「非常停止」の右端はみ出しを発見し、二段表示へ修正。生成素材・プロンプト・試作寸法はVISUAL_REFERENCES。
+- 最終検証: Play Mode 33/33成功、失敗skipなし（artifacts/tests/20260910-150830-014/playmode.xml）、Edit Mode 2/2（20260910-151024-561/editmode.xml）。Console Error 0。M1のartifacts/m1-02/scene-input-20260910-150952-837/panel-hover.png（1579x888）で非常停止を含む全ボタンの文字収まりと8のhoverを実見。M2のartifacts/m2-04/scene-input-20260910-150843-956は同じ最終codeの通常入力証跡。
+- Windows: artifacts/builds/20260910-151107-633/build.json、成功・0 errors / 0 warnings。Computer Useで入口1280x720を確認しartifacts/visual-03/windows-player.png保存。Player.logに例外・文字欠落の該当行なし。短いW入力では十分な移動差を確認できず、OS入力一巡は未検証。設定ファイル差分なし。人の操作性・音・60fps・目標写実度の受入は未了。
+- Solへの限定引継ぎ: 次はVIS-04として、既存の内装構成・白色照明・Noto Sans JPを維持して、貼り紙の紙／テープの厚みと縁、金属枠の接合部など近景の仕上げを1単位ずつ進めてよい。入口・操作盤・廊下の同一視点比較を残し、表示距離で読めることと動線を確認する。実在電話番号や個人情報は使わない。共有処理はApartmentVisualPass、対象はM1/M2、素材方針はVISUAL_REFERENCES。M3へ勝手に進めず、既存操作位置・猶予・部屋寸法の変更や新依存はこの引継ぎに含めない。
+- モデル判断: 操作盤の主要な比率・材質修正は本単位で区切り、上記の限定した仕上げはSolで続行可能。常時Astra監督は不要。『8番出口』相当の品質達成とはしない。車内寸法・怪異の仮形状・法線／粗さの専用素材・人の押しやすさ評価が残り、大きな作り直しが必要なら原因と影響を整理して再判断する。
+
 ## VIS-02 内装の造作・照明整理（2026-09-10）
 
 - 状態／担当: 造作改善の実装・下記検証を完了し区切り。Astra task 01a07fbb-3ac2-7a62-a049-19d919724625。開始時main clean、Sol実装task idleを確認。終了時EditorはM2 Edit Mode、検証Playerは終了。次の実装担当は本記録を読んで所有を確認する。

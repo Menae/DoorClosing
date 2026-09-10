@@ -1,5 +1,13 @@
 # Decisions
 
+## VIS-003 — 操作盤の比率調整と限定引継ぎ
+- Status: GAME-015の委任内試作。正式品質・人の押しやすさ評価は未了。
+- Date: 2026-09-11; Owner: Astra
+- Decision: 既存位置でボタン面とColliderを140×120mmへ同率縮小、非常停止は二段表示。操作盤・階数板・銘板を整理し、生成した金属base colorと抑えた反射を使う。配置／移動経路／猶予は維持。
+- Trade-off: 試作の大きなボタンは改善したが実物寸法を完全再現していない。文字とクリック許容幅を優先。3.4m幅の車内や仮の怪異造形は残る。
+- Handoff: 次の限定的な素材・貼り紙・小物調整と回帰はSolへ引継ぎ可能。空間・操作配置の全面変更、M3の自動開始、写実度の完成認定は含めない。具体的な残作業と確認条件はPROJECT_STATUS。Astra常時監督を必須としない。
+- Effects: ApartmentVisualPass、BrushedSteel.png、SatinSteel.mat、M1/M2 scenes、VISUAL_REFERENCES、PROJECT_STATUS。
+
 ## VIS-002 — 造作の試作と次担当の判断
 - Status: GAME-015の試作委任で実装。モデル引継ぎ判断は今回ユーザーがAstraへ委任。視覚品質の正式受入は未決。
 - Date: 2026-09-10; Owner: Astra（委任内の実装・判断）
