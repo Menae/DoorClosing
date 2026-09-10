@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class BeatStateMachine : MonoBehaviour
 {
+    [SerializeField] private CabinInformationDisplay informationDisplay;
     [Header("References")]
     [SerializeField] private BeatDefinition initialBeat;
     [SerializeField] private ResponseEvaluator responseEvaluator;
@@ -461,6 +462,7 @@ public class BeatStateMachine : MonoBehaviour
         currentAnomalyInstance.transform.SetLocalPositionAndRotation(def.PresentationLocalPosition, Quaternion.identity);
         currentAnomalyInstance.transform.localScale = def.PresentationLocalScale;
         currentAnomaly = currentAnomalyInstance.GetComponentInChildren<AnomalyBehaviour>();
+        if (currentAnomaly is ProvocationAnomaly provocation) provocation.BindMountedDisplay(informationDisplay);
 
         if (currentAnomaly == null)
         {

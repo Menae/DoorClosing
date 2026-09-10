@@ -1,5 +1,12 @@
 # Decisions
 
+## VIS-005 — 扉の材質差と壁付けの常設案内器
+- Status: ユーザーの3点の修正依頼に基づく試作。正式な品質受入とは分ける。
+- Date: 2026-09-11; Owner: user（具体実装Astra）
+- Decision: 扉は既存ヘアライン素材を用いた中明度の金属、壁は既存化粧板。扉上中央の独立表示を無効化し、主操作盤と左右盤の3つの階表示へ統合する。挑発は後壁に接した常設案内器へ表示し、通常文から0.3秒でフェード切替、終了時に通常文へ戻す。
+- Reason: 動く扉の前に支持材なしで表示を置き、怪異開始時に独立パネルを生成していたことが浮遊と唐突さの原因。固定筐体と一時的な内容を分離する。
+- Effects: DoorSteel、ApartmentVisualPass/ElevatorRealismPass、CabinInformationDisplay、ProvocationAnomaly/BeatStateMachine、M1/M2、scene入力試験。怪異の判定・猶予・移動・実在素材出典は変更しない。既存Mainなど未移行シーンの仮表示fallbackは保持。
+
 ## VIS-004 — 実物基準の操作盤移設・掲示・動作音
 - Status: ユーザーが方向を明示指定。具体寸法・速度・音色はGAME-015内の試作、品質受入は未了。
 - Date: 2026-09-11; Owner: user（実装Astra）

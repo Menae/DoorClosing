@@ -1,5 +1,15 @@
 # 現在地・再開情報
 
+## VIS-05 扉材と常設案内器の修正（2026-09-11）
+- 担当: Astra、main clean / 264c84fから継続。直前の中断ターンでは変更なし。
+- 依頼と方針: 同一材の扉／壁を分け、扉上の浮いた表示を操作盤内へ統合。挑発パネルは壁に接する常設の金属枠案内器をM1/M2へ設置し、通常案内から警告文へ短くフェード切替する。怪異の正解・猶予・開始条件は維持。
+- 中間経過: 初回適用はdirty guardで停止。artifacts/visual-05/unsaved-M2.unityへコピーを退避し、保存済みとの差分が今回追加のinformationDisplay参照1行のみであることを確認して保存・再開。初回回帰32/33、追加撮影移動後の閉ボタンが距離外でM2一巡1件失敗。ゲーム距離や判定は変えず、試験経路で盤へ歩いて近づく処理を追加し、当該1件の再実行成功。
+- 対象と検証: ApartmentVisualPass、ElevatorRealismPass、ProvocationAnomaly／BeatStateMachineの表示参照、常設表示component、M1/M2、scene入力回帰。正面だけでなく側面から壁との接触、開扉時の浮遊表示消失、挑発終了時の通常表示復帰を確認し、関連テスト・Player buildを記録する。新依存なし、既存素材を再利用。
+- 完了範囲: 扉はDoorSteel、壁はIvoryLaminateへ分離。旧中央表示を無効化し、3操作盤内で階数を同期。案内器は背面壁に2mm重ねて固定し、通常文から挑発文へ0.3秒で内容のみ切替、終了時に復帰。M1/M2ともgeometry-audit-result.jsonで接触と材質・無効化を確認。
+- 検証結果: 初回PlayMode32成功・1失敗（artifacts/tests/20260910-172147-594）、経路修正後M2一巡1/1成功（20260910-172645-850）。全33件に成功結果が揃ったが、修正後の全件一括再実行ではない。skip0。EditMode2/2（20260910-173016-344）、Console error0。artifacts/m2-04/scene-input-20260910-172650-665の斜め視点・挑発・操作盤階数表示を実見（761×428）。常設器の存在／接触、浮遊prefab描画停止、通常表示復帰もassert成功。
+- Windows: artifacts/builds/20260910-173028-227/build.json成功、errors0 / warnings0。Computer Useで入口Player画面1280×720を実見、artifacts/visual-05/windows-player.png・Player-observed.logへ保存。実行時例外／Unicode警告なし。OS入力による全経路は未検証、全経路はEditorのInput System→Raycast試験。Player終了確認済み、UnityはM2保存済みEdit Mode。artifactsはローカルのみ。
+- 判断: 今回の3点は実装・検証済み。Solへの引継ぎは保留し、Astraの品質確認を継続する方針。残る全体の縮尺・壁の法線／粗さ・空間の統一感は未完成で、『8番出口』相当や人の視覚評価済みとは扱わない。M3未着手。
+
 ## VIS-04 実物基準への配置・掲示・動作音の修正（2026-09-11）
 
 - 担当／状態: Astra継続。ユーザーがVIS-03の品質とSol引継ぎを否定し、操作盤移設・掲示縮尺・動作速度・音の徹底修正を明示依頼。以前の限定引継ぎ判断を撤回。開始時main clean、同じcheckout。

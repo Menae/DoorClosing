@@ -149,6 +149,12 @@ namespace GraduationProject.Tests
                 .GetComponent(GameAccess.Type("NormalJourneyController"));
             Assert.That(journey, Is.Not.Null);
             Assert.That(((Behaviour)journey).enabled, Is.True, "M2 night must begin at the entrance journey");
+            var information = FindGameComponent("CabinInformationDisplay");
+            Assert.That(information, Is.Not.Null, "The information housing must exist before any encounter");
+            var housing=information.transform.Find("Housing").GetComponent<Renderer>();
+            var backWall=roots.Single(r=>r.name=="Building").transform.Find("CabBack").GetComponent<Renderer>();
+            Assert.That(housing.bounds.max.z-backWall.bounds.min.z,Is.InRange(0f,.004f),"Housing rear must touch the wall");
+            Assert.That(roots.Single(r=>r.name=="Building").transform.Find("FloorDisplay").gameObject.activeSelf,Is.False);
 
             string evidence = Path.GetFullPath(Path.Combine(Application.dataPath,
                 "../artifacts/m2-04/scene-input-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss-fff")));
@@ -160,6 +166,11 @@ namespace GraduationProject.Tests
             yield return Until(() => JourneyState == "Boarding", "elevator call");
             yield return WaitForDoors();
             yield return WalkTo(new Vector3(0f, 0.95f, 3.6f));
+            yield return WalkTo(new Vector3(-.85f,.95f,3.8f));
+            yield return Aim(information.transform.position);
+            ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"information-mounted-side.png"));
+            yield return null;
+            yield return WalkTo(new Vector3(0f,.95f,3.6f));
             yield return ClickAt(Control("Floor8"));
             yield return Until(() => Count("Diagnosis") >= 1, "lure diagnosis", 40f);
             Assert.That(((Behaviour)journey).enabled, Is.False, "Encounter input must route to BeatStateMachine");
@@ -174,6 +185,9 @@ namespace GraduationProject.Tests
             Release(keyboard.dKey, queueEventOnly: true);
             yield return null;
             Assert.That(Vector3.Distance(beforeStep, player.position), Is.GreaterThan(0.1f), "Authored player must accept WASD");
+            // The additional oblique fixture inspection changes our approach. Walk back within real click range.
+            yield return WalkTo(new Vector3(.25f,.95f,3.5f));
+            Assert.That(Vector3.Distance(camera.transform.position,Control("SideRightClose")),Is.LessThan(1.9f));
             yield return ClickAt(Control("SideRightClose"));
             yield return Until(() => CountOutcome("Correct") >= 1, "lure close resolution");
 
@@ -184,8 +198,12 @@ namespace GraduationProject.Tests
                 return active != null && ReadBool(active, "IsAnnouncementVisible") && ReadBool(active, "IsAnnouncementPlaying");
             }, "provocation diegetic display and chime", 4.5f);
             yield return Aim(FindGameComponent("ProvocationAnomaly").transform.position);
+            Assert.That(FindGameComponent("ProvocationAnomaly").GetComponentsInChildren<Renderer>(true).All(r=>!r.enabled),Is.True,
+                "Encounter must not introduce a second floating panel");
+            Assert.That(ReadBool(information,"IsShowingAnnouncement"),Is.True);
             ScreenCapture.CaptureScreenshot(Path.Combine(evidence, "provocation.png"));
             yield return Until(() => CountOutcome("Correct") >= 2, "provocation no-input success");
+            Assert.That(ReadBool(information,"IsShowingAnnouncement"),Is.False,"Restore the ordinary notice after the encounter");
 
             yield return Until(() => Count("Diagnosis") >= 3, "hijack diagnosis");
             yield return Until(() =>
@@ -197,8 +215,10 @@ namespace GraduationProject.Tests
             // Arrival deliberately flickers the display; capture after it has returned
             // so the evidence shows the impossible floor instead of a blank frame.
             yield return new WaitForSeconds(0.6f);
-            Transform floorDisplay = roots.SelectMany(root => root.GetComponentsInChildren<Transform>(true))
-                .Single(item => item.name == "FloorDisplay");
+            var floorController=FindGameComponent("FloorIndicator");
+            Transform floorDisplay = ((Component)floorController.GetType().GetField("floorText",BindingFlags.Instance|BindingFlags.NonPublic)
+                .GetValue(floorController)).transform;
+            Assert.That(floorDisplay.gameObject.activeInHierarchy,Is.True,"Hijack must use a visible fixed-panel display");
             RectTransform floorRect = floorDisplay as RectTransform;
             Assert.That(floorRect, Is.Not.Null);
             Vector3[] corners = new Vector3[4];

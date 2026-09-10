@@ -13,7 +13,7 @@ namespace GraduationProject.EditorTools
     public static class ApartmentVisualPass
     {
         private const string Folder = "Assets/ApartmentVisuals";
-        private static Material plaster, laminate, steel, dark, tile, paper, ink, red, light;
+        private static Material plaster, laminate, steel, doorSteel, dark, tile, paper, ink, red, light;
         private static TMP_FontAsset font;
 
         [MenuItem("Tools/Unity Agent/Apply Apartment Visual Pass")]
@@ -68,6 +68,7 @@ namespace GraduationProject.EditorTools
             var steelTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(Folder + "/BrushedSteel.png");
             if (steelTexture == null) throw new InvalidOperationException("Import BrushedSteel.png before applying.");
             steel = Mat("SatinSteel", new Color(.85f,.86f,.85f), .72f, .34f, steelTexture);
+            doorSteel = Mat("DoorSteel", new Color(.58f,.61f,.60f), .68f, .30f, steelTexture);
             dark = Mat("Charcoal", new Color(.065f,.077f,.074f), .2f, .3f);
             var floorTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(Folder + "/FloorTiles.png");
             if (floorTexture == null) throw new InvalidOperationException("Import FloorTiles.png before applying.");
@@ -84,7 +85,8 @@ namespace GraduationProject.EditorTools
 
         private static void DressCabin(Transform b)
         {
-            foreach (string n in new[]{"CabBack","CabLeft","CabRight","DoorLeft","DoorRight"}) Surface(b,n,laminate);
+            foreach (string n in new[]{"CabBack","CabLeft","CabRight"}) Surface(b,n,laminate);
+            foreach (string n in new[]{"DoorLeft","DoorRight"}) Surface(b,n,doorSteel);
             foreach (string n in new[]{"FrontLeft","FrontRight","OuterFrontLeft","OuterFrontRight"}) Surface(b,n,ink);
             Surface(b,"CabFloor",tile); Surface(b,"CabCeiling",dark);
             var v = Group(b,"InteriorVisuals");

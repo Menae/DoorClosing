@@ -27,9 +27,21 @@ public class ProvocationAnomaly : AnomalyBehaviour
     private float originalSpeakerPitch = 1f;
     private AudioClip generatedAnnouncementClip;
     private bool usesGeneratedTrialPanel;
+    private CabinInformationDisplay mountedDisplay;
 
-    public bool IsAnnouncementVisible => subtitle != null && subtitle.gameObject.activeInHierarchy && !string.IsNullOrWhiteSpace(subtitle.text);
+    public bool IsAnnouncementVisible => mountedDisplay != null ? mountedDisplay.IsShowingAnnouncement
+        : subtitle != null && subtitle.gameObject.activeInHierarchy && !string.IsNullOrWhiteSpace(subtitle.text);
     public bool IsAnnouncementPlaying => speaker != null && speaker.isPlaying;
+
+    public void BindMountedDisplay(CabinInformationDisplay display)
+    {
+        if (display == null) return; // Legacy scenes retain their existing fallback presentation.
+        mountedDisplay = display;
+        mountedDisplay.Restore();
+        foreach (var renderer in GetComponentsInChildren<Renderer>(true)) renderer.enabled = false;
+        transform.position = display.transform.position;
+        if (revealLamp != null) revealLamp.transform.position = display.transform.position + new Vector3(0,.10f,-.05f);
+    }
 
     protected override void Awake()
     {
@@ -76,6 +88,7 @@ public class ProvocationAnomaly : AnomalyBehaviour
         base.OnCleanup();
         StopAnnouncementRoutine();
         StopRevealLampRoutine();
+        if (mountedDisplay != null) mountedDisplay.Restore();
 
         if (speaker != null)
         {
@@ -112,7 +125,8 @@ public class ProvocationAnomaly : AnomalyBehaviour
 
     private void PresentAnnouncement(string message, float pitch)
     {
-        SetTextOrLog(subtitle, nameof(subtitle), message);
+        if (mountedDisplay != null) mountedDisplay.Present(message);
+        else SetTextOrLog(subtitle, nameof(subtitle), message);
 
         if (speaker == null)
         {

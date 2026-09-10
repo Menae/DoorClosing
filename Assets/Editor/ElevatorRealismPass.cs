@@ -71,18 +71,24 @@ namespace GraduationProject.EditorTools
                 Text(p,"Caption","行先階",-.40f,1.066f,-.02f,.20f,.045f,.26f,Color.black);
                 Finish(p,new Vector3(side*1.558f,0,3.35f),side*90);
             }
-            // The original high display remains the single controller reference, now over the entrance.
-            var floorText=b.Find("FloorDisplay").GetComponent<TMP_Text>();
-            floorText.transform.SetPositionAndRotation(new Vector3(0,2.64f,2.15f),Quaternion.Euler(0,180,0));
-            floorText.rectTransform.anchoredPosition3D=floorText.transform.localPosition;
-            floorText.rectTransform.sizeDelta=new Vector2(.40f,.21f); floorText.fontSize=1.35f;
-            floorText.color=new Color(1,.43f,.16f);
-            ApartmentVisualPass.Box(v,"HeaderDisplay",new Vector3(0,2.64f,2.125f),new Vector3(.46f,.25f,.026f),dark);
+            // No housing can be supported by the moving door leaf. Use the fixed operation-panel displays.
+            b.Find("FloorDisplay").gameObject.SetActive(false);
+            var oldHeader=v.Find("HeaderDisplay");
+            if(oldHeader!=null)oldHeader.gameObject.SetActive(false);
             var system=roots.Single(x=>x.name=="NormalJourney");
             var indicator=new SerializedObject(system.GetComponent<FloorIndicator>());
-            var additional=indicator.FindProperty("additionalDisplays");additional.arraySize=displays.Count;
-            for(int i=0;i<displays.Count;i++)additional.GetArrayElementAtIndex(i).objectReferenceValue=displays[i];
+            indicator.FindProperty("floorText").objectReferenceValue=mainDisplay;
+            var additional=indicator.FindProperty("additionalDisplays");additional.arraySize=displays.Count-1;
+            for(int i=1;i<displays.Count;i++)additional.GetArrayElementAtIndex(i-1).objectReferenceValue=displays[i];
             indicator.ApplyModifiedPropertiesWithoutUndo();
+            var information=MountedInformation(v,b.Find("CabBack").GetComponent<Renderer>().bounds.min.z);
+            var machine=system.GetComponent<BeatStateMachine>();
+            if(machine!=null)
+            {
+                var settings=new SerializedObject(machine);
+                settings.FindProperty("informationDisplay").objectReferenceValue=information;
+                settings.ApplyModifiedPropertiesWithoutUndo();
+            }
             var elevator=system.GetComponent<ElevatorController>();
             SetFloat(elevator,"doorSlideSeconds",2.4f);
             SetFloat(elevator,"cameraShakeAmplitude",.003f);
@@ -93,6 +99,30 @@ namespace GraduationProject.EditorTools
             sounds.FindProperty("arrivalAudioSource").objectReferenceValue=Audio(v,"Arrival","ElevatorArrival",.35f,false);
             sounds.ApplyModifiedPropertiesWithoutUndo();
             DressNotices(hall,v);
+        }
+
+        private static CabinInformationDisplay MountedInformation(Transform parent,float wallSurface)
+        {
+            var p=Panel(parent,"CabinInformation",Vector3.zero,0);
+            Box(p,"Housing",0,0,0,.66f,.40f,.040f,steel);
+            Box(p,"Gasket",0,-.014f,-.025f,.61f,.32f,.012f,dark);
+            Box(p,"Screen",0,-.014f,-.032f,.565f,.275f,.004f,dark);
+            Text(p,"Caption","ご案内",0,.166f,-.022f,.30f,.032f,.22f,Color.black);
+            var content=Text(p,"Content","扉の開閉に\nご注意ください",0,-.014f,-.035f,.53f,.23f,.48f,new Color(.78f,.86f,.8f));
+            content.enableAutoSizing=true;content.fontSizeMin=.30f;content.fontSizeMax=.48f;
+            for(int side=-1;side<=1;side+=2)
+            for(int row=-1;row<=1;row+=2)
+            {
+                Box(p,"Fastener"+side+row,side*.313f,row*.180f,-.022f,.010f,.010f,.004f,dark);
+                Box(p,"Slot"+side+row,side*.313f,row*.180f,-.025f,.007f,.002f,.001f,steel);
+            }
+            // The rear face penetrates the actual wall by 2 mm, not a free-floating visual offset.
+            Finish(p,new Vector3(0,2.05f,wallSurface-.018f),0);
+            var display=p.GetComponent<CabinInformationDisplay>();
+            if(display==null)display=p.gameObject.AddComponent<CabinInformationDisplay>();
+            var so=new SerializedObject(display);so.FindProperty("content").objectReferenceValue=content;
+            so.FindProperty("standbyMessage").stringValue="扉の開閉に\nご注意ください";
+            so.ApplyModifiedPropertiesWithoutUndo();return display;
         }
 
         private static void DressNotices(Transform hall, Transform cabin)
