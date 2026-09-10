@@ -1,5 +1,16 @@
 # 現在地・再開情報
 
+## VIS-02 内装の造作・照明整理（2026-09-10）
+
+- 状態／担当: 造作改善の実装・下記検証を完了し区切り。Astra task 01a07fbb-3ac2-7a62-a049-19d919724625。開始時main clean、Sol実装task idleを確認。終了時EditorはM2 Edit Mode、検証Playerは終了。次の実装担当は本記録を読んで所有を確認する。
+- 計画／委任: GAME-015/WORK-001と今回の継続依頼に基づく試作。ApartmentVisualPass、共有素材、M1/M2 sceneを対象に、写真に近い穴あき天井板、操作盤の縁・固定金具、玄関造作と共用廊下の生活感、白色照明の見え方を調整する。既存の移動経路・操作対象・進行条件を維持し、新たな操作対象は追加しない。
+- 検証: コンパイル、両sceneの通常入力回帰と実Game View、Windows Development Build／画面、追加装飾のColliderなしを確認。寸法・材質・文字の改善余地を実画面から判断し、Astra継続／Sol引継ぎの結論を記録する。品質受入・恐怖・最低環境性能は人の評価と区別する。
+- 中間結果: 初回project入力回帰33/33、失敗skipなし（artifacts/tests/20260910-144938-220）。画面で天井板の角の光漏れ、非active RectTransformの位置が保存時に戻る階数表示、玄関下部の隙間を発見して修正。絞り込みMCP job 239cc2c6b42c4449b5a48c97970536c8は初期化timeout、合格に数えない。EditorがEdit Modeへ戻ったことを確認し、既存メニューのXML保存方式で最終回帰を再実行する。
+- ビルド再試行: Unity保存が付けた行末空白のみを今回の対象ファイルで除去。再読込ダイアログ中の最初のbuild要求はtimeout、新規build artifactなし。未保存変更なしを確認済みの自分のsceneを再読込してから再要求する。
+- 最終検証: Play Mode 33/33成功、失敗skipなし（artifacts/tests/20260910-145410-785/playmode.xml）、Edit Mode 2/2（20260910-145556-172/editmode.xml）。M1/M2とも追加InteriorVisuals内Collider 0。Console Error 0。最終Windows M2 build artifacts/builds/20260910-145749-464/build.json 成功、errors 0 / warnings 0。設定の一時変更はbuild処理が復元し、設定ファイルの差分なし。
+- 画面: artifacts/m2-04/scene-input-20260910-145420-690（1579x888）の廊下・挑発・階数表示を実見。M1通常入力証跡はartifacts/m1-02/scene-input-20260910-145529-574。Windows Computer Useで1280x720 Player入口、日本語表示とマウス視点応答を確認。OS入力による帰宅一巡は未検証で、合成Keyboard/Mouse→Raycastの回帰と混同しない。持続60fps・音・恐怖・正式品質は未認定。
+- 次担当の判断: **Astraでさらにブラッシュアップが必要。現時点ではSolへ全面引継ぎしない。** 操作盤が大きく材質も均一で、写実度の基準が未成立。次は操作盤／車内の実寸感と金属・壁面の粗さを優先し、既存の試作委任を越える操作配置・移動寸法変更が必要なら先に設計判断を解決する。基準成立後にSolへ反復配置・文書・回帰を渡す。M3は未着手。
+
 ## VIS-01 参考写真に基づくM1/M2内装改善（2026-09-08）
 
 - 状態／担当: 内装の第一段階を実装・技術確認済み、見た目の人間評価待ち。Astra task 01a07fbb-3ac2-7a62-a049-19d919724625。Sol task idle、main差分なし、M2 Edit Mode未保存変更なしを確認して担当した。

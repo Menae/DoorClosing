@@ -1,5 +1,12 @@
 # Decisions
 
+## VIS-002 — 造作の試作と次担当の判断
+- Status: GAME-015の試作委任で実装。モデル引継ぎ判断は今回ユーザーがAstraへ委任。視覚品質の正式受入は未決。
+- Date: 2026-09-10; Owner: Astra（委任内の実装・判断）
+- Decision: 既存URPとEditor装飾処理を拡張し、共有の丸穴天井Mesh・操作盤金具・廊下住戸の非操作装飾を作成。経路／正解条件／操作対象は維持する。
+- Trade-off: 当たり判定を維持して回帰を抑えたため、操作盤の実寸感は未解決。追加パッケージなし。材質・寸法の基準作りは引き続きAstraが必要で、現時点ではSolへ視覚品質の仕上げを丸ごと引き継がない。
+- Effects: ApartmentVisualPass、PerforatedCeiling.asset、M1/M2 scenes、PROJECT_STATUS、VISUAL_REFERENCES。M3は未着手のまま。
+
 ## VIS-001 — 内装リファレンスと日本語表示
 - Status: 参照方針はユーザー指定済み。具体的な内装はGAME-015に基づく試作、人の品質評価待ち。
 - Date: 2026-09-08; Owner: user（具体実装: Astra）

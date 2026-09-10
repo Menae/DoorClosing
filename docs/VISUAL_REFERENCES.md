@@ -15,7 +15,13 @@ Adopt: 導入済みURP Lit/TMP。Extend: 既存シーンへの再適用可能な
 生成プロンプト:
 > Create a production game material BASE COLOR texture, single square seamless tile 1024x1024. Flat orthographic scan of aged Japanese apartment elevator decorative laminate: pale warm ivory/beige fibrous fine irregular mineral paper grain, very subtle thin tan wisps, desaturated and clean enough for an inhabited 1980s building. Realistic close-up surface, fine detail but low contrast, no large stains, no lighting gradient, no directional shadows or highlights, no objects, NO letters, NO panels, NO seams or borders. All four edges tile seamlessly. This will be applied over real 3D geometry under actual Unity lighting; do not render a room or material ball. Save output as usable PNG texture.
 
-今回の素材はbase colorのみ。法線／粗さの専用マップと固有の傷表現、写真どおりの穿孔天井、実寸に合わせた操作盤配置は未作成。正式採用は実画面をユーザーが評価して判断する。
+今回の素材はbase colorのみ。法線／粗さの専用マップと固有の傷表現、実寸に合わせた操作盤配置は未作成。正式採用は実画面をユーザーが評価して判断する。
+
+## VIS-02 造作の追加（2026-09-10）
+
+写真の丸穴天井を参考に、透ける丸穴を持つ共有Mesh `PerforatedCeiling.asset` をEditorコードで作成。画像加工や追加shaderは不要。既存の天井ルーバーは無効化し、穴の奥の発光板を見せる。操作対象は同じ位置と当たり判定のまま金属縁・固定金具を追加した。廊下の住戸扉4枚は壁面の非操作装飾、玄関の郵便口・ドアクローザー・覗き穴を追加。「８階」は壁に固定し、白色照明と環境光を調整した。すべてGAME-015の試作で、正式なアート承認ではない。
+
+次の品質課題は、大きい操作ボタンと車内の寸法感、金属の粗さ・傷、壁材の単調さ。小物を増やすだけでは『8番出口』程度の写実度に届かない。Astraで実寸感と材質の基準をもう一段詰め、その基準が成立してからSolへ反復配置・回帰検証を引き継ぐ。M3開始・品質受入は今回決定しない。
 
 `Assets/ApartmentVisuals/FloorTiles.png` もbuilt-in image_genで生成。初期の立体目地は遠景でちらついたため無効化し、mipmap付き床素材へ切り替えた。生成プロンプト:
 > Single square seamless PBR base-color texture for a realistic inhabited old Japanese apartment hallway floor. Orthographic perfectly flat scan, no perspective. Four square greige light gray-beige matte stone composite floor tiles in a precise 2x2 grid. Very thin dark gray grout, 3 millimeter wide relative to 60cm tiles; half-width grout at exterior edges so texture repeats seamlessly. Subtle small stone flecks, mild scuffs and slight tone variation across tiles. Desaturated neutral color, evenly lit albedo only, no cast shadows, no glossy highlights, no vignetting, no objects, no text. Photographic fine surface detail. 1024 square PNG game-ready tileable texture.

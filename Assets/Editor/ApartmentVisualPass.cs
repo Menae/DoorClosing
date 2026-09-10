@@ -46,9 +46,9 @@ namespace GraduationProject.EditorTools
                 so.ApplyModifiedPropertiesWithoutUndo();
             }
             RenderSettings.ambientMode = AmbientMode.Trilight;
-            RenderSettings.ambientSkyColor = new Color(.32f, .34f, .36f);
-            RenderSettings.ambientEquatorColor = new Color(.23f, .24f, .24f);
-            RenderSettings.ambientGroundColor = new Color(.12f, .115f, .10f);
+            RenderSettings.ambientSkyColor = new Color(.48f, .49f, .50f);
+            RenderSettings.ambientEquatorColor = new Color(.34f, .35f, .35f);
+            RenderSettings.ambientGroundColor = new Color(.19f, .185f, .17f);
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             AssetDatabase.SaveAssets();
@@ -97,7 +97,12 @@ namespace GraduationProject.EditorTools
                 text.textWrappingMode = TextWrappingModes.NoWrap;
                 text.color = new Color(.96f,.96f,.9f);
                 if (n == "Call") text.text = "呼";
+                // The existing face and collider retain their dimensions and input feedback.
+                Box(v,n+"Bezel",target.position+Vector3.forward*.016f,new Vector3(.39f,.34f,.055f),steel);
             }
+            for(int x=-1;x<=1;x+=2)
+            for(int y=-1;y<=1;y+=2)
+                Screw(v,"PanelScrew"+x+"_"+y,new Vector3(.06f+x*.86f,1.45f+y*.78f,4.936f),Quaternion.identity);
             // Keep trim clear of button faces and the doorway safety volume.
             for (int side = -1; side <= 1; side += 2)
             {
@@ -118,7 +123,19 @@ namespace GraduationProject.EditorTools
             {
                 Box(v,"CeilingTray"+j,new Vector3(0,2.975f,2.55f+j*.8f),new Vector3(2.85f,.07f,.66f),steel);
                 Box(v,"CeilingDiffuser"+j,new Vector3(0,2.93f,2.55f+j*.8f),new Vector3(2.65f,.018f,.49f),light);
-                for(int k=0;k<13;k++) Box(v,"CeilingLouvre"+j+"_"+k,new Vector3(-1.26f+k*.21f,2.912f,2.55f+j*.8f),new Vector3(.025f,.025f,.49f),dark);
+                for(int k=0;k<13;k++)
+                {
+                    var old=v.Find("CeilingLouvre"+j+"_"+k);
+                    if(old!=null)old.gameObject.SetActive(false);
+                }
+                var perforated=Group(v,"PerforatedCeiling"+j);
+                perforated.position=new Vector3(0,2.913f,2.55f+j*.8f);
+                var filter=perforated.GetComponent<MeshFilter>();
+                if(filter==null)filter=perforated.gameObject.AddComponent<MeshFilter>();
+                filter.sharedMesh=PerforatedSheet();
+                var renderer=perforated.GetComponent<MeshRenderer>();
+                if(renderer==null)renderer=perforated.gameObject.AddComponent<MeshRenderer>();
+                renderer.sharedMaterial=dark;
             }
             Label(v,"CabinCapacity","定員 ９名　積載 ６００kg",new Vector3(0,2.65f,4.963f),new Vector2(1.6f,.18f),.8f,Color.black);
             Label(v,"PanelCaption","行先階",new Vector3(-.28f,1.93f,4.935f),new Vector2(.65f,.16f),.9f,Color.black);
@@ -158,7 +175,7 @@ namespace GraduationProject.EditorTools
                 if(lamp==null)lamp=lampObject.AddComponent<Light>();
                 lamp.transform.SetPositionAndRotation(new Vector3(0,2.89f,z),Quaternion.Euler(90,0,0));
                 lamp.type=LightType.Spot;lamp.spotAngle=140;lamp.innerSpotAngle=100;
-                lamp.intensity=3;lamp.range=8;lamp.color=new Color(.96f,.97f,1);lamp.shadows=LightShadows.None;
+                lamp.intensity=4;lamp.range=8;lamp.color=new Color(.96f,.97f,1);lamp.shadows=LightShadows.None;
             }
             foreach(Transform child in h)
             {
@@ -170,11 +187,20 @@ namespace GraduationProject.EditorTools
                 Surface(h,"HomeDoor",ink);
                 var door=h.Find("HomeDoor");
                 var doorLabel=door.GetComponentInChildren<TMP_Text>(); doorLabel.text="自宅";doorLabel.fontSize=1.5f;
-                for(int side=-1;side<=1;side+=2) Box(v,"HomeFrame"+side,new Vector3(side*.74f,1.35f,-11.77f),new Vector3(.065f,2.2f,.13f),steel);
+                for(int side=-1;side<=1;side+=2) Box(v,"HomeFrame"+side,new Vector3(side*.74f,1.215f,-11.77f),new Vector3(.065f,2.43f,.13f),steel);
+                Box(v,"HomeKickPlate",new Vector3(0,.155f,-11.808f),new Vector3(1.4f,.31f,.02f),ink);
                 Box(v,"HomeLintel",new Vector3(0,2.43f,-11.77f),new Vector3(1.55f,.065f,.13f),steel);
                 Box(v,"HomeHandle",new Vector3(-.49f,1.08f,-11.70f),new Vector3(.035f,.19f,.075f),steel);
+                Box(v,"HomeLetterSlot",new Vector3(0,.73f,-11.695f),new Vector3(.35f,.065f,.025f),steel);
+                Box(v,"HomeLetterOpening",new Vector3(0,.733f,-11.678f),new Vector3(.29f,.018f,.012f),dark);
+                Box(v,"HomeCloser",new Vector3(.40f,2.29f,-11.67f),new Vector3(.28f,.085f,.085f),steel);
+                Screw(v,"HomePeephole",new Vector3(0,1.74f,-11.69f),Quaternion.Euler(0,180,0));
+                for(int side=-1;side<=1;side+=2)
+                for(int i=0;i<2;i++) CorridorDoor(v,side,-4.0f-i*4.2f);
                 var floorText=h.Find("Floor8Notice").GetComponent<TMP_Text>();floorText.fontSize=2.5f;floorText.text="８階";
-                Box(v,"FloorPlate",new Vector3(1.2f,2.2f,-1.04f),new Vector3(.85f,.44f,.025f),ink);
+                floorText.transform.SetPositionAndRotation(new Vector3(1.565f,2.2f,-1),Quaternion.Euler(0,90,0));
+                floorText.rectTransform.anchoredPosition3D=new Vector3(1.565f,2.2f,-1);
+                Box(v,"FloorPlate",new Vector3(1.59f,2.2f,-1),new Vector3(.025f,.44f,.85f),ink);
             }
             else
             {
@@ -191,6 +217,73 @@ namespace GraduationProject.EditorTools
                 Box(v,"TapeLeft",new Vector3(2.0f,2.17f,1.85f),new Vector3(.15f,.10f,.008f),paper);
                 Box(v,"TapeRight",new Vector3(2.85f,2.17f,1.85f),new Vector3(.15f,.10f,.008f),paper);
             }
+        }
+
+        private static void CorridorDoor(Transform parent,int side,float z)
+        {
+            // Pure wall dressing, with no collider, script, or new route through the wall.
+            var root=Group(parent,"Residence"+side+"_"+z.ToString("0.0",System.Globalization.CultureInfo.InvariantCulture));
+            root.SetPositionAndRotation(Vector3.zero,Quaternion.identity);
+            Box(root,"Leaf",new Vector3(0,1.10f,0),new Vector3(.92f,2.16f,.032f),ink);
+            for(int edge=-1;edge<=1;edge+=2)
+                Box(root,"Frame"+edge,new Vector3(edge*.49f,1.10f,-.02f),new Vector3(.045f,2.20f,.055f),steel);
+            Box(root,"Lintel",new Vector3(0,2.20f,-.02f),new Vector3(1.02f,.045f,.055f),steel);
+            Box(root,"Threshold",new Vector3(0,.015f,-.025f),new Vector3(.95f,.025f,.065f),steel);
+            Box(root,"Handle",new Vector3(.32f,1.06f,-.045f),new Vector3(.035f,.17f,.055f),steel);
+            Box(root,"MailSlot",new Vector3(0,.65f,-.026f),new Vector3(.30f,.045f,.02f),steel);
+            Box(root,"Closer",new Vector3(-.25f,2.10f,-.04f),new Vector3(.25f,.075f,.04f),steel);
+            Screw(root,"Peephole",new Vector3(0,1.70f,-.026f),Quaternion.identity);
+            root.SetPositionAndRotation(new Vector3(side*1.578f,0,z),Quaternion.Euler(0,side*90,0));
+        }
+
+        private static void Screw(Transform parent,string name,Vector3 position,Quaternion rotation)
+        {
+            var t=parent.Find(name);
+            if(t==null)
+            {
+                var go=GameObject.CreatePrimitive(PrimitiveType.Cylinder);go.name=name;
+                UnityEngine.Object.DestroyImmediate(go.GetComponent<Collider>());
+                t=go.transform;t.SetParent(parent,false);
+            }
+            t.SetPositionAndRotation(position,rotation*Quaternion.Euler(90,0,0));
+            t.localScale=new Vector3(.022f,.004f,.022f);
+            t.GetComponent<Renderer>().sharedMaterial=steel;
+        }
+
+        private static Mesh PerforatedSheet()
+        {
+            const string path=Folder+"/PerforatedCeiling.asset";
+            var mesh=AssetDatabase.LoadAssetAtPath<Mesh>(path);
+            // One shared mesh: square cells surrounding real round openings, facing downward.
+            var vertices=new System.Collections.Generic.List<Vector3>();
+            var triangles=new System.Collections.Generic.List<int>();
+            const int columns=15,rows=3,segments=16;
+            const float width=2.65f,depth=.49f,radius=.043f;
+            for(int x=0;x<columns;x++)for(int z=0;z<rows;z++)
+            {
+                var center=new Vector3((x+.5f)*width/columns-width/2,0,(z+.5f)*depth/rows-depth/2);
+                int start=vertices.Count;
+                for(int k=0;k<segments;k++)
+                {
+                    float a=k*Mathf.PI*2/segments,dx=Mathf.Cos(a),dz=Mathf.Sin(a);
+                    float scale=1/Mathf.Max(Mathf.Abs(dx),Mathf.Abs(dz));
+                    vertices.Add(center+new Vector3(dx*radius,0,dz*radius));
+                    vertices.Add(center+new Vector3(dx*scale*width/columns/2,0,dz*scale*depth/rows/2));
+                }
+                for(int k=0;k<segments;k++)
+                {
+                    int a=start+k*2,b=start+((k+1)%segments)*2;
+                    triangles.Add(a);triangles.Add(a+1);triangles.Add(b+1);
+                    triangles.Add(a);triangles.Add(b+1);triangles.Add(b);
+                }
+            }
+            bool create=mesh==null;
+            if(create)mesh=new Mesh {name="Perforated ceiling sheet"};
+            else mesh.Clear();
+            mesh.SetVertices(vertices);mesh.SetTriangles(triangles,0);mesh.RecalculateNormals();mesh.RecalculateBounds();
+            if(create)AssetDatabase.CreateAsset(mesh,path);
+            else EditorUtility.SetDirty(mesh);
+            return mesh;
         }
 
         private static Transform Group(Transform parent,string name)
