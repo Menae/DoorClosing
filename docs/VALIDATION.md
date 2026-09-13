@@ -1,5 +1,10 @@
 # 検証方針
 
+## 現行の追加条件（2026-09-14）
+
+M2の状態遷移だけでは怪異の知覚を保証しない。偽到着時はEntranceHallが非active・共通HomeCorridorがactiveで、車内カメラから柱へのRaycastが遮蔽物に先に当たらないことを確認し、実画面でも柱と正常廊下を比較する。死亡時は入口へ戻す既存assertを維持。柱の通常材質と怪異消滅後のruntime material破棄もM2一巡で検証する。
+`Build M2 Vertical Slice Release Verification`は非Developmentのローカル検証ビルド（公開しない）。build.jsonのdevelopment=falseと成功を確認し、Assembly-CSharpのdebug method/field除外を調べる。Development成功だけで製品条件の除外を認定しない。
+
 ゲームの設計承認と、実装が期待どおり動いた証拠は分ける。現段階のテストは「既存挙動の回帰検証」であり、新しいゲーム仕様の承認ではない。
 
 ## 最小の開発サイクル

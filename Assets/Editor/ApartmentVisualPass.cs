@@ -33,6 +33,7 @@ namespace GraduationProject.EditorTools
             DressHall(hall, false);
             DressHall(corridor, true);
             ElevatorRealismPass.Apply(building, hall, roots);
+            ApartmentAtmospherePass.Apply(building, hall, corridor);
             foreach (var root in roots)
             foreach (var text in root.GetComponentsInChildren<TMP_Text>(true))
             {
@@ -47,9 +48,9 @@ namespace GraduationProject.EditorTools
                 so.ApplyModifiedPropertiesWithoutUndo();
             }
             RenderSettings.ambientMode = AmbientMode.Trilight;
-            RenderSettings.ambientSkyColor = new Color(.48f, .49f, .50f);
-            RenderSettings.ambientEquatorColor = new Color(.34f, .35f, .35f);
-            RenderSettings.ambientGroundColor = new Color(.19f, .185f, .17f);
+            RenderSettings.ambientSkyColor = new Color(.38f, .40f, .40f);
+            RenderSettings.ambientEquatorColor = new Color(.23f, .245f, .24f);
+            RenderSettings.ambientGroundColor = new Color(.13f, .125f, .11f);
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             AssetDatabase.SaveAssets();

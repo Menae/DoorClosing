@@ -139,6 +139,15 @@ public class NormalJourneyController : MonoBehaviour
         StartCoroutine(ArriveHome());
     }
 
+    public void PrepareEncounterEnvironment()
+    {
+        // Swap while doors are closed. False arrivals must be comparable with the real eighth floor.
+        // Keep homePresented false: only completing the encounter run permits home-door completion.
+        if (!routeThroughEncounterRun) return;
+        if (entranceHall != null) entranceHall.SetActive(false);
+        if (homeCorridor != null) homeCorridor.SetActive(true);
+    }
+
     public void RestartNightAtEntrance()
     {
         StopAllCoroutines();

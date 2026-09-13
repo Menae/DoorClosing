@@ -12,6 +12,7 @@ public abstract class AnomalyBehaviour : MonoBehaviour
     [SerializeField] private Color recoveredColor = Color.green;
     [SerializeField] private Color failedColor = Color.black;
     [SerializeField, Min(0f)] private float emissionIntensity = 1.5f;
+    [SerializeField] private bool preserveDiagnosisSurface;
 
     private Material[] runtimeMaterials;
     private Color[] originalColors;
@@ -31,7 +32,8 @@ public abstract class AnomalyBehaviour : MonoBehaviour
     public virtual void OnDiagnosisStart()
     {
         Debug.Log($"[Anomaly] {name} OnDiagnosisStart", this);
-        ApplyColor(diagnosisColor);
+        if (preserveDiagnosisSurface) RestoreOriginalColors();
+        else ApplyColor(diagnosisColor);
     }
 
     public virtual void OnReveal()
@@ -56,6 +58,14 @@ public abstract class AnomalyBehaviour : MonoBehaviour
     {
         Debug.Log($"[Anomaly] {name} OnCleanup", this);
         RestoreOriginalColors();
+    }
+
+    protected virtual void OnDestroy()
+    {
+        // Renderer.materials creates instances. Repeated deaths/encounters must not retain them.
+        if (runtimeMaterials == null) return;
+        foreach (var material in runtimeMaterials)
+            if (material != null) Destroy(material);
     }
 
     private void CacheMaterials()

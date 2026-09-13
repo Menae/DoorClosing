@@ -1,5 +1,18 @@
 # 現在地・再開情報
 
+## VIS-06 全体監査と経年表現（2026-09-14）
+- 状態: VIS-06の監査・下記修正と検証を完了。担当Astra、本task、開始main clean / 985dc6c。同checkout単独操作。ローカルMCP停止を既存Start＋Connectで復旧。終了時EditorはM2保存済みEdit Mode、検証Player終了。
+- 依頼: ビジュアルとシステムを徹底検証し開発再開。ユーザーは清潔すぎる見た目と不安の弱さを指摘、システム開発を一任。GAME-015内の具体表現を試作し、人の恐怖評価とは分ける。
+- 対象: M1/M2共有内装、材質の実寸投影・乾いた摩耗・粗さ／凹凸、照明の接触影、RunManagerの製品ビルド用debug入力除外。材質と照明を第一単位とし、進行や公平性を変えない。新パッケージなし。監査結果はAUDIT_2026-09-14へ記録済み。
+- 検証: 開始時全入力回帰と画面を基準として保存。変更後にM1/M2・救済／死亡／再挑戦・日本語・壁付け表示を再確認、shader compile、Windows build/画面、Draw/性能は測定条件と限界を記録。正式な写実品質や恐怖は代行認定しない。
+- 重要な発見: 基準回帰33/33（20260913-171341-868）でも、M2偽到着はEntranceHallが残り柱が壁裏に隠れていた。材質第一案の回帰33/33（171856-222）の画像で発見し、PrepareEncounterEnvironmentでHomeCorridorへ切替。車内から柱ColliderへのRaycastが直接届くassert追加後33/33（172424-803）。従来の柱視認確認は不十分だった。
+- 中間修正: 石材の人工的な計算模様を専用生成画像へ差替え、住戸扉は塗装材へ分離。可視になった仮柱の白発光を通常の壁材へ変更し、Reveal/Grace色は保持。怪異のRenderer.materials生成instanceが解放されない問題もOnDestroyへ解放処理を追加。M2実経路で消滅後の破棄assertを含む全33/33成功（172901-024、失敗skip0）。その画面に残った柱上端の白飛び・案内器の影の縞を照明／前面shadow設定で修正し、M2の3件を再検証中。
+- 追加確認: 173430-429でM2の3/3成功。柱の白飛びは軽減。案内器の縞はshadow設定だけでは残り、液晶面を専用Unlit材へ分離して一巡1/1成功（173744-377）。画面で縞の消失と日本語を確認。原因を通常shadowだけと断定しない。
+- 最終検証: EditMode2/2（173911-976）、shader errors/messages0、Console error0。全33件の後の照明／液晶材変更は上記3件＋1件で再確認し、全33件をその後再実行したとはしない。すべて失敗skip0。M1画面はartifacts/m1-02/scene-input-20260913-173143-554、最終M2一巡はartifacts/m2-04/scene-input-20260913-173748-219（1579×888）。救済／死亡再挑戦はartifacts/m2-06の173615-330／173538-151。入力は合成Keyboard/Mouse→Raycast→click。
+- Windows: Development 20260913-173921-504、非Development 20260913-174008-540ともbuild.json Succeeded、errors0/warnings0。両Assembly-CSharp比較でdebug用5名称はDevelopmentに存在、非Developmentに不在、通常BeginEncounterRunは両方に存在。Tests assemblyも両方なし（artifacts/visual-06/build-symbol-check.json）。公開・配布ではなくローカル検証。
+- 実画面: Computer Useで非Development Player入口1280×720を確認し、artifacts/visual-06/windows-player.png／Player-observed.logへ保存。実行時例外／Unicode警告なし。既知のD3D12 info queue診断行は残る。OS入力の全経路・音の聴感・1080p60fpsは未認定。Player終了確認済み、生成時の行末空白のみ整えM2再読込後Console error0。artifactsはGit外のローカル証跡。
+- 判断／次: **Astraのブラッシュアップを継続し、Solへ全面引継ぎしない。** 次は車内3.4m幅／天井3mと廊下の比率を、到達距離・救済移動・敷居と同時に検証。その次に足音／生活環境音と機械音の自然さ。M3全4夜・M4保存／UIは未着手。恐怖、初見理解、目標写実度は未受入。品質改善をM3完成と取り違えない。次担当は本記録とAUDITを読んで所有確認から再開する。
+
 ## VIS-05 扉材と常設案内器の修正（2026-09-11）
 - 担当: Astra、main clean / 264c84fから継続。直前の中断ターンでは変更なし。
 - 依頼と方針: 同一材の扉／壁を分け、扉上の浮いた表示を操作盤内へ統合。挑発パネルは壁に接する常設の金属枠案内器をM1/M2へ設置し、通常案内から警告文へ短くフェード切替する。怪異の正解・猶予・開始条件は維持。

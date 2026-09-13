@@ -175,6 +175,17 @@ namespace GraduationProject.Tests
             yield return Until(() => Count("Diagnosis") >= 1, "lure diagnosis", 40f);
             Assert.That(((Behaviour)journey).enabled, Is.False, "Encounter input must route to BeatStateMachine");
             Component lure = FindGameComponent("LureAnomaly");
+            Assert.That(roots.Single(r=>r.name=="EntranceHall").activeSelf,Is.False,"Do not leave the lobby in front of the anomaly");
+            Assert.That(roots.Single(r=>r.name=="HomeCorridor").activeSelf,Is.True,"False arrival must share the eighth-floor baseline");
+            var pillar=lure.GetComponentInChildren<Collider>();
+            Assert.That(pillar,Is.Not.Null);
+            var pillarMaterial=pillar.GetComponent<Renderer>().sharedMaterial;
+            Assert.That(pillarMaterial.shader.name,Is.EqualTo("GraduationProject/Apartment Surface"));
+            yield return Aim(pillar.bounds.center);
+            Physics.SyncTransforms();
+            var ray=new Ray(camera.transform.position,pillar.bounds.center-camera.transform.position);
+            Assert.That(Physics.Raycast(ray,out RaycastHit obstruction,20f,Physics.DefaultRaycastLayers,QueryTriggerInteraction.Ignore),Is.True);
+            Assert.That(obstruction.collider,Is.EqualTo(pillar),"The abnormal pillar must be visible from inside the cabin, not hidden by a lobby wall");
             Assert.That(lure, Is.Not.Null);
             Assert.That(lure.transform.lossyScale.y, Is.GreaterThan(2.5f), "Lure trial cue must read as a tall corridor obstruction");
             yield return Aim(new Vector3(0f, 1.6f, -6f));
@@ -190,6 +201,8 @@ namespace GraduationProject.Tests
             Assert.That(Vector3.Distance(camera.transform.position,Control("SideRightClose")),Is.LessThan(1.9f));
             yield return ClickAt(Control("SideRightClose"));
             yield return Until(() => CountOutcome("Correct") >= 1, "lure close resolution");
+            yield return null;
+            Assert.That(pillarMaterial==null,Is.True,"Completed encounters must release their per-instance materials");
 
             yield return Until(() => Count("Diagnosis") >= 2, "provocation diagnosis");
             yield return Until(() =>

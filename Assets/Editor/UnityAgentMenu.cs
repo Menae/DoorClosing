@@ -243,7 +243,16 @@ namespace GraduationProject.EditorTools
             EditorApplication.delayCall += () => BuildWindows(new[] { M2VerticalSliceBuilder.ScenePath });
         }
 
-        private static void BuildWindows(string[] requestedScenes)
+        [MenuItem("Tools/Unity Agent/Build M2 Vertical Slice Release Verification")]
+        public static void RequestM2ReleaseBuild()
+        {
+            RequireCleanEditMode();
+            if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.StandaloneWindows64 || !File.Exists(M2VerticalSliceBuilder.ScenePath))
+                throw new InvalidOperationException("Requires Windows64 and the saved M2 vertical-slice scene.");
+            EditorApplication.delayCall += () => BuildWindows(new[] { M2VerticalSliceBuilder.ScenePath }, false);
+        }
+
+        private static void BuildWindows(string[] requestedScenes, bool development = true)
         {
             RequireCleanEditMode();
             if (TestMetadata.Any(p => File.Exists(Path.Combine(Root, p))))
@@ -254,7 +263,7 @@ namespace GraduationProject.EditorTools
             Directory.CreateDirectory(directory);
             var statusFile = Path.Combine(directory, "build.json");
             var info = new BuildInfo { utc = DateTime.UtcNow.ToString("o"), unity = Application.unityVersion,
-                project = Root, scenes = scenes, status = "Running", executable = Path.Combine(directory, "GraduationProject.exe") };
+                project = Root, scenes = scenes, development = development, status = "Running", executable = Path.Combine(directory, "GraduationProject.exe") };
             File.WriteAllText(statusFile, JsonUtility.ToJson(info, true));
             var originalSettings = BuildSettingsFiles.Where(p => File.Exists(Path.Combine(Root, p)))
                 .ToDictionary(p => p, p => File.ReadAllBytes(Path.Combine(Root, p)));
@@ -270,7 +279,7 @@ namespace GraduationProject.EditorTools
                 {
                     scenes = scenes, locationPathName = info.executable,
                     target = BuildTarget.StandaloneWindows64,
-                    options = BuildOptions.Development | BuildOptions.StrictMode | BuildOptions.DetailedBuildReport
+                    options = (development ? BuildOptions.Development : BuildOptions.None) | BuildOptions.StrictMode | BuildOptions.DetailedBuildReport
                 });
                 info.status = report.summary.result.ToString();
                 info.errors = report.summary.totalErrors;
@@ -322,6 +331,7 @@ namespace GraduationProject.EditorTools
         }
         [Serializable] private class BuildInfo
         {
+            public bool development;
             public string utc, unity, project, status, executable, error;
             public string[] scenes;
             public int errors, warnings;

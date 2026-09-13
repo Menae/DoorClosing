@@ -106,7 +106,23 @@ namespace GraduationProject.EditorTools
             var p=Panel(parent,"CabinInformation",Vector3.zero,0);
             Box(p,"Housing",0,0,0,.66f,.40f,.040f,steel);
             Box(p,"Gasket",0,-.014f,-.025f,.61f,.32f,.012f,dark);
-            Box(p,"Screen",0,-.014f,-.032f,.565f,.275f,.004f,dark);
+            var screen=Material("InformationScreen");
+            if(screen==null)
+            {
+                screen=new Material(Shader.Find("Universal Render Pipeline/Unlit"));
+                AssetDatabase.CreateAsset(screen,"Assets/ApartmentVisuals/InformationScreen.mat");
+            }
+            // The LCD has its own dark backlight; avoid screen-space occlusion streaks on its face.
+            screen.SetColor("_BaseColor",new Color(.025f,.031f,.032f));
+            EditorUtility.SetDirty(screen);
+            Box(p,"Screen",0,-.014f,-.032f,.565f,.275f,.004f,screen);
+            // Millimetre-thick front layers must not self-shadow into stripes. Housing still casts.
+            foreach(var part in new[]{"Screen","Gasket"})
+            {
+                var renderer=p.Find(part).GetComponent<Renderer>();
+                renderer.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;
+                renderer.receiveShadows=false;
+            }
             Text(p,"Caption","ご案内",0,.166f,-.022f,.30f,.032f,.22f,Color.black);
             var content=Text(p,"Content","扉の開閉に\nご注意ください",0,-.014f,-.035f,.53f,.23f,.48f,new Color(.78f,.86f,.8f));
             content.enableAutoSizing=true;content.fontSizeMin=.30f;content.fontSizeMax=.48f;

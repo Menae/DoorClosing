@@ -1,5 +1,12 @@
 # Decisions
 
+## VIS-006 — 全体監査と居住中の経年表現
+- Status: 2026-09-14ユーザーの改善依頼とGAME-015内の試作委任。怖さ・正式品質の承認ではない。Owner: user / implementation Astra。
+- Decision: 既存URPに実寸投影と乾いた摩耗、微細凹凸・粗さ、照明の接触影を追加。石材は提供写真を参考に生成し、住戸扉の塗装材と分離。通常床に異常の濡れを混ぜず、点滅・暗化のみで怖さを代用しない。
+- Evidence / reason: base colorだけの同一材・影なし廊下・Cube UV伸縮を確認。実画面の人工的な石模様は不採用にして専用画像へ変更。AUDIT_2026-09-14に比較根拠・限界・次工程。
+- System delegation: システムは一任との今回の明示依頼。まず怪異到着時に入口壁が柱を隠す配線不良を修正し、車内から柱へ直接Raycastが届くことを回帰条件へ追加。元の正解・猶予・夜の規則を維持。製品ビルドからdebug入力経路をコンパイル除外し、非Development検証buildを追加する。
+- Effects: ApartmentSurface.shader/ApartmentAtmospherePass、既存材・M1/M2、AgedGreenStone、ResidencePaint、NormalJourneyController/RunManager、M2scene試験、UnityAgentMenu。新依存・エンジン移行・公開なし。
+
 ## VIS-005 — 扉の材質差と壁付けの常設案内器
 - Status: ユーザーの3点の修正依頼に基づく試作。正式な品質受入とは分ける。
 - Date: 2026-09-11; Owner: user（具体実装Astra）

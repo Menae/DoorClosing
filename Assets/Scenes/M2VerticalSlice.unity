@@ -20,9 +20,9 @@ RenderSettings:
   m_FogDensity: 0.01
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.48, g: 0.49, b: 0.5, a: 1}
-  m_AmbientEquatorColor: {r: 0.34, g: 0.35, b: 0.35, a: 1}
-  m_AmbientGroundColor: {r: 0.19, g: 0.185, b: 0.17, a: 1}
+  m_AmbientSkyColor: {r: 0.38, g: 0.4, b: 0.4, a: 1}
+  m_AmbientEquatorColor: {r: 0.23, g: 0.245, b: 0.24, a: 1}
+  m_AmbientGroundColor: {r: 0.13, g: 0.125, b: 0.11, a: 1}
   m_AmbientIntensity: 1
   m_AmbientMode: 1
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
@@ -849,7 +849,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 5299871ff2b887f478bcad949f98e9a8, type: 2}
+  - {fileID: 2100000, guid: e577fb13826e10c4b80e30bbf9f37d40, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -3915,7 +3915,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 5299871ff2b887f478bcad949f98e9a8, type: 2}
+  - {fileID: 2100000, guid: e577fb13826e10c4b80e30bbf9f37d40, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -5874,19 +5874,19 @@ Light:
   m_Enabled: 1
   serializedVersion: 12
   m_Type: 0
-  m_Color: {r: 0.96, g: 0.97, b: 1, a: 1}
-  m_Intensity: 4
+  m_Color: {r: 0.95, g: 0.97, b: 1, a: 1}
+  m_Intensity: 4.4
   m_Range: 8
-  m_SpotAngle: 140
-  m_InnerSpotAngle: 100
+  m_SpotAngle: 135
+  m_InnerSpotAngle: 95
   m_CookieSize2D: {x: 0.5, y: 0.5}
   m_Shadows:
-    m_Type: 0
+    m_Type: 2
     m_Resolution: -1
-    m_CustomResolution: -1
+    m_CustomResolution: 512
     m_Strength: 1
-    m_Bias: 0.05
-    m_NormalBias: 0.4
+    m_Bias: 0.025
+    m_NormalBias: 0.15
     m_NearPlane: 0.2
     m_CullingMatrixOverride:
       e00: 1
@@ -8952,19 +8952,19 @@ Light:
   m_Enabled: 1
   serializedVersion: 12
   m_Type: 0
-  m_Color: {r: 0.96, g: 0.97, b: 1, a: 1}
-  m_Intensity: 4
+  m_Color: {r: 0.95, g: 1, b: 0.94, a: 1}
+  m_Intensity: 0.7
   m_Range: 8
-  m_SpotAngle: 140
-  m_InnerSpotAngle: 100
+  m_SpotAngle: 135
+  m_InnerSpotAngle: 95
   m_CookieSize2D: {x: 0.5, y: 0.5}
   m_Shadows:
-    m_Type: 0
+    m_Type: 2
     m_Resolution: -1
-    m_CustomResolution: -1
+    m_CustomResolution: 512
     m_Strength: 1
-    m_Bias: 0.05
-    m_NormalBias: 0.4
+    m_Bias: 0.025
+    m_NormalBias: 0.15
     m_NearPlane: 0.2
     m_CullingMatrixOverride:
       e00: 1
@@ -9361,19 +9361,19 @@ Light:
   m_Enabled: 1
   serializedVersion: 12
   m_Type: 0
-  m_Color: {r: 0.96, g: 0.97, b: 1, a: 1}
-  m_Intensity: 4
+  m_Color: {r: 0.95, g: 1, b: 0.94, a: 1}
+  m_Intensity: 4.4
   m_Range: 8
-  m_SpotAngle: 140
-  m_InnerSpotAngle: 100
+  m_SpotAngle: 135
+  m_InnerSpotAngle: 95
   m_CookieSize2D: {x: 0.5, y: 0.5}
   m_Shadows:
-    m_Type: 0
+    m_Type: 2
     m_Resolution: -1
-    m_CustomResolution: -1
+    m_CustomResolution: 512
     m_Strength: 1
-    m_Bias: 0.05
-    m_NormalBias: 0.4
+    m_Bias: 0.025
+    m_NormalBias: 0.15
     m_NearPlane: 0.2
     m_CullingMatrixOverride:
       e00: 1
@@ -11479,19 +11479,19 @@ Light:
   m_Enabled: 1
   serializedVersion: 12
   m_Type: 0
-  m_Color: {r: 0.96, g: 0.97, b: 1, a: 1}
-  m_Intensity: 4
+  m_Color: {r: 0.95, g: 0.97, b: 1, a: 1}
+  m_Intensity: 4.2
   m_Range: 8
-  m_SpotAngle: 140
-  m_InnerSpotAngle: 100
+  m_SpotAngle: 135
+  m_InnerSpotAngle: 95
   m_CookieSize2D: {x: 0.5, y: 0.5}
   m_Shadows:
-    m_Type: 0
+    m_Type: 2
     m_Resolution: -1
-    m_CustomResolution: -1
+    m_CustomResolution: 512
     m_Strength: 1
-    m_Bias: 0.05
-    m_NormalBias: 0.4
+    m_Bias: 0.025
+    m_NormalBias: 0.15
     m_NearPlane: 0.2
     m_CullingMatrixOverride:
       e00: 1
@@ -15528,7 +15528,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 5299871ff2b887f478bcad949f98e9a8, type: 2}
+  - {fileID: 2100000, guid: e577fb13826e10c4b80e30bbf9f37d40, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -29600,8 +29600,8 @@ MeshRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 932070447}
   m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
   m_MotionVectors: 1
@@ -41973,8 +41973,8 @@ MeshRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1396746846}
   m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
   m_MotionVectors: 1
@@ -41990,7 +41990,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 1b68b81693183ad45ad112aab331a667, type: 2}
+  - {fileID: 2100000, guid: e8558c4e3fdc6fa45a17b54dcc4024b8, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -51506,7 +51506,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 5299871ff2b887f478bcad949f98e9a8, type: 2}
+  - {fileID: 2100000, guid: e577fb13826e10c4b80e30bbf9f37d40, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -51853,7 +51853,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 5299871ff2b887f478bcad949f98e9a8, type: 2}
+  - {fileID: 2100000, guid: e577fb13826e10c4b80e30bbf9f37d40, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -54269,7 +54269,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 5299871ff2b887f478bcad949f98e9a8, type: 2}
+  - {fileID: 2100000, guid: e577fb13826e10c4b80e30bbf9f37d40, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -55240,7 +55240,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1840295386}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 2.8, z: 3.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -55256,20 +55256,20 @@ Light:
   m_GameObject: {fileID: 1840295386}
   m_Enabled: 1
   serializedVersion: 12
-  m_Type: 2
+  m_Type: 0
   m_Color: {r: 0.94, g: 0.96, b: 1, a: 1}
-  m_Intensity: 2.2
+  m_Intensity: 3.8
   m_Range: 5
-  m_SpotAngle: 30
-  m_InnerSpotAngle: 21.80208
+  m_SpotAngle: 155
+  m_InnerSpotAngle: 120
   m_CookieSize2D: {x: 0.5, y: 0.5}
   m_Shadows:
     m_Type: 2
     m_Resolution: -1
-    m_CustomResolution: -1
+    m_CustomResolution: 512
     m_Strength: 1
-    m_Bias: 0.05
-    m_NormalBias: 0.4
+    m_Bias: 0.025
+    m_NormalBias: 0.15
     m_NearPlane: 0.2
     m_CullingMatrixOverride:
       e00: 1
@@ -61591,19 +61591,19 @@ Light:
   m_Enabled: 1
   serializedVersion: 12
   m_Type: 0
-  m_Color: {r: 0.96, g: 0.97, b: 1, a: 1}
-  m_Intensity: 4
+  m_Color: {r: 0.95, g: 0.97, b: 1, a: 1}
+  m_Intensity: 4.2
   m_Range: 8
-  m_SpotAngle: 140
-  m_InnerSpotAngle: 100
+  m_SpotAngle: 135
+  m_InnerSpotAngle: 95
   m_CookieSize2D: {x: 0.5, y: 0.5}
   m_Shadows:
-    m_Type: 0
+    m_Type: 2
     m_Resolution: -1
-    m_CustomResolution: -1
+    m_CustomResolution: 512
     m_Strength: 1
-    m_Bias: 0.05
-    m_NormalBias: 0.4
+    m_Bias: 0.025
+    m_NormalBias: 0.15
     m_NearPlane: 0.2
     m_CullingMatrixOverride:
       e00: 1

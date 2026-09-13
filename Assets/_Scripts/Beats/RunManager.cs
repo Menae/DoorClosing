@@ -17,6 +17,7 @@ public class RunManager : MonoBehaviour
     [SerializeField] private List<BeatDefinition> beatDefinitions = new List<BeatDefinition>();
     [SerializeField] private bool startRunOnStart = true;
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
     [Header("Debug Input")]
     [SerializeField] private bool enableDebugCommitKey = true;
     [SerializeField] private Key debugCommitKey = Key.Space;
@@ -24,6 +25,7 @@ public class RunManager : MonoBehaviour
     [SerializeField] private Key debugCloseCommitKey = Key.C;
     [SerializeField] private PlayerAction debugWrongAction = PlayerAction.PressOpen;
     [SerializeField] private int debugWrongFloorNumber = -1;
+#endif
 
     [Header("Clear Presentation")]
     [SerializeField, Min(0f)] private float clearFadeSeconds = 1.5f;
@@ -72,6 +74,7 @@ public class RunManager : MonoBehaviour
         }
     }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
     private void Update()
     {
         if (!enableDebugCommitKey || runClearInProgress || deathRestartInProgress || Keyboard.current == null)
@@ -94,6 +97,7 @@ public class RunManager : MonoBehaviour
             SubmitDebugCloseAction();
         }
     }
+#endif
 
     public void StartRunFromBeginning()
     {
@@ -118,6 +122,7 @@ public class RunManager : MonoBehaviour
 
     public void BeginEncounterRun()
     {
+        nightJourney?.PrepareEncounterEnvironment();
         StartRunFromBeginning();
     }
 
@@ -150,11 +155,14 @@ public class RunManager : MonoBehaviour
             return;
         }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
         WarnIfFinalBeatCannotClearWithDebugKey();
+#endif
         Debug.Log($"[Run] Begin beat {currentBeatIndex + 1}/{beatDefinitions.Count}: {currentBeat.DebugLabel}", this);
         beatStateMachine.BeginBeat(currentBeat);
     }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
     private void WarnIfFinalBeatCannotClearWithDebugKey()
     {
         if (!IsFinalBeat() || currentBeat == null)
@@ -200,6 +208,8 @@ public class RunManager : MonoBehaviour
         Debug.Log($"[Run][Debug] Submit {PlayerAction.PressClose} for {currentBeat.DebugLabel}", this);
         beatStateMachine.SubmitAction(PlayerAction.PressClose);
     }
+
+#endif
 
     private void HandleBeatStateChanged(BeatState newState)
     {

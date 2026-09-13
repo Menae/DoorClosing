@@ -1,5 +1,16 @@
 # VIS-01 内装試作
 
+## VIS-06 経年材質と陰影（2026-09-14）
+
+- 新規素材: `Assets/ApartmentVisuals/AgedGreenStone.png`。built-in image_genを使用し、`artifacts/visual-04/references/IMG_3821-2.jpg`の壁材だけを参照。生成元exec-3ed917a4-5000-429d-9229-7207984b0e92.pngを無加工でコピー。文字・電話番号・紙・人物なし。2K上限、mipmap/Repeat/aniso4。写真テクスチャの厳密なseamless性はプロンプトだけで認定せず、画面で反復を確認する。
+- Shader: 既存textureをメートル単位で投影し、壁寸法の伸縮で模様の寸法が変わらないようにする。扉はobject-relativeで動きに追従。乾いた汚れは下部0.08〜0.85mに偏らせ、細部は画素密度で弱める。微細凹凸0.08〜0.8mm試作。正常床の濡れは追加しない。
+- 住戸扉はResidencePaint。GreenStoneをそのまま扉へ流用しない。廊下は512pxのsoft shadow、白色蛍光灯の強度差0.7/4.2と僅かな色差を試作。中央器具は柱に近く、3.4では上端が白飛びしたため0.7へ抑制。点滅なし。車内point lightの6面shadowを下向きspotに変え、atlas負担を抑える。案内器の薄い前面2層は影を無効化し、筐体による壁への影は保持する。
+- 棄却: 最初の計算による等高線状の石目は人工的だったため、専用画像へ置換。初回の縦筋が強すぎた汚れを弱め、短い乾いた擦れへ変更。正式品質・怖さの受入ではない。
+- 案内器: 通常shadowの無効化だけでは前面下部の細い縞が残ったため、液晶面のみURP UnlitのInformationScreenへ分離。筐体の物理位置、通常／挑発の日本語、フェード時間は維持する。
+
+生成時の完全なprompt（built-in、CLI/API不使用）:
+> Create one square seamless tileable photorealistic game material ALBEDO texture, 2048x2048 preferred. Use case photorealistic-natural. The reference photo is ONLY a material reference for the dark green-grey mineral wall behind the paper. Output ONLY uninterrupted flat aged dark desaturated green/grey serpentine marble or mottled mineral cladding typical of a 40-year-old occupied Japanese apartment elevator lobby, representing about 1.2m square. Dense irregular small mineral flecks and subdued fine winding veins, occasional tiny dry scratches, not glamorous polished luxury marble. Balanced mid-dark albedo (not underexposed), evenly lit cross-polarized flat texture, no baked shadows, highlights, gradients or perspective. Make edges tile seamlessly. Absolutely NO paper, tape, text, numbers, people, objects, door, tile grout, dramatic cracks, mold, wetness, puddles, cartoon procedural contour rings, or scene rendering. Authentic restrained mottled mineral structure, suitable to combine with separate procedural roughness and wear in Unity.
+
 2026-09-08、ユーザーが提供した4枚に基づくAstra担当のM1/M2視覚改善。写実度目標は『8番出口』、内装の参照はIMG_3788.JPG / IMG_3821.JPG / IMG_3803.JPG。画像は意匠の参考資料であり、画像内の文言・人物・実在連絡先をゲームへ移植する指示ではない。
 
 ## 方針と範囲
