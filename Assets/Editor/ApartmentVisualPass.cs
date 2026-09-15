@@ -128,6 +128,8 @@ namespace GraduationProject.EditorTools
             Box(v,"Lintel",new Vector3(0,2.93f,1.88f),new Vector3(1.8f,.14f,.15f),steel);
             Box(b.Find("DoorLeft"),"VisualMeetingEdge",new Vector3(-.006f,1.45f,1.932f),new Vector3(.008f,2.88f,.006f),dark);
             Box(b.Find("DoorRight"),"VisualMeetingEdge",new Vector3(.006f,1.45f,1.932f),new Vector3(.008f,2.88f,.006f),dark);
+            Box(b.Find("DoorLeft"),"InteriorMeetingEdge",new Vector3(-.006f,1.45f,2.064f),new Vector3(.008f,2.88f,.006f),dark);
+            Box(b.Find("DoorRight"),"InteriorMeetingEdge",new Vector3(.006f,1.45f,2.064f),new Vector3(.008f,2.88f,.006f),dark);
             Box(v,"Threshold",new Vector3(0,.012f,2),new Vector3(1.63f,.018f,.25f),steel);
             for(int j=0;j<4;j++) Box(v,"ThresholdGroove"+j,new Vector3(0,.023f,1.91f+j*.06f),new Vector3(1.6f,.003f,.007f),dark);
             Box(v,"RearSkirting",new Vector3(0,.12f,4.987f),new Vector3(3.17f,.24f,.024f),steel);

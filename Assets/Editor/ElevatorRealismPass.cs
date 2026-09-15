@@ -81,7 +81,7 @@ namespace GraduationProject.EditorTools
             var additional=indicator.FindProperty("additionalDisplays");additional.arraySize=displays.Count-1;
             for(int i=1;i<displays.Count;i++)additional.GetArrayElementAtIndex(i-1).objectReferenceValue=displays[i];
             indicator.ApplyModifiedPropertiesWithoutUndo();
-            var information=MountedInformation(v,b.Find("CabBack").GetComponent<Renderer>().bounds.min.z);
+            var information=MountedInformation(v,b.Find("FrontLeft").GetComponent<Renderer>().bounds.max.z);
             var machine=system.GetComponent<BeatStateMachine>();
             if(machine!=null)
             {
@@ -90,6 +90,13 @@ namespace GraduationProject.EditorTools
                 settings.ApplyModifiedPropertiesWithoutUndo();
             }
             var elevator=system.GetComponent<ElevatorController>();
+            if(!roots.Any(r=>r.GetComponent<ElevatorTuning>()!=null)) new GameObject("音・動作調整",typeof(ElevatorTuning));
+            foreach(var button in b.GetComponentsInChildren<Interactable>(true).Where(i=>i.ActionType==PlayerAction.PressFloor && i.FloorNumber==8))
+            {
+                var lamp=button.GetComponent<DestinationButtonLamp>();
+                if(lamp==null) lamp=button.gameObject.AddComponent<DestinationButtonLamp>();
+                lamp.rim=button.transform.parent.Find(button.name+"Rim").GetComponent<Renderer>(); lamp.elevator=elevator;
+            }
             SetFloat(elevator,"doorSlideSeconds",2.4f);
             SetFloat(elevator,"cameraShakeAmplitude",.003f);
             SetFloat(system.GetComponent<NormalJourneyController>(),"travelSeconds",24f);
@@ -133,7 +140,7 @@ namespace GraduationProject.EditorTools
                 Box(p,"Slot"+side+row,side*.313f,row*.180f,-.025f,.007f,.002f,.001f,steel);
             }
             // The rear face penetrates the actual wall by 2 mm, not a free-floating visual offset.
-            Finish(p,new Vector3(0,2.05f,wallSurface-.018f),0);
+            Finish(p,new Vector3(-1.22f,2.12f,wallSurface+.018f),180);
             var display=p.GetComponent<CabinInformationDisplay>();
             if(display==null)display=p.gameObject.AddComponent<CabinInformationDisplay>();
             var so=new SerializedObject(display);so.FindProperty("content").objectReferenceValue=content;

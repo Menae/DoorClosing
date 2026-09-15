@@ -306,3 +306,13 @@
 - InspectorをComputer Useで実見。最終Game View画像でタイトル・設定を確認。通常Windows build成功（20260915-072340-630、error/warning 0、11.71秒）。新buildのWindows実入力と作者が執筆した文章の理解は未検証。
 - 開始時main 59e9abb、Git差分なし。未保存シーンをartifacts/text-01/user-scene-before.unityへ保護。既存との差はTMPの内部正規化2項目のみで保持。検証後のUnity生成末尾空白のみを整理し、無関係な素材変更は残さなかった。
 - 操作案内はDEMO_AUTHORING。artifactsはローカル証拠でGit同期対象外。従来のPlayerは閉じておらず、その実行物は今回の変更前の版。
+
+## FEEDBACK-001 実プレイ9点の修正（2026-09-15）
+
+Astra、開始main c97208d。内容・出典はDECISIONS/FEEDBACK-001とVISUAL_REFERENCES。ユーザー執筆のPlayableDemoをartifacts/feedback-01へ保護。ゲーム文は変更せず、改名された文章編集rootの再識別を修正。
+
+到着の間1.4秒、8外周登録灯、内側扉目地・水平継ぎ目、右袖壁モニター、実録革靴足音と静音化、共通音Inspectorを3シーンに反映。誘引の開扉中退出を拾い、閉扉に寄りかかっただけの誤発火を実際の扉面判定で防止。救済の全身帰還条件を維持。Hijackは13階上限とReveal加速を廃して一定間隔で増加、非常停止／遭遇終了で停止。既存死亡期限は維持。
+
+検証の試行: 085057-414全37件34成功3失敗→外側開始fixture誤Reveal修正、Hijack新fixtureのStart完了待ち、デモtimeout診断追加→085853-402対象29件28成功1失敗（退出境界が扉より前）→扉平面修正→090555-342対象26/26成功。デモ全経路・階数継続は085853で成功済み。EditMode090719-963は2/2。最終全回帰一括再実行なし。画像inside-door-selected／sprint-revealを実見。
+
+通常build090821-735成功13.5秒・error/warning0。Player起動windowは返ったがComputer Useのprocess id取得失敗が再接続でも継続したため、Windows画面検証は未完と記録。音素材はHerbertBoland/CC BY4.0、配布用licensesへ同梱。聴感・怖さは人の受入待ち。元の写真・取得音源・検証画像はartifactsに留め外部へ送らない。

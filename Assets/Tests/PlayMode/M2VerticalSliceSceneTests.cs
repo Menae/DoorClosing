@@ -136,6 +136,59 @@ namespace GraduationProject.Tests
         }
 
         [UnityTest]
+        public IEnumerator SprintThroughOpeningDoor_RevealsLureAndLightsHall()
+        {
+            yield return UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/M2VerticalSlice.unity",new LoadSceneParameters(LoadSceneMode.Single));
+            fixtureScene=SceneManager.GetSceneByPath("Assets/Scenes/M2VerticalSlice.unity"); SceneManager.SetActiveScene(fixtureScene);
+            var roots=fixtureScene.GetRootGameObjects(); player=roots.Single(r=>r.name=="Player").transform;
+            camera=player.GetComponentInChildren<Camera>(); journey=FindGameComponent("NormalJourneyController");
+            yield return WalkTo(new Vector3(0,.95f,.5f)); yield return ClickAt(new Vector3(1.25f,1.5f,1.82f));
+            yield return Until(()=>JourneyState=="Boarding","boarding"); yield return WaitForDoors();
+            yield return WalkTo(new Vector3(0,.95f,3.6f)); yield return ClickAt(Control("Floor8"));
+            var elevator=FindGameComponent("ElevatorController");
+            Assert.That((bool)elevator.GetType().GetProperty("DestinationSelected").GetValue(elevator),Is.True);
+            yield return Aim(new Vector3(0,camera.transform.position.y,1.8f));
+            yield return WaitForDoors();
+            ScreenCapture.CaptureScreenshot("artifacts/feedback-01/inside-door-selected.png"); yield return null;
+            yield return Until(()=>Count("Arrive")>0,"arrival",40);
+            float chimeAt=Time.time;
+            var door=roots.Single(r=>r.name=="Building").transform.Find("DoorLeft"); var closed=door.position;
+            yield return new WaitForSeconds(.8f); Assert.That(door.position,Is.EqualTo(closed),"Chime must precede door movement");
+            Press(keyboard.leftShiftKey,queueEventOnly:true); Press(keyboard.wKey,queueEventOnly:true);
+            yield return new WaitForSeconds(.3f); Assert.That(Count("Reveal"),Is.Zero,"Pushing against a closed door must not reveal");
+            yield return Until(()=>Count("Reveal")>0,"Early exit must reveal",5);
+            Release(keyboard.wKey,queueEventOnly:true); Release(keyboard.leftShiftKey,queueEventOnly:true); yield return null;
+            Assert.That(Time.time-chimeAt,Is.GreaterThanOrEqualTo(1.4f));
+            Assert.That((bool)elevator.GetType().GetProperty("IsDoorMoving").GetValue(elevator),Is.True,"Reproduce exit before opening completes");
+            var lure=FindGameComponent("LureAnomaly"); var lamp=lure.GetComponentInChildren<Light>();
+            Assert.That(lamp,Is.Not.Null); Assert.That(lamp.isActiveAndEnabled,Is.True); Assert.That(lamp.intensity,Is.GreaterThan(0));
+            Assert.That(lamp.color.r,Is.GreaterThan(lamp.color.g));
+            Assert.That(player.position.z,Is.LessThan(2.15f),"Body must cross the threshold, not lean against the door");
+            yield return WalkTo(new Vector3(0,.95f,.5f));
+            yield return Aim(new Vector3(0,1.6f,-6));
+            ScreenCapture.CaptureScreenshot("artifacts/feedback-01/sprint-reveal.png"); yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator HijackPresentation_PassesThirteenKeepsCadenceAndStopsOnCleanup()
+        {
+            yield return UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/M2VerticalSlice.unity",new LoadSceneParameters(LoadSceneMode.Single));
+            fixtureScene=SceneManager.GetSceneByPath("Assets/Scenes/M2VerticalSlice.unity"); SceneManager.SetActiveScene(fixtureScene);
+            yield return null; // Let the journey complete its Start/reset before the presentation fixture.
+            var tuning=FindGameComponent("ElevatorTuning"); tuning.GetType().GetField("怪異の階数上昇間隔").SetValue(tuning,.1f);
+            var floor=FindGameComponent("FloorIndicator"); floor.GetType().GetMethod("SetFloor").Invoke(floor,new object[]{12});
+            var anomaly=new GameObject("Hijack presentation fixture").AddComponent(GameAccess.Type("HijackAnomaly"));
+            int Number() => (int)floor.GetType().GetProperty("CurrentDisplayedFloor").GetValue(floor);
+            anomaly.GetType().GetMethod("OnDiagnosisStart").Invoke(anomaly,null);
+            yield return new WaitForSeconds(.36f); Assert.That(Number(),Is.InRange(15,16));
+            int before=Number(); anomaly.GetType().GetMethod("OnReveal").Invoke(anomaly,null);
+            yield return new WaitForSeconds(.35f); Assert.That(Number()-before,Is.InRange(3,4));
+            anomaly.GetType().GetMethod("OnCleanup").Invoke(anomaly,null); int stopped=Number();
+            yield return new WaitForSeconds(.25f); Assert.That(Number(),Is.EqualTo(stopped));
+            UnityEngine.Object.Destroy(anomaly.gameObject);
+        }
+
+        [UnityTest]
         public IEnumerator AuthoredPrototype_WASDMouseAndClicks_ClearThreeEncounters()
         {
             yield return UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(
@@ -152,8 +205,8 @@ namespace GraduationProject.Tests
             var information = FindGameComponent("CabinInformationDisplay");
             Assert.That(information, Is.Not.Null, "The information housing must exist before any encounter");
             var housing=information.transform.Find("Housing").GetComponent<Renderer>();
-            var backWall=roots.Single(r=>r.name=="Building").transform.Find("CabBack").GetComponent<Renderer>();
-            Assert.That(housing.bounds.max.z-backWall.bounds.min.z,Is.InRange(0f,.004f),"Housing rear must touch the wall");
+            var backWall=roots.Single(r=>r.name=="Building").transform.Find("FrontLeft").GetComponent<Renderer>();
+            Assert.That(backWall.bounds.max.z-housing.bounds.min.z,Is.InRange(0f,.004f),"Housing rear must touch the wall");
             Assert.That(roots.Single(r=>r.name=="Building").transform.Find("FloorDisplay").gameObject.activeSelf,Is.False);
 
             string evidence = Path.GetFullPath(Path.Combine(Application.dataPath,

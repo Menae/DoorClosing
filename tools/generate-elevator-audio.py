@@ -25,10 +25,10 @@ def write(name, seconds, kind):
                      + .045 * math.sin(2 * math.pi * 337 * t)
                      + .55 * low) * (.90 + .10 * math.cos(2 * math.pi * 3 * t))
         elif kind == "door":
-            value = (.09 * math.sin(2 * math.pi * 145 * t)
-                     + .06 * math.sin(2 * math.pi * 290 * t)
-                     + .65 * low + .018 * rng.uniform(-1, 1))
-            value *= .85 + .15 * math.cos(2 * math.pi * 7 * t)
+            # Quiet belt/roller motion: remove the rattling modulation and broadband scrape.
+            value = (.032 * math.sin(2 * math.pi * 83 * t)
+                     + .009 * math.sin(2 * math.pi * 166 * t)
+                     + .075 * low)
         else:
             value = 0
             for onset, hz in [(0, 659.25), (.45, 523.25)]:

@@ -26,6 +26,10 @@ public class ElevatorController : MonoBehaviour
     [SerializeField] private AudioSource doorAudioSource;
     [SerializeField] private AudioSource arrivalAudioSource;
     private float driveVolume;
+    private ElevatorTuning tuning;
+    public bool DestinationSelected { get; private set; }
+    public void SelectDestination(bool selected) => DestinationSelected = selected;
+    public float ArrivalDoorDelay => tuning != null ? tuning.チャイムから開扉まで : 0f;
     private float driveEnvelope;
     private float driveTarget = 1f;
 
@@ -37,6 +41,7 @@ public class ElevatorController : MonoBehaviour
 
     private void Awake()
     {
+        tuning = FindFirstObjectByType<ElevatorTuning>();
         driveVolume = travelLoopAudioSource != null ? travelLoopAudioSource.volume : 0f;
         if (leftDoor != null)
         {
@@ -60,10 +65,21 @@ public class ElevatorController : MonoBehaviour
         driveEnvelope = Mathf.MoveTowards(driveEnvelope, isTravelling ? driveTarget : 0f, Time.deltaTime / 1.5f);
         if (travelLoopAudioSource != null)
         {
-            travelLoopAudioSource.volume = driveVolume * driveEnvelope;
+            travelLoopAudioSource.volume = (tuning != null ? tuning.走行音 : driveVolume) * driveEnvelope;
             travelLoopAudioSource.pitch = Mathf.Lerp(.65f, 1f, driveEnvelope);
             if (!isTravelling && driveEnvelope <= 0f) travelLoopAudioSource.Stop();
         }
+    }
+
+    // Recovery uses the whole cabin volume; early exit detection uses the actual door plane.
+    public bool HasCrossedEntrance(CharacterController body, Bounds cabinBounds)
+    {
+        if(body==null) return false;
+        if(leftDoor==null || leftDoor.parent==null) return !cabinBounds.Contains(body.bounds.center);
+        var planePoint=leftDoor.parent.TransformPoint(leftDoorClosedLocalPosition);
+        var normal=leftDoor.parent.forward;
+        float insideSign=Mathf.Sign(Vector3.Dot(cabinBounds.center-planePoint,normal));
+        return Vector3.Dot(body.bounds.center-planePoint,normal)*insideSign < 0;
     }
 
     public void OpenDoors()
@@ -104,6 +120,7 @@ public class ElevatorController : MonoBehaviour
 
     public void ResetDoorsClosed()
     {
+        DestinationSelected = false;
         if (doorAudioSource != null) doorAudioSource.Stop();
         if (arrivalAudioSource != null) arrivalAudioSource.Stop();
         if (travelLoopAudioSource != null) travelLoopAudioSource.Stop();
@@ -144,7 +161,7 @@ public class ElevatorController : MonoBehaviour
         Vector3 leftTarget = Vector3.Lerp(leftDoorClosedLocalPosition, leftDoorClosedLocalPosition + leftDoorOpenLocalOffset, targetOpenAmount);
         Vector3 rightTarget = Vector3.Lerp(rightDoorClosedLocalPosition, rightDoorClosedLocalPosition + rightDoorOpenLocalOffset, targetOpenAmount);
         bool hasDistance = (leftStart-leftTarget).sqrMagnitude + (rightStart-rightTarget).sqrMagnitude > .00001f;
-        if (doorAudioSource != null && hasDistance && doorSlideSeconds > 0f) doorAudioSource.Play();
+        if (doorAudioSource != null && hasDistance && doorSlideSeconds > 0f) { if(tuning!=null) doorAudioSource.volume=0; doorAudioSource.Play(); }
 
         if (doorSlideSeconds <= 0f || (!hasDistance && leftDoor != null && rightDoor != null))
         {
@@ -167,6 +184,8 @@ public class ElevatorController : MonoBehaviour
             }
             elapsedSeconds += Time.deltaTime;
             float normalizedTime = Mathf.Clamp01(elapsedSeconds / doorSlideSeconds);
+            if (doorAudioSource != null && tuning != null)
+                doorAudioSource.volume = tuning.扉の動作音 * Mathf.SmoothStep(0,1,Mathf.Min(normalizedTime*6,(1-normalizedTime)*6));
             float eased = doorCurve != null ? doorCurve.Evaluate(normalizedTime) : normalizedTime;
             ApplyDoorPositions(Vector3.Lerp(leftStart, leftTarget, eased), Vector3.Lerp(rightStart, rightTarget, eased));
             yield return null;
@@ -193,7 +212,8 @@ public class ElevatorController : MonoBehaviour
 
     public void PlayArrival()
     {
-        if (arrivalAudioSource != null) arrivalAudioSource.Play();
+        DestinationSelected = false;
+        if (arrivalAudioSource != null) { if(tuning != null) arrivalAudioSource.volume=tuning.到着チャイム; arrivalAudioSource.Play(); }
     }
 
     private void ApplyDoorPositions(Vector3 leftPosition, Vector3 rightPosition)

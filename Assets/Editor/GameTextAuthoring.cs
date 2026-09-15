@@ -14,8 +14,8 @@ namespace GraduationProject.EditorTools
         [MenuItem("Tools/Unity Agent/文章編集を開く")]
         public static void Open()
         {
-            var root = SceneManager.GetActiveScene().GetRootGameObjects().FirstOrDefault(g => g.name == RootName);
-            if (root == null) { Install(); root = SceneManager.GetActiveScene().GetRootGameObjects().First(g => g.name == RootName); }
+            var root = SceneManager.GetActiveScene().GetRootGameObjects().FirstOrDefault(g => g.GetComponent<GameTextCollection>() != null);
+            if (root == null) { Install(); root = SceneManager.GetActiveScene().GetRootGameObjects().First(g => g.GetComponent<GameTextCollection>() != null); }
             Selection.activeGameObject = root;
             EditorGUIUtility.PingObject(root);
         }
@@ -26,7 +26,7 @@ namespace GraduationProject.EditorTools
             if (scene.path != PlayableDemoBuilder.ScenePath && scene.path != M1NormalRouteBuilder.ScenePath && scene.path != M2VerticalSliceBuilder.ScenePath)
                 throw new InvalidOperationException("Open PlayableDemo, M1NormalRoute or M2VerticalSlice first.");
             var roots = scene.GetRootGameObjects();
-            var root = roots.FirstOrDefault(g => g.name == RootName);
+            var root = roots.FirstOrDefault(g => g.GetComponent<GameTextCollection>() != null);
             if (root == null) { root = new GameObject(RootName, typeof(GameTextCollection)); Undo.RegisterCreatedObjectUndo(root, "文章編集を配置"); }
             root.transform.SetAsFirstSibling();
             GameTextCollection Group(string name)

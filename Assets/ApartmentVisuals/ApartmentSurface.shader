@@ -60,7 +60,10 @@ Shader "GraduationProject/Apartment Surface"
             UNITY_SETUP_INSTANCE_ID(i); UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
             float3 n=normalize(i.normalWS);
             float2 uv=SurfaceUV(i.surfacePosition,n);
-            half3 tex=SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,uv*_WorldScale).rgb;
+            // Mirrored sampling removes the non-tileable photo seam across moving door leaves.
+            float2 textureUV=uv*_WorldScale;
+            if(_ObjectSpace>.5) textureUV=1-abs(frac(textureUV*.5)*2-1);
+            half3 tex=SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,textureUV).rgb;
             float broad=Noise(uv*1.7+7.3),middle=Noise(uv*13.7);
             float detailVisibility=saturate(.35/max(length(fwidth(uv*170)),.001));
             float fine=lerp(.5,Noise(uv*170),detailVisibility);

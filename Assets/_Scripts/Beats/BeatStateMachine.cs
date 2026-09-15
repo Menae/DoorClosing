@@ -32,6 +32,7 @@ public class BeatStateMachine : MonoBehaviour
     private SubmittedAction pendingAction;
     private bool hasPendingAction;
     private bool acceptsPlayerAction;
+    private bool lureArrivalStartedInside;
 
     public bool IsPassengerInsideCabin => CabinOccupancy.FullyContains(cabin, passenger);
 
@@ -224,6 +225,7 @@ public class BeatStateMachine : MonoBehaviour
 
     private IEnumerator ArriveForDiagnosis(BeatDefinition def)
     {
+        lureArrivalStartedInside = passenger!=null && cabin!=null && cabin.bounds.Contains(passenger.bounds.center);
         SetState(BeatState.Arrive);
         SpawnAnomaly(def);
         floorIndicator?.SetFloor(def.DisplayFloor);
@@ -236,9 +238,16 @@ public class BeatStateMachine : MonoBehaviour
 
         elevatorController?.SetTravelling(false);
         elevatorController?.PlayArrival();
+        if(elevatorController!=null) yield return WaitForSecondsFromDefinition(elevatorController.ArrivalDoorDelay);
         elevatorController?.OpenDoors();
-        yield return WaitForSecondsFromDefinition(doorOpenSeconds);
-        while (elevatorController != null && elevatorController.IsDoorMoving) yield return null;
+        float openingElapsed=0f;
+        while(openingElapsed<doorOpenSeconds || (elevatorController!=null && elevatorController.IsDoorMoving))
+        {
+            // Exiting during the opening animation is still a Lure response.
+            if(def.Category==AnomalyCategory.Lure && lureArrivalStartedInside && passenger!=null && cabin!=null && (elevatorController!=null ? elevatorController.HasCrossedEntrance(passenger,cabin.bounds) : !cabin.bounds.Contains(passenger.bounds.center))) break;
+            openingElapsed+=Time.deltaTime;
+            yield return null;
+        }
     }
 
     private IEnumerator RepresentSameBeat()
@@ -295,7 +304,7 @@ public class BeatStateMachine : MonoBehaviour
         acceptsPlayerAction = true;
 
         float elapsedSeconds = 0f;
-        bool lureWasInside = def.Category != AnomalyCategory.Lure || IsPassengerInsideCabin;
+        bool lureWasInside = lureArrivalStartedInside || IsPassengerInsideCabin;
         while (!hasPendingAction)
         {
             if (def.Category == AnomalyCategory.Lure && passenger != null && cabin != null)

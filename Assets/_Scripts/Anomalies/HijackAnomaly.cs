@@ -3,8 +3,6 @@ using UnityEngine;
 
 public class HijackAnomaly : AnomalyBehaviour
 {
-    private const float SlowDriftInterval = 1f;
-    private const float FastDriftInterval = 0.08f;
     private const float RevealPitch = 2f;
     private const float RevealVolume = 1f;
     private const float JitterAmplitude = 0.035f;
@@ -12,7 +10,8 @@ public class HijackAnomaly : AnomalyBehaviour
 
     [Header("Hijack")]
     [SerializeField] private AudioSource motor;
-    [SerializeField] private int driftTargetFloor = 13;
+    [SerializeField, Min(.05f)] private float driftIntervalSeconds = 1f;
+    private ElevatorTuning tuning;
     [SerializeField, Min(0f)] private float rampSeconds = 20f;
     [SerializeField] private float pitchStart = 1f;
     [SerializeField] private float pitchEnd = 1.6f;
@@ -30,6 +29,7 @@ public class HijackAnomaly : AnomalyBehaviour
     protected override void Awake()
     {
         base.Awake();
+        tuning=FindFirstObjectByType<ElevatorTuning>();
         originalLocalPosition = transform.localPosition;
         EnsurePrototypeMotor();
 
@@ -48,7 +48,7 @@ public class HijackAnomaly : AnomalyBehaviour
         if (floorIndicator != null)
         {
             normalDisplayFloor = floorIndicator.CurrentDisplayedFloor;
-            floorIndicator.StartDrift(driftTargetFloor, SlowDriftInterval);
+            floorIndicator.StartContinuousRise(tuning!=null ? tuning.怪異の階数上昇間隔 : driftIntervalSeconds);
         }
         else
         {
@@ -59,6 +59,7 @@ public class HijackAnomaly : AnomalyBehaviour
         {
             motor.loop = true;
             motor.pitch = pitchStart;
+            if(tuning!=null) motor.volume=tuning.怪異の走行音;
             motor.Play();
         }
         else
@@ -80,7 +81,7 @@ public class HijackAnomaly : AnomalyBehaviour
         {
             motor.loop = true;
             motor.pitch = RevealPitch;
-            motor.volume = RevealVolume;
+            motor.volume = tuning!=null ? tuning.怪異の走行音 : originalMotorVolume;
             if (!motor.isPlaying)
             {
                 motor.Play();
@@ -96,7 +97,7 @@ public class HijackAnomaly : AnomalyBehaviour
         if (floorIndicator != null)
         {
             floorIndicator.Flicker();
-            floorIndicator.StartDrift(driftTargetFloor, FastDriftInterval);
+            // Keep the same uninterrupted cadence after reveal.
         }
         else
         {

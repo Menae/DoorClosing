@@ -6,6 +6,7 @@ public sealed class ApartmentFootsteps : MonoBehaviour
 {
     [SerializeField] private AudioClip[] steps;
     [SerializeField] private AudioClip ventilation;
+    private ElevatorTuning tuning;
     private CharacterController body;
     private PlayerLook movement;
     private AudioSource foot, room;
@@ -15,6 +16,7 @@ public sealed class ApartmentFootsteps : MonoBehaviour
 
     private void Awake()
     {
+        tuning=FindFirstObjectByType<ElevatorTuning>();
         body=GetComponent<CharacterController>(); movement=GetComponent<PlayerLook>();
         foot=gameObject.AddComponent<AudioSource>(); foot.playOnAwake=false;
         foot.volume=.38f; foot.spatialBlend=0;
@@ -26,6 +28,7 @@ public sealed class ApartmentFootsteps : MonoBehaviour
 
     private void LateUpdate()
     {
+        if(tuning!=null) { foot.volume=tuning.足音; room.volume=tuning.換気音; }
         Vector3 delta=transform.position-previous;previous=transform.position;delta.y=0;
         float moved=delta.magnitude;
         if(DemoSession.BlocksGameplay || !movement.enabled || !body.isGrounded || moved>1.5f)

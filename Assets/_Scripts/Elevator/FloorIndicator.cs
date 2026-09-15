@@ -51,6 +51,20 @@ public class FloorIndicator : MonoBehaviour
         driftRoutine = StartCoroutine(DriftToFloor(targetFloor, interval));
     }
 
+    public void StartContinuousRise(float interval)
+    {
+        StopDrift(); driftRoutine = StartCoroutine(RiseContinuously(Mathf.Max(.05f, interval)));
+    }
+    private IEnumerator RiseContinuously(float interval)
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(interval);
+            if(displayedFloor < int.MaxValue) displayedFloor++;
+            RefreshText();
+        }
+    }
+
     public void StopDrift()
     {
         if (driftRoutine == null)

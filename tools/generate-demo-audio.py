@@ -34,6 +34,5 @@ def write(name, seconds, seed, ambience=False):
 
 if __name__ == '__main__':
     ROOT.mkdir(parents=True,exist_ok=True)
-    for index in range(4):
-        write('Footstep'+str(index+1),.32,120+index)
+    # Footsteps now use licensed leather/concrete recordings; never overwrite authored clips here.
     write('Ventilation',8,440,True)

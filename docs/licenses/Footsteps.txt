@@ -1,0 +1,11 @@
+Footsteps 1-4
+Source: ShoeLeatherSteps.wav by HerbertBoland
+https://freesound.org/people/HerbertBoland/sounds/28298/
+License: Creative Commons Attribution 4.0 International
+https://creativecommons.org/licenses/by/4.0/
+Retrieved 2026-09-15 from the publicly available HQ preview:
+https://cdn.freesound.org/previews/28/28298_129090-hq.mp3
+Changes: mono conversion, four individual step excerpts, low-frequency removal,
+short edge fades, amplitude normalization. See tools/prepare-leather-footsteps.py.
+The original recording describes leather shoes on a concrete floor indoors.
+No endorsement by the original author is implied.

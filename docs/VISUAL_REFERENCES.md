@@ -63,3 +63,10 @@ Adopt: 既存URP/TMP/Input System。Extend: 再適用可能なEditor造作、同
 
 ユーザーの指摘により扉／壁の同一材を解消。BrushedSteelの既存生成素材を再利用したDoorSteel（metallic .68 / smoothness .30）、壁はIvoryLaminate。新たな外部素材は使わない。
 上部中央の浮いた独立階数表示は無効化、既存主盤をFloorIndicatorの主参照として3盤同期を維持する。後壁の案内器は660×400×40mmの金属筐体と固定具・ガスケット。Renderer.boundsの実壁面から位置を算出し、筐体背面が壁へ2mm入る配置。M1から存在し、M2挑発は内容だけが0.3秒で切り替わる。文字は日本語、判定・猶予は従来どおり。通常文は「扉の開閉に／ご注意ください」。通常時と挑発時の筐体は同じもの。
+
+### 2026-09-15 FEEDBACK-001
+
+- ボタン登録灯: https://www.mitsubishielectric.co.jp/corporate/chiteki/otb/list/089/index.html （応答時に外周リング点灯、非点灯時は金属調。今回は画面内の見た目を参照し、製品技術・ロゴ等を移植しない）
+- かご内広告・案内モニター: https://www.toshiba-elevator.co.jp/elv/maintenance/d_signage/ （設置事例と幅520mm・高さ379.4mm・厚さ31.5mmの筐体仕様を参照。今回のゲームは既存表示枠を維持し、右袖壁上部へ支持面を合わせる）
+- 静音化の方向: https://www.toshiba-elevator.co.jp/elv/renewal/purpose/ （振動・騒音の少ない運転への更新。実機の音圧や開扉前の秒数を測定した根拠には用いない）
+- 革靴／コンクリートの実録: https://freesound.org/people/HerbertBoland/sounds/28298/ （CC BY 4.0。採用と加工・クレジットはdocs/licenses/Footsteps.txt）

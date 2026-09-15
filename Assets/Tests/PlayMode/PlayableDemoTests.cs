@@ -41,7 +41,8 @@ namespace GraduationProject.Tests
   {
    float end=Time.realtimeSinceStartup+timeout;
    while(!predicate()&&Time.realtimeSinceStartup<end) yield return null;
-   Assert.That(predicate(),Is.True,message);
+   if(!predicate()) ScreenCapture.CaptureScreenshot("artifacts/feedback-01/demo-timeout.png");
+   Assert.That(predicate(),Is.True,message+" timeScale="+Time.timeScale+" paused="+(demo!=null && Flag("IsPaused")));
   }
   private Component Find(string type) => UnityEngine.Object.FindFirstObjectByType(GameAccess.Type(type)) as Component;
         private IEnumerator Aim(Vector3 point, bool horizontal = false)

@@ -116,6 +116,7 @@ public class NormalJourneyController : MonoBehaviour
         }
         else if (State == JourneyState.Boarding && action == PlayerAction.PressFloor && floorNumber == 8 && IsBodyInside)
         {
+            elevator.SelectDestination(true);
             StartCoroutine(CloseAndTravel());
         }
         else if (action == PlayerAction.PressClose && (State == JourneyState.Boarding || State == JourneyState.Arrived))
@@ -190,6 +191,7 @@ public class NormalJourneyController : MonoBehaviour
         while (elevator.IsDoorMoving) yield return null;
         if (elevator.LastCloseObstructed || !IsBodyInside)
         {
+            elevator.SelectDestination(false);
             elevator.OpenDoors();
             ChangeState(JourneyState.Boarding);
             yield break;
@@ -216,6 +218,7 @@ public class NormalJourneyController : MonoBehaviour
         elevator.SetTravelling(false);
         indicator?.SetFloor(8);
         elevator.PlayArrival();
+        yield return new WaitForSeconds(elevator.ArrivalDoorDelay);
         homePresented = true;
         if (entranceHall != null) entranceHall.SetActive(false);
         if (homeCorridor != null) homeCorridor.SetActive(true);
