@@ -51,6 +51,7 @@ namespace GraduationProject.EditorTools
             RenderSettings.ambientSkyColor = new Color(.38f, .40f, .40f);
             RenderSettings.ambientEquatorColor = new Color(.23f, .245f, .24f);
             RenderSettings.ambientGroundColor = new Color(.13f, .125f, .11f);
+            GameTextAuthoring.Install(); // Restore scene-authored copy after generated dressing.
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             AssetDatabase.SaveAssets();

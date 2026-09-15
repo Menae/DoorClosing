@@ -1,6 +1,6 @@
 {
   "name": "GraduationProject.PlayModeTests",
-  "references": ["Unity.InputSystem", "Unity.InputSystem.TestFramework", "UnityEngine.UI"],
+  "references": ["Unity.InputSystem", "Unity.InputSystem.TestFramework", "UnityEngine.UI", "Unity.TextMeshPro"],
   "optionalUnityReferences": ["TestAssemblies"],
   "includePlatforms": [],
   "autoReferenced": false

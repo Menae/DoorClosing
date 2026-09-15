@@ -330,3 +330,11 @@
 - Delegated implementation: 既存M2を基にデモ専用SceneをUnity APIで作成し、通常帰宅→翌夜を接続。日本語名の各掲示にEditableNoticeを付け、見出し／本文をInspectorで編集。内装再適用でも編集文を保持。通常・怪異の比較と三原則を提示し、読了チェックは強制しない。
 - UI / sound: 既存委任内の試作として開始・設定・ポーズ・完了・再プレイを実装。メニュー中はゲーム入力・時間・音を停止。感度／反転／視野角／明るさ／音量／画面を調整できるが永続保存は追加しない。足音と小音量の換気音を独自生成。具体的な怖さ・音色の正式受入とは別。
 - Effects / limits: PlayableDemoが通常buildの入口。M1/M2は個別Sceneとして保持し、掲示の文章はSceneごとに所有するため自動同期しない。編集案内はDEMO_AUTHORING。全４夜の仕様・判定規則は変更しない。初見理解と恐怖は人のプレイで確認する。
+
+## TEXT-001 — ユーザーが全表示文を執筆する編集入口
+
+- Status / date / owner: 2026-09-15、ユーザーが文章全般の直接執筆・Hierarchy／Inspector整備を明示依頼。実装はWORK-001/002の委任内、Astra。
+- Context: DEMO-002で編集できたのは3枚の掲示のみ。起動CanvasはPlay時生成で、メニュー本文・ボタン名がコード固定だった。
+- Decision: 現行3シーンの最上部に `★文章編集_ここから` を常設し、画面別の文章・動的案内・館内TMP・既存掲示へ日本語Inspectorからアクセスする。文章の正本はシーン内GameTextCollection、掲示は従来EditableNoticeを継続使用する。ルール・ボタン機能・物理配置は変更しない。
+- Trade-off: M1/M2/PlayableDemoは独立執筆。外部ファイル・翻訳サービス・新依存は追加しない。長文メニューはスクロール、固定紙面ははみ出しを警告。空欄はそのまま採用。内装の再適用後に執筆済み内容を戻す。
+- Effects: GameTextCollection、GameTextAuthoring／Inspector、DemoSessionと動的表示元、3シーン、DEMO_AUTHORING。文章の質や初見理解の評価はユーザー執筆後のプレイ確認で行う。

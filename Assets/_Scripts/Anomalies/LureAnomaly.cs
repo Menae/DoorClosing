@@ -34,7 +34,7 @@ public class LureAnomaly : AnomalyBehaviour
     {
         base.OnDiagnosisStart();
         SetActiveIfPresent(hallwayRoot, nameof(hallwayRoot), true);
-        SetTextOrLog(plateText, nameof(plateText), fakePlateString);
+        SetTextOrLog(plateText, nameof(plateText), GameTextCollection.Get(this, "lure.plate", fakePlateString));
     }
 
     public override void OnReveal()
@@ -51,7 +51,7 @@ public class LureAnomaly : AnomalyBehaviour
         }
 
         PlayAudioOrLog(revealDrone, nameof(revealDrone), "Lure reveal drone playback");
-        SetTextOrLog(plateText, nameof(plateText), BrokenPlateString);
+        SetTextOrLog(plateText, nameof(plateText), GameTextCollection.Get(this, "lure.broken", BrokenPlateString));
     }
 
     public override void OnGraceStart()

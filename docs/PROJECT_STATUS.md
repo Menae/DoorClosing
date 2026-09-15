@@ -4,6 +4,16 @@
 
 ## 現在のゲーム開発
 
+### TEXT-001 文章編集の入口を整備（2026-09-15）
+
+- 担当Astra。ユーザーの全表示文の直接執筆依頼に対応。現行3シーンのHierarchy最上部 `★文章編集_ここから` に、起動／ポーズ／翌夜・結果／設定／動的案内／館内表示／掲示の8カテゴリを配置。日本語Inspectorから編集・Ctrl+S保存。詳しくは [DEMO_AUTHORING](DEMO_AUTHORING.md)。ルール・物理配置は変更なし。
+- メニューの固定文をシーン保存値へ接続。空欄保持・長文スクロール・ボタン名変更に対応。内装再適用でも執筆内容を保持。掲示は既存EditableNoticeへの編集入口を追加し、元の場所からも編集可能。
+- 検証: 保存・再読込・ApartmentVisualPass再適用で独自タイトル／空欄の保持を確認。PlayMode対象2/2合格（長文・空欄・改名ボタン・不正階数書式＋既存の通常帰宅→3怪異→死亡再挑戦→帰宅・再プレイ）。`artifacts/tests/20260915-071925-578/playmode.xml`。初回テストコードのTMP参照不足は修正後に合格。全回帰34件の再実行はしていない。
+- 実見: `artifacts/text-01/title-inspector.png` と `artifacts/demo-02/input-20260915-071930/` の最終Game Viewで編集欄・タイトル・設定を確認。
+- 通常Windows build: `artifacts/builds/20260915-072340-630/GraduationProject.exe`、11.7秒、error/warning 0。今回の新buildのWindows実入力は未確認。以前起動したPlayerには文章編集は反映されない。作者の執筆後は保存・再buildする。
+- 開始時の未保存シーンは `artifacts/text-01/user-scene-before.unity` にコピー保護。意味差分はTMPスタイルhash／Canvas追加shader channelのみと確認し、保持した。停止時はPlayableDemo保存済みEdit Mode。人の理解・怖さは未受入のまま。
+- 次: ユーザーが上記8カテゴリで文章を執筆し、実プレイでルール説明の分かりやすさを評価する。文章変更とゲームルール変更は別。Solへの全面引継ぎは今回実施していない。
+
 ### DEMO-002 完成候補を実装・検証（2026-09-15）
 
 - 担当: Astra task 01a07fbb-3ac2-7a62-a049-19d919724625。開始main clean / 8ae08e1。DEMO-001の続行と「掲示でのルール学習／Hierarchyで文章編集箇所を明示」を実装。Solへの全面引継ぎは保留のまま。

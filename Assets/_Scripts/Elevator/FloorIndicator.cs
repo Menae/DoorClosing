@@ -111,14 +111,20 @@ public class FloorIndicator : MonoBehaviour
         flickerRoutine = null;
     }
 
+    private string FormatFloor()
+    {
+        try { return string.Format(GameTextCollection.Get(this, "floor.format", displayFormat), displayedFloor); }
+        catch (System.FormatException) { return displayedFloor.ToString(); }
+    }
+
     private void RefreshText()
     {
         if (floorText != null)
         {
-            floorText.text = string.Format(displayFormat, displayedFloor);
+            floorText.text = FormatFloor();
         }
         foreach (var display in additionalDisplays)
-            if (display != null) display.text = string.Format(displayFormat, displayedFloor);
+            if (display != null) display.text = FormatFloor();
     }
 
     private void SetDisplaysEnabled(bool visible)

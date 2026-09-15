@@ -19939,6 +19939,55 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_renderer: {fileID: 645366552}
   m_maskType: 0
+--- !u!1 &647867276
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 647867277}
+  - component: {fileID: 647867278}
+  m_Layer: 0
+  m_Name: "08_\u63B2\u793A\u7269\u306E\u898B\u51FA\u3057\u30FB\u672C\u6587"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &647867277
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 647867276}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1007742827}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &647867278
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 647867276}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13795906dba7bc147bcbd5a6e32b3906, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::GameTextCollection
+  entries: []
+  notices:
+  - {fileID: 1459420391}
+  - {fileID: 881578589}
+  - {fileID: 1219929646}
 --- !u!1 &648876150
 GameObject:
   m_ObjectHideFlags: 0
@@ -32159,6 +32208,56 @@ Mesh:
       - serializedVersion: 1
         m_IndexStart: 0
         m_IndexCount: 0
+--- !u!1 &1007742825
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1007742827}
+  - component: {fileID: 1007742826}
+  m_Layer: 0
+  m_Name: "\u2605\u6587\u7AE0\u7DE8\u96C6_\u3053\u3053\u304B\u3089"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1007742826
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1007742825}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13795906dba7bc147bcbd5a6e32b3906, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::GameTextCollection
+  entries: []
+  notices: []
+--- !u!4 &1007742827
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1007742825}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 2093591358}
+  - {fileID: 1201241857}
+  - {fileID: 1092197321}
+  - {fileID: 647867277}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1011090946
 GameObject:
   m_ObjectHideFlags: 0
@@ -35424,6 +35523,72 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1090362689}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1092197320
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1092197321}
+  - component: {fileID: 1092197322}
+  m_Layer: 0
+  m_Name: "07_\u30ED\u30D3\u30FC\u30FB\u5ECA\u4E0B\u30FB\u305D\u306E\u4ED6\u8868\u793A"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1092197321
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1092197320}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1007742827}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1092197322
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1092197320}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13795906dba7bc147bcbd5a6e32b3906, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::GameTextCollection
+  entries:
+  - key: scene.EntranceHall/Notice
+    label: EntranceHall/Notice
+    value: "<size=120%>\u304A\u304B\u3048\u308A\u306A\u3055\u3044</size>\n\n\u81EA\u5B85\u306F\uFF18\u968E\u3067\u3059\n\u547C\u3073\u30DC\u30BF\u30F3\u3067\n\u6249\u3092\u958B\u3051\u3066\u304F\u3060\u3055\u3044"
+    target: {fileID: 1739259974}
+  - key: scene.EntranceHall/InteriorVisuals/MaintenanceNotice
+    label: EntranceHall/InteriorVisuals/MaintenanceNotice
+    value: "\u304A\u77E5\u3089\u305B\n<size=62%>\u5171\u7528\u90E8\u306F\u9759\u304B\u306B\n\u3054\u5229\u7528\u304F\u3060\u3055\u3044\n\u8A2D\u5099\u306E\u4E0D\u5177\u5408\u306F\u7BA1\u7406\u5BA4\u307E\u3067</size>"
+    target: {fileID: 715020119}
+  - key: scene.HomeCorridor/HomeDoor/HomeDoorLabel
+    label: HomeCorridor/HomeDoor/HomeDoorLabel
+    value: "\u81EA\u5B85"
+    target: {fileID: 1463464222}
+  - key: scene.HomeCorridor/Floor8Notice
+    label: HomeCorridor/Floor8Notice
+    value: "\uFF18\u968E"
+    target: {fileID: 688882844}
+  - key: scene.HUD/NightComplete
+    label: HUD/NightComplete
+    value: "\u5E30\u5B85\u3057\u307E\u3057\u305F"
+    target: {fileID: 261047171}
+  notices: []
 --- !u!1 &1095598804
 GameObject:
   m_ObjectHideFlags: 0
@@ -38928,6 +39093,292 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1200276880}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1201241856
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1201241857}
+  - component: {fileID: 1201241858}
+  m_Layer: 0
+  m_Name: "06_\u64CD\u4F5C\u76E4\u30FB\u304B\u3054\u5185\u8868\u793A"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1201241857
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1201241856}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1007742827}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1201241858
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1201241856}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13795906dba7bc147bcbd5a6e32b3906, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::GameTextCollection
+  entries:
+  - key: scene.Building/FloorDisplay
+    label: Building/FloorDisplay
+    value: 1
+    target: {fileID: 1827900975}
+  - key: scene.Building/Call/CallLabel
+    label: Building/Call/CallLabel
+    value: "\u547C"
+    target: {fileID: 733256224}
+  - key: scene.Building/InteriorVisuals/CabinCapacity
+    label: Building/InteriorVisuals/CabinCapacity
+    value: "\u5B9A\u54E1\uFF19\u540D\u3000\u7A4D\u8F09\uFF16\uFF10\uFF10kg"
+    target: {fileID: 534455991}
+  - key: scene.Building/InteriorVisuals/PanelCaption
+    label: Building/InteriorVisuals/PanelCaption
+    value: "\u884C\u5148\u968E"
+    target: {fileID: 325003381}
+  - key: scene.Building/InteriorVisuals/CabinNotice
+    label: Building/InteriorVisuals/CabinNotice
+    value: "\u6249\u306B\u6CE8\u610F\n<color=#292923><size=70%>\u6307\u3092\u631F\u307E\u306A\u3044\n\u3088\u3046\u306B</size></color>"
+    target: {fileID: 1548504484}
+  - key: scene.Building/RealismDetails/EntrancePanel/Capacity
+    label: Building/RealismDetails/EntrancePanel/Capacity
+    value: "\u5B9A\u54E1\uFF19\u540D\u3000\uFF16\uFF10\uFF10kg"
+    target: {fileID: 202355075}
+  - key: scene.Building/RealismDetails/EntrancePanel/Emergency/EmergencyLabel
+    label: Building/RealismDetails/EntrancePanel/Emergency/EmergencyLabel
+    value: "\u975E\u5E38\n\u505C\u6B62"
+    target: {fileID: 763172298}
+  - key: scene.Building/RealismDetails/EntrancePanel/EmergencyLegend
+    label: Building/RealismDetails/EntrancePanel/EmergencyLegend
+    value: "\u975E\u5E38\n\u505C\u6B62"
+    target: {fileID: 49928047}
+  - key: scene.Building/RealismDetails/EntrancePanel/Floor1Legend
+    label: Building/RealismDetails/EntrancePanel/Floor1Legend
+    value: 1
+    target: {fileID: 1682127873}
+  - key: scene.Building/RealismDetails/EntrancePanel/Floor2Legend
+    label: Building/RealismDetails/EntrancePanel/Floor2Legend
+    value: 2
+    target: {fileID: 1932615802}
+  - key: scene.Building/RealismDetails/EntrancePanel/Floor3Legend
+    label: Building/RealismDetails/EntrancePanel/Floor3Legend
+    value: 3
+    target: {fileID: 1556029170}
+  - key: scene.Building/RealismDetails/EntrancePanel/Floor4Legend
+    label: Building/RealismDetails/EntrancePanel/Floor4Legend
+    value: 4
+    target: {fileID: 1961701469}
+  - key: scene.Building/RealismDetails/EntrancePanel/Floor5Legend
+    label: Building/RealismDetails/EntrancePanel/Floor5Legend
+    value: 5
+    target: {fileID: 1516907035}
+  - key: scene.Building/RealismDetails/EntrancePanel/Floor6Legend
+    label: Building/RealismDetails/EntrancePanel/Floor6Legend
+    value: 6
+    target: {fileID: 463238487}
+  - key: scene.Building/RealismDetails/EntrancePanel/Floor7/Floor7Label
+    label: Building/RealismDetails/EntrancePanel/Floor7/Floor7Label
+    value: 7
+    target: {fileID: 74214853}
+  - key: scene.Building/RealismDetails/EntrancePanel/Floor7Legend
+    label: Building/RealismDetails/EntrancePanel/Floor7Legend
+    value: 7
+    target: {fileID: 718483866}
+  - key: scene.Building/RealismDetails/EntrancePanel/Floor8/Floor8Label
+    label: Building/RealismDetails/EntrancePanel/Floor8/Floor8Label
+    value: 8
+    target: {fileID: 1140128299}
+  - key: scene.Building/RealismDetails/EntrancePanel/Floor8Legend
+    label: Building/RealismDetails/EntrancePanel/Floor8Legend
+    value: 8
+    target: {fileID: 1062124524}
+  - key: scene.Building/RealismDetails/EntrancePanel/Floor9Legend
+    label: Building/RealismDetails/EntrancePanel/Floor9Legend
+    value: 9
+    target: {fileID: 1775732818}
+  - key: scene.Building/RealismDetails/EntrancePanel/Floor10Legend
+    label: Building/RealismDetails/EntrancePanel/Floor10Legend
+    value: 10
+    target: {fileID: 553402104}
+  - key: scene.Building/RealismDetails/EntrancePanel/Open/OpenLabel
+    label: Building/RealismDetails/EntrancePanel/Open/OpenLabel
+    value: "\u958B"
+    target: {fileID: 27613161}
+  - key: scene.Building/RealismDetails/EntrancePanel/OpenLegend
+    label: Building/RealismDetails/EntrancePanel/OpenLegend
+    value: "\u958B"
+    target: {fileID: 1130613496}
+  - key: scene.Building/RealismDetails/EntrancePanel/Close/CloseLabel
+    label: Building/RealismDetails/EntrancePanel/Close/CloseLabel
+    value: "\u9589"
+    target: {fileID: 1472347513}
+  - key: scene.Building/RealismDetails/EntrancePanel/CloseLegend
+    label: Building/RealismDetails/EntrancePanel/CloseLegend
+    value: "\u9589"
+    target: {fileID: 529804565}
+  - key: scene.Building/RealismDetails/EntrancePanel/OpenCaption
+    label: Building/RealismDetails/EntrancePanel/OpenCaption
+    value: "\u3072\u3089\u304F"
+    target: {fileID: 1987407549}
+  - key: scene.Building/RealismDetails/EntrancePanel/CloseCaption
+    label: Building/RealismDetails/EntrancePanel/CloseCaption
+    value: "\u3068\u3058\u308B"
+    target: {fileID: 1795130851}
+  - key: scene.Building/RealismDetails/EntrancePanel/Service
+    label: Building/RealismDetails/EntrancePanel/Service
+    value: "\u4FDD\u5B88\u70B9\u691C\u7528"
+    target: {fileID: 1065096311}
+  - key: scene.Building/RealismDetails/SideLeftPanel/SideLeftFloor1Legend
+    label: Building/RealismDetails/SideLeftPanel/SideLeftFloor1Legend
+    value: 1
+    target: {fileID: 1120626743}
+  - key: scene.Building/RealismDetails/SideLeftPanel/SideLeftFloor2Legend
+    label: Building/RealismDetails/SideLeftPanel/SideLeftFloor2Legend
+    value: 2
+    target: {fileID: 1414497045}
+  - key: scene.Building/RealismDetails/SideLeftPanel/SideLeftFloor3Legend
+    label: Building/RealismDetails/SideLeftPanel/SideLeftFloor3Legend
+    value: 3
+    target: {fileID: 244213036}
+  - key: scene.Building/RealismDetails/SideLeftPanel/SideLeftFloor4Legend
+    label: Building/RealismDetails/SideLeftPanel/SideLeftFloor4Legend
+    value: 4
+    target: {fileID: 1191129074}
+  - key: scene.Building/RealismDetails/SideLeftPanel/SideLeftFloor5Legend
+    label: Building/RealismDetails/SideLeftPanel/SideLeftFloor5Legend
+    value: 5
+    target: {fileID: 474981553}
+  - key: scene.Building/RealismDetails/SideLeftPanel/SideLeftFloor6Legend
+    label: Building/RealismDetails/SideLeftPanel/SideLeftFloor6Legend
+    value: 6
+    target: {fileID: 651749596}
+  - key: scene.Building/RealismDetails/SideLeftPanel/SideLeftFloor7Legend
+    label: Building/RealismDetails/SideLeftPanel/SideLeftFloor7Legend
+    value: 7
+    target: {fileID: 105893941}
+  - key: scene.Building/RealismDetails/SideLeftPanel/SideLeftFloor8Legend
+    label: Building/RealismDetails/SideLeftPanel/SideLeftFloor8Legend
+    value: 8
+    target: {fileID: 235157920}
+  - key: scene.Building/RealismDetails/SideLeftPanel/SideLeftFloor9Legend
+    label: Building/RealismDetails/SideLeftPanel/SideLeftFloor9Legend
+    value: 9
+    target: {fileID: 539146112}
+  - key: scene.Building/RealismDetails/SideLeftPanel/SideLeftFloor10Legend
+    label: Building/RealismDetails/SideLeftPanel/SideLeftFloor10Legend
+    value: 10
+    target: {fileID: 956744103}
+  - key: scene.Building/RealismDetails/SideLeftPanel/SideLeftOpenLegend
+    label: Building/RealismDetails/SideLeftPanel/SideLeftOpenLegend
+    value: "\u958B"
+    target: {fileID: 287494203}
+  - key: scene.Building/RealismDetails/SideLeftPanel/SideLeftCloseLegend
+    label: Building/RealismDetails/SideLeftPanel/SideLeftCloseLegend
+    value: "\u9589"
+    target: {fileID: 1815101564}
+  - key: scene.Building/RealismDetails/SideLeftPanel/SideLeftEmergencyLegend
+    label: Building/RealismDetails/SideLeftPanel/SideLeftEmergencyLegend
+    value: "\u975E\u5E38\n\u505C\u6B62"
+    target: {fileID: 1264636060}
+  - key: scene.Building/RealismDetails/SideLeftPanel/Caption
+    label: Building/RealismDetails/SideLeftPanel/Caption
+    value: "\u884C\u5148\u968E"
+    target: {fileID: 627977099}
+  - key: scene.Building/RealismDetails/SideRightPanel/SideRightFloor1Legend
+    label: Building/RealismDetails/SideRightPanel/SideRightFloor1Legend
+    value: 1
+    target: {fileID: 73070161}
+  - key: scene.Building/RealismDetails/SideRightPanel/SideRightFloor2Legend
+    label: Building/RealismDetails/SideRightPanel/SideRightFloor2Legend
+    value: 2
+    target: {fileID: 896907038}
+  - key: scene.Building/RealismDetails/SideRightPanel/SideRightFloor3Legend
+    label: Building/RealismDetails/SideRightPanel/SideRightFloor3Legend
+    value: 3
+    target: {fileID: 594276073}
+  - key: scene.Building/RealismDetails/SideRightPanel/SideRightFloor4Legend
+    label: Building/RealismDetails/SideRightPanel/SideRightFloor4Legend
+    value: 4
+    target: {fileID: 997525294}
+  - key: scene.Building/RealismDetails/SideRightPanel/SideRightFloor5Legend
+    label: Building/RealismDetails/SideRightPanel/SideRightFloor5Legend
+    value: 5
+    target: {fileID: 1250966257}
+  - key: scene.Building/RealismDetails/SideRightPanel/SideRightFloor6Legend
+    label: Building/RealismDetails/SideRightPanel/SideRightFloor6Legend
+    value: 6
+    target: {fileID: 478135922}
+  - key: scene.Building/RealismDetails/SideRightPanel/SideRightFloor7Legend
+    label: Building/RealismDetails/SideRightPanel/SideRightFloor7Legend
+    value: 7
+    target: {fileID: 1625837602}
+  - key: scene.Building/RealismDetails/SideRightPanel/SideRightFloor8Legend
+    label: Building/RealismDetails/SideRightPanel/SideRightFloor8Legend
+    value: 8
+    target: {fileID: 257751966}
+  - key: scene.Building/RealismDetails/SideRightPanel/SideRightFloor9Legend
+    label: Building/RealismDetails/SideRightPanel/SideRightFloor9Legend
+    value: 9
+    target: {fileID: 854442135}
+  - key: scene.Building/RealismDetails/SideRightPanel/SideRightFloor10Legend
+    label: Building/RealismDetails/SideRightPanel/SideRightFloor10Legend
+    value: 10
+    target: {fileID: 1921303734}
+  - key: scene.Building/RealismDetails/SideRightPanel/SideRightOpenLegend
+    label: Building/RealismDetails/SideRightPanel/SideRightOpenLegend
+    value: "\u958B"
+    target: {fileID: 1939031129}
+  - key: scene.Building/RealismDetails/SideRightPanel/SideRightCloseLegend
+    label: Building/RealismDetails/SideRightPanel/SideRightCloseLegend
+    value: "\u9589"
+    target: {fileID: 241176692}
+  - key: scene.Building/RealismDetails/SideRightPanel/SideRightEmergencyLegend
+    label: Building/RealismDetails/SideRightPanel/SideRightEmergencyLegend
+    value: "\u975E\u5E38\n\u505C\u6B62"
+    target: {fileID: 1212360838}
+  - key: scene.Building/RealismDetails/SideRightPanel/Caption
+    label: Building/RealismDetails/SideRightPanel/Caption
+    value: "\u884C\u5148\u968E"
+    target: {fileID: 672367250}
+  - key: scene.Building/RealismDetails/DoorCaution/Heading
+    label: Building/RealismDetails/DoorCaution/Heading
+    value: "\u6249\u306B\u3054\u6CE8\u610F"
+    target: {fileID: 1220997199}
+  - key: scene.Building/RealismDetails/DoorCaution/Body
+    label: Building/RealismDetails/DoorCaution/Body
+    value: "\u6307\u3092\u631F\u307E\u306A\u3044\n\u3088\u3046\u306B"
+    target: {fileID: 1025641038}
+  - key: scene.Building/RealismDetails/CallLegend
+    label: Building/RealismDetails/CallLegend
+    value: "\u25B3"
+    target: {fileID: 1053512618}
+  - key: scene.Building/RealismDetails/CallCaption
+    label: Building/RealismDetails/CallCaption
+    value: "\u547C \u51FA"
+    target: {fileID: 412262596}
+  - key: scene.Building/RealismDetails/CabinInformation/Caption
+    label: Building/RealismDetails/CabinInformation/Caption
+    value: "\u3054\u6848\u5185"
+    target: {fileID: 511315100}
+  notices: []
 --- !u!1 &1201372628
 GameObject:
   m_ObjectHideFlags: 0
@@ -39993,7 +40444,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 0.16
+  m_fontSize: 0.128
   m_fontSizeBase: 0.16
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -63778,6 +64229,84 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2093473061}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &2093591357
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2093591358}
+  - component: {fileID: 2093591359}
+  m_Layer: 0
+  m_Name: "05_\u6848\u5185\u30FB\u602A\u7570\u30FB\u968E\u6570"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2093591358
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2093591357}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1007742827}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2093591359
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2093591357}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13795906dba7bc147bcbd5a6e32b3906, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::GameTextCollection
+  entries:
+  - key: cabin.standby
+    label: "\u304B\u3054\u5185\u3054\u6848\u5185\uFF1A\u5F85\u6A5F\u4E2D"
+    value: "\u6249\u306E\u958B\u9589\u306B\n\u3054\u6CE8\u610F\u304F\u3060\u3055\u3044"
+    target: {fileID: 2012553555}
+  - key: floor.format
+    label: "\u73FE\u5728\u968E\u306E\u8868\u793A\u66F8\u5F0F"
+    value: '{0}'
+    target: {fileID: 0}
+  - key: run.clear
+    label: "\u5E30\u5B85\u6642\u306E\u8868\u793A"
+    value: "\u5E30\u5B85\u3057\u307E\u3057\u305F"
+    target: {fileID: 0}
+  - key: provocation.normal
+    label: "\u505C\u6B62\u3092\u8A98\u3046\u653E\u9001\uFF1A\u901A\u5E38"
+    value: "\u5B89\u5168\u78BA\u8A8D\u306E\u305F\u3081\n\u975E\u5E38\u505C\u6B62\u3092\n\u62BC\u3057\u3066\u304F\u3060\u3055\u3044"
+    target: {fileID: 0}
+  - key: provocation.revealed
+    label: "\u505C\u6B62\u3092\u8A98\u3046\u653E\u9001\uFF1A\u6B63\u4F53\u5224\u660E\u5F8C"
+    value: "\u62BC\u3057\u3066\u3002\u62BC\u3057\u3066\u3002\n\u62BC\u3057\u3066\u3002"
+    target: {fileID: 0}
+  - key: lure.plate
+    label: "\u507D\u5ECA\u4E0B\u306E\u8868\u672D\uFF08\u8868\u672D\u3092\u4F7F\u7528\u3059\u308B\u69CB\u6210\u306E\u307F\uFF09"
+    value: 708
+    target: {fileID: 0}
+  - key: lure.broken
+    label: "\u507D\u5ECA\u4E0B\u306E\u8868\u672D\uFF1A\u6B63\u4F53\u5224\u660E\u5F8C"
+    value: 7#8
+    target: {fileID: 0}
+  - key: normal.plate
+    label: "\u901A\u5E38\u5230\u7740\u306E\u8868\u672D\uFF08\u8868\u672D\u3092\u4F7F\u7528\u3059\u308B\u69CB\u6210\u306E\u307F\uFF09"
+    value: 703
+    target: {fileID: 0}
+  notices: []
 --- !u!1 &2094365856
 GameObject:
   m_ObjectHideFlags: 0
@@ -65293,6 +65822,7 @@ MeshFilter:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
+  - {fileID: 1007742827}
   - {fileID: 1272322857}
   - {fileID: 1581441852}
   - {fileID: 1444219853}

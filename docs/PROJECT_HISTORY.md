@@ -296,3 +296,13 @@
 - Windows通常build 20260915-062502-491はSucceeded、14.6秒、error/warning0、Tests assemblyなし。READMEと公式OFL（既存ttf内部copyright照合）を同梱。artifacts/demo-02/PlayableDemo-20260915.zipはruntime・README・licensesのみを選び、before/after-build記録やBurstDebugInformation_DoNotShipは含めない。
 - Computer Useで実Playerの開始・設定・720→1080・反転表示と復帰・フォーカス喪失ポーズを確認。skyキー送信ではW/Esc反応を観測できず、ユーザーが実キーボードのEsc・Wは正常と回答。クリック成功や合成試験をOS全経路の実行へ読み替えない。Player.logに新規例外なし、従来のD3D12 info queue行あり。WMI機器照会はsandboxで拒否され、性能認定はしていない。
 - Playerはユーザーの確認用に起動したまま残す。Editorは保存済みPlayableDemo、test/build処理なし。初見理解・怖さ・聴感・Windows全経路/終了・性能・長時間安定性は人の評価・追加確認が必要。Solへの全面引継ぎは保留を維持。
+
+
+## 2026-09-15 TEXT-001 — 全表示文の執筆入口
+
+- ユーザーが起動Canvas・掲示物を含む全文章の直接執筆を依頼。シーン最上部に8カテゴリの常設編集入口、日本語Inspector、シーン保存の文章コレクションを追加。既存掲示はEditableNoticeの同じデータを編集する。
+- 起動・設定・結果・確認・怪異案内の動的表示と館内TMPを接続。内装再適用時に執筆済み値を保持。空欄を尊重し、長文メニューはスクロール、壊れた階数書式は数字表示へフォールバック。判定・操作機能・配置は維持。
+- 保存／再読込／実際の内装再適用の保持確認成功。対象PlayMode 2/2成功、0 fail/skip（144.38秒）。新テストは改名したボタンをInput Systemのマウスで操作。既存のデモ通し回帰も成功。テストのTMP参照不足はテストasmdefへ既存TMP参照を追加して修正。
+- InspectorをComputer Useで実見。最終Game View画像でタイトル・設定を確認。通常Windows build成功（20260915-072340-630、error/warning 0、11.71秒）。新buildのWindows実入力と作者が執筆した文章の理解は未検証。
+- 開始時main 59e9abb、Git差分なし。未保存シーンをartifacts/text-01/user-scene-before.unityへ保護。既存との差はTMPの内部正規化2項目のみで保持。検証後のUnity生成末尾空白のみを整理し、無関係な素材変更は残さなかった。
+- 操作案内はDEMO_AUTHORING。artifactsはローカル証拠でGit同期対象外。従来のPlayerは閉じておらず、その実行物は今回の変更前の版。

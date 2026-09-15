@@ -74,7 +74,7 @@ public class ProvocationAnomaly : AnomalyBehaviour
     {
         base.OnReveal();
         StopAnnouncementRoutine();
-        PresentAnnouncement(revealedAnnouncement, RevealedPitch);
+        PresentAnnouncement(GameTextCollection.Get(this, "provocation.revealed", revealedAnnouncement), RevealedPitch);
 
         if (HasReference(revealLamp, nameof(revealLamp)))
         {
@@ -118,7 +118,7 @@ public class ProvocationAnomaly : AnomalyBehaviour
 
         while (true)
         {
-            PresentAnnouncement(normalAnnouncement, originalSpeakerPitch);
+            PresentAnnouncement(GameTextCollection.Get(this, "provocation.normal", normalAnnouncement), originalSpeakerPitch);
             yield return WaitForSecondsIfPositive(repeatInterval);
         }
     }

@@ -22,7 +22,7 @@ public class NormalArrival : AnomalyBehaviour
     {
         base.OnDiagnosisStart();
         SetActiveIfPresent(hallwayRoot, nameof(hallwayRoot), true);
-        SetTextOrLog(plateText, nameof(plateText), realPlateString);
+        SetTextOrLog(plateText, nameof(plateText), GameTextCollection.Get(this, "normal.plate", realPlateString));
     }
 
     public override void OnReveal()

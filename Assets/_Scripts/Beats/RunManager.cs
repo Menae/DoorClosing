@@ -344,7 +344,7 @@ public class RunManager : MonoBehaviour
             yield break;
         }
 
-        nightClearText.text = clearMessage;
+        nightClearText.text = GameTextCollection.Get(this, "run.clear", clearMessage);
         nightClearText.gameObject.SetActive(false);
         blackFadeImage.gameObject.SetActive(true);
 
@@ -406,7 +406,7 @@ public class RunManager : MonoBehaviour
 
         if (nightClearText != null)
         {
-            nightClearText.text = clearMessage;
+            nightClearText.text = GameTextCollection.Get(this, "run.clear", clearMessage);
             nightClearText.gameObject.SetActive(false);
         }
     }

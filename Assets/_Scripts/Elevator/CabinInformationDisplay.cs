@@ -24,7 +24,7 @@ public class CabinInformationDisplay : MonoBehaviour
         transition = null;
         IsShowingAnnouncement = false;
         if (content == null) return;
-        content.text = standbyMessage;
+        content.text = GameTextCollection.Get(this, "cabin.standby", standbyMessage);
         content.color = new Color(.78f,.86f,.80f,1f);
     }
 

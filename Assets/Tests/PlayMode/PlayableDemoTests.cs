@@ -101,6 +101,46 @@ namespace GraduationProject.Tests
         }
 
 
+  private void Author(string key, string value)
+  {
+   foreach (var root in fixtureScene.GetRootGameObjects())
+   foreach (var component in root.GetComponentsInChildren(GameAccess.Type("GameTextCollection"), true))
+   {
+    var so = new UnityEditor.SerializedObject(component); var entries = so.FindProperty("entries");
+    for (int i = 0; i < entries.arraySize; i++)
+    {
+     var entry = entries.GetArrayElementAtIndex(i);
+     if (entry.FindPropertyRelative("key").stringValue != key) continue;
+     entry.FindPropertyRelative("value").stringValue = value; so.ApplyModifiedPropertiesWithoutUndo(); return;
+    }
+   }
+   Assert.Fail("Missing authored entry: " + key);
+  }
+  [UnityTest] public IEnumerator AuthoredMenu_BlankLongAndRenamedButtonRemainUsable()
+  {
+   yield return UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/PlayableDemo.unity",new LoadSceneParameters(LoadSceneMode.Single));
+   fixtureScene=SceneManager.GetSceneByPath("Assets/Scenes/PlayableDemo.unity"); SceneManager.SetActiveScene(fixtureScene);
+   demo=Find("DemoSession"); journey=Find("NormalJourneyController");
+   Author("menu.ShowTitle.1", "執筆したタイトル");
+   Author("menu.ShowTitle.2", string.Join("\n", Enumerable.Repeat("長文の執筆内容が最後まで読めることを確認します。", 35)));
+   Author("menu.ShowTitle.4", "入館する");
+   var redraw=demo.GetType().GetMethod("ShowTitle",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic);
+   redraw.Invoke(demo,null); yield return null; yield return null;
+   var scroll=UnityEngine.Object.FindFirstObjectByType<ScrollRect>();
+   Assert.That(scroll.content.rect.height,Is.GreaterThan(scroll.viewport.rect.height),"Long copy must scroll instead of losing its controls");
+   scroll.verticalNormalizedPosition=0; yield return null;
+   var button=UnityEngine.Object.FindObjectsByType<Button>(FindObjectsSortMode.None).Single(b=>b.name=="入館する");
+   Assert.That(RectTransformUtility.RectangleContainsScreenPoint(scroll.viewport, RectTransformUtility.WorldToScreenPoint(null,button.transform.position)),Is.True);
+   Author("menu.ShowTitle.2", ""); redraw.Invoke(demo,null); yield return null; yield return null;
+   var captions=UnityEngine.Object.FindObjectsByType<TMPro.TMP_Text>(FindObjectsSortMode.None);
+   Assert.That(captions.Any(t=>t.text=="執筆したタイトル"),Is.True);
+   Assert.That(captions.Any(t=>t.text.Contains("あなたの自宅は")),Is.False,"Empty authored text must not restore defaults");
+   Author("floor.format", "{broken");
+   var floor=Find("FloorIndicator");
+   Assert.DoesNotThrow(()=>floor.GetType().GetMethod("SetFloor").Invoke(floor,new object[]{1}));
+   yield return Ui("入館する"); Assert.That(Flag("IsPaused"),Is.False); Assert.That(State,Is.EqualTo("WaitingForCall"));
+  }
+
   [UnityTest] public IEnumerator MenuIntroductionThreeEncountersAndReplay_UseInputSystem()
   {
    yield return UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/PlayableDemo.unity",new LoadSceneParameters(LoadSceneMode.Single));
