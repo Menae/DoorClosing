@@ -1,21 +1,21 @@
 ---
 name: unity-verified-development
-description: Implement and verify this Unity URP project using focused tests, reproducible input, actual screenshots and Windows Player checks. Use for Unity development or regression investigation, not design approval or generic coding.
+description: Implement or debug this Unity project and verify affected behavior in the Editor or Windows Player.
 ---
 
 # Unity verified development
-Read AGENTS.md, docs/DEVELOPMENT.md and relevant docs/VALIDATION.md scenarios. Inspect Git changes and preserve user edits. Scene values may override script defaults.
 
-Prefer Unity MCP. If native tools are absent, use the documented repository SDK client. Inspect live schemas, instances, project path, Editor state and relevant resources before actions. Bind to the intended project; never choose an arbitrary running Editor.
+このプロジェクトのUnity実装・回帰調査を、承認済み仕様と再現可能な証拠につなぐ。委任・継続・保存の境界は [AGENTS.md](../../../AGENTS.md)。Sceneの保存値がscript既定値を上書きすることに注意する。
 
-After edits wait for import/compilation/domain reload and inspect Console. Run the smallest meaningful check of changed behavior. Derive expected results from approved requirements or explicitly labeled existing-behavior regressions, never from a desire to pass.
+## 必要な経路だけ読む
 
-For input changes cover Input System → Raycast → hold → commit. Direct evaluator calls and debug shortcuts cover only logic. Separate synthetic-input tests from Windows device tests. Restore fake devices, input settings, time scale and test objects even after failure.
+- 期待結果と検証選択: [VALIDATION.md](../../../docs/VALIDATION.md#変更に応じた検証) と対象シナリオ。関連するGAME_SPEC／決定から期待結果を導く。
+- MCP操作・接続・復旧: [DEVELOPMENT.md](../../../docs/DEVELOPMENT.md)。Unity MCPを優先し、非表示なら既存SDK clientを使う。操作前に実instance・project path・scene・Editor状態と必要なtool schemaを確認する。
+- 画面／Windows実入力: VALIDATIONの「画面・操作の証拠」「Windows Player」とDEVELOPMENTの「Windows Computer Useの接続確認」。対象windowと最終Game Viewを確認する。
 
-Capture final Game View at a known scene/state, with UI and post-processing. Camera-only/Scene View renders are supplementary. Inspect returned images; verify capture source, color space, timing and resolution. Do not brighten game lighting merely to make screenshots legible.
+## このプロジェクトで間違えやすい境界
 
-Do not use -nographics to certify URP appearance. Do not open another Editor on this project. Do not discard unsaved user scenes; use isolated generated fixtures for tests.
-
-Save evidence in artifacts/ with reproduction context. Separate compile, logic, synthetic input, visual inspection, Player, performance and human playtest results, including skips/failures/timeouts. Stop broadening tests when relevant checks pass unless new evidence warrants it.
-
-For real UI/Player checks, announce foreground Computer Use, identify the window and refresh after actions. One click or screenshot does not prove continuous first-person control. Keep verification code excluded from ordinary builds; report evidence and limits, not a guarantee of fun or release readiness.
+- 現行入力はInput System → Raycast → **click → commit**。旧holdは履歴。直接SubmitAction／debug正解入力ではこの経路を検証できない。合成デバイスとOS入力を区別し、失敗時もfixtureのデバイス・設定・時間倍率・生成物・購読を戻す。
+- UI・post-processing込みの最終画面を実見する。Camera単体・Scene View・`-nographics`はURPの最終外観の証明にならない。撮影条件・色空間を確認し、撮影の都合でゲームの照明を変えない。
+- 同じprojectで別Editor／batchを起動せず、未保存シーンを保護する。import／compile／reload後のConsoleを確認する。テスト用fixtureと製品buildのdebug除外はVALIDATIONに従う。
+- 必要な検証、そこで判明した回帰修正、証拠・限界の記録まで進める。合格済み検証の拡大・反復は新たな変更や懸念があるときだけ行う。技術検証と人の知覚・怖さの受入は別。

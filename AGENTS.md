@@ -3,29 +3,22 @@
 Communicate in Japanese. Existing first-person atmospheric horror for Windows; Unity 6000.3.14f1 / URP 17.3.0.
 
 ## Working agreement
-- At every task start, resume, or handoff, read docs/START_HERE.md, docs/PROJECT_STATUS.md, the full docs/GAME_SPEC.md, docs/ROADMAP.md, and relevant docs/DECISIONS.md / docs/OPEN_QUESTIONS.md. Conversation memory is not the shared project record.
-- The 2026-09-07 design baseline is accepted for documentation and development planning. Follow its requirements; prototype presentation and numeric tuning remain provisional until human evaluation. See WORK-001 for the user's Codex-led implementation delegation and its limits.
-- Before implementation, record the active roadmap task, owner/session, intended player behavior, affected files and checks in docs/PROJECT_STATUS.md. Update it after each meaningful unit and before stopping. Never mark untested work complete. Record interrupted operations before retrying them.
-- Use a single implementation/Unity operator in this checkout. PROJECT_STATUS.md is a coordination record, not an atomic lock. If another task is active, verify ownership before mutations; do not steal ownership based only on elapsed time. Other chats can review read-only.
-- Continue the requested development scope through routine reversible steps without asking after every unit. Ask only for material unapproved design, severe consequences, or necessary human feedback. User pause instructions take immediate precedence.
-- Read docs/GAME_SPEC.md, docs/DECISIONS.md and relevant docs/OPEN_QUESTIONS.md before changing behavior.
-- On 2026-09-06 the user delegated routine, reversible engineering decisions for this development environment. Proceed and verify without repeated approval; report choices and practical effects. Do not invent the game's intended experience.
-- Confirm changes with severe consequences or expensive reversal: engine/render-pipeline migration, replacing major game systems, destructive data/history changes, paid commitments, public release, or broad access/security changes. Explain consequences in plain Japanese. Use the available user-input tool for design choices and the actual permission mechanism for access grants.
-- Keep approved requirements, observed implementation and hypotheses separate. A recommendation, AI agreement or unanswered question is not a user decision.
-- Preserve user work. Inspect status and diff first; do not reset, clean, stash or commit their work incidentally.
-- Follow docs/START_HERE.md "利用枠を節約する運用 — WORK-003": Sol medium is the normal operating recommendation; Codex owns escalation diagnosis and prepares a concise handoff when Astra is needed. Do not make the user classify every task. Keep required verification and approvals; prefer brief reports. This does not automatically change model settings or authorize subagents.
+
+- 開始・再開時は [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md) の現在地・担当とGit差分を確認し、[docs/START_HERE.md](docs/START_HERE.md) の目的別案内から必要な資料を読む。仕様全文や過去ログの一律読込は不要。ゲーム挙動を変えるときはGAME_SPECの関連規則・例外とDECISIONS／OPEN_QUESTIONSを照合する。
+- 2026-09-07の仕様基準版と最新の明示決定を守る。WORK-001/002により承認済み範囲の可逆的実装・環境整備・検証・記録は委任済み。GAME-015の具体演出・数値は試作できるが、正式採用・怖さの評価とは分ける。
+- 依頼範囲の実装、関連検証、発見した回帰の修正、記録、WORK-005の保存まで継続する。初回実装や単位ごとの報告を継続確認のゲートにしない。新しい懸念がなければ合格済みの検証を広げず次へ進む。ユーザーの停止指示は直ちに優先する。
+- 質問は既存の決定・委任で解けない重大な判断に限る。未承認のゲーム体験・必須範囲、エンジン／描画基盤移行、大型置換、新依存・サービス・保存形式、破壊的変更、費用・公開・アクセス変更は影響を具体化して確認する。判断には利用可能なuser-inputツール、アクセスには実際の承認機構を使う。人の評価待ちは依存する範囲だけ止める。
+- 編集前にPROJECT_STATUSへ目的／工程、担当task、変更範囲、期待結果、完了条件と検証を簡潔に記録し、意味のある単位と停止時に更新する。中断した処理は結果を確認してから再試行する。過去の詳細はPROJECT_HISTORYへ残す。
+- 同checkoutの実装・Unity操作は1担当。他の担当が稼働中なら所有を確認してから編集し、経過時間だけで引き継がない。PROJECT_STATUSは排他ロックではない。別taskは読み取りレビュー可。
+- モデル運用はSTART_HEREのWORK-003を参照し、最新の明示的な担当指定を優先する。モデル設定変更・サブエージェント起動の承認をこの規約から推測しない。スキルの一般手順で既存のユーザー委任を狭めない。
 
 ## Unity workflow
-- Prefer Unity MCP. Read docs/DEVELOPMENT.md for startup, recovery and the SDK client fallback when native tools are absent.
-- Identify the project and scene before mutations. Wait for import/compilation/domain reload; check Console after changes.
-- Preserve .meta GUIDs. Use Unity APIs/MCP for scenes and prefabs where practical; never broadly rewrite serialized files or unintentionally save Play changes.
-- One operator per Editor. Do not open the same project in another Editor/batch process. Separate worktrees need separate Library folders and explicit routing.
-- Follow docs/VALIDATION.md and unity-verified-development. Distinguish compilation, logic tests, simulated input, actual visual inspection, Windows Player checks and human playtests.
-- Direct SubmitAction calls and debug-correct keys do not verify normal Input System → Raycast → click → commit behavior. Existing hold-based tests describe the old implementation, not the approved click specification.
-- Keep test/debug code out of ordinary release builds. Do not incidentally add production services, telemetry or runtime dependencies.
-- Save generated evidence outside Assets in artifacts/. Record scene, code version, input path, resolution and state. No automatic evidence deletion without an agreed policy.
-- Announce Computer Use foreground control. Check the selected Unity/Player window and final Game View composition, not just a camera-only render.
-- For Windows Computer Use, follow docs/DEVELOPMENT.md "Windows Computer Useの接続確認" and the installed computer-use skill: discover `mcp__node_repl__js`, initialize `@oai/sky`, then enumerate windows. An empty `cua_repl` app list or its native-API restriction does not establish that the separate Windows plugin is unavailable. Check the supported plugin route before reporting a blocker; never bypass an actual permission denial.
+
+- Unity実装・不具合調査にはunity-verified-developmentを使い、[docs/VALIDATION.md](docs/VALIDATION.md) から変更に必要な検証を選ぶ。MCP接続・復旧は [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)。文書のみの編集にEditor起動・ビルドは不要。
+- Unity MCPを優先し、操作前に接続先project・scene・未保存状態を確認する。同じprojectに別Editor／batchを起動しない。別worktreeには独立Libraryと明示ルーティングが必要。
+- .meta GUID、ユーザーの未保存シーン、Play変更を保護する。シーン／Prefabは実用的な範囲でUnity APIを使い、serialized fileの広範囲書換えを避ける。変更後のimport／compile／domain reloadとConsoleを確認する。
+- 通常入力はInput System → Raycast → click → commit。Debug直接呼出しは代用にならない。見た目はUI・post-processingを含む最終Game View／Playerを実見する。テスト／debugコードは通常製品ビルドから除外する。
+- 前面Computer Useは事前に知らせ、対象windowを確認する。[Windows接続手順](docs/DEVELOPMENT.md#windows-computer-useの接続確認)に従い、`cua_repl`の制限だけでWindows plugin全体の不可と判断しない。実際の権限拒否は迂回しない。
 
 ## Git workflow
 - 作業開始・再開時は `git status --short`、現在ブランチ、対象のunstaged/staged差分を確認する。既存変更と今回の変更を区別し、由来不明の差分を混ぜない。
@@ -40,4 +33,5 @@ Communicate in Japanese. Existing first-person atmospheric horror for Windows; U
 - GitHub認証はWindows Credential Managerを使い、トークンを環境変数や平文へコピーしない。sandbox内の認証失敗だけで再ログインせず、必要な権限で通常ホストの `gh auth status --hostname github.com` を確認する。
 
 ## Completion report
-Report changed files, actual checks and evidence, failures/skips and limitations. Never call a timed-out, unavailable or merely compiled check passed. Technical verification cannot prove fun or fear.
+
+成果・変更ファイル、実際の検証と証拠、失敗／skip／未検証、commit／pushと残る差分を短く報告する。実装・コンパイル・自動テスト・実画像・Player・人の評価を区別し、技術検証から面白さ・怖さを認定しない。証拠はAssets外のartifactsへ再現条件付きで保存し、合意した方針なしに自動削除しない。

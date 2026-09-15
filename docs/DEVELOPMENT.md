@@ -2,14 +2,14 @@
 
 対象は GraduationProject、Unity 6000.3.14f1、URP 17.3.0、Windows PC。ゲームの内容・面白さの判断は docs/GAME_SPEC.md と意思決定記録を基準にする。
 
-開始・再開の入口はdocs/START_HERE.md。全体仕様はGAME_SPEC、開発順はROADMAP、現在担当・進捗・次の一手はPROJECT_STATUSを読む。以下の環境導入時のテスト説明にある長押しは旧実装の記録で、現行承認仕様は即時クリック。新仕様へ更新するときに関連テストも移行する。
+開始・再開の入口は [START_HERE.md](START_HERE.md)。本書はUnity接続・検証ツール・復旧が必要なときに該当節を読む。現在担当と進捗はPROJECT_STATUS、変更ごとの検証選択は [VALIDATION.md](VALIDATION.md#変更に応じた検証)。現行入力は即時クリックで、長押し試験は導入時の履歴。
 
 ## 普段の開始
 
 1. Codexで既存の GraduationProject を開く。Unityを操作する作業は、この保存済みプロジェクトの作業ディレクトリで行う。別worktreeを使う場合は、そちらを明示的にUnityで開き、接続先も確認する。
-2. Unity Hubから同じプロジェクトを6000.3.14f1で開く。既に開いていれば再起動不要。
-3. プロジェクトのPowerShellで `./tools/UnityAgent.ps1 Start` を実行する。既存の同版サーバーは再利用する。
-4. Unityで **Tools > Unity Agent > Connect Local MCP**。または **Window > MCP for Unity > Toggle MCP Window** の Connect。
+2. Unity操作が必要でEditorが閉じている場合はUnity Hubから同じプロジェクトを6000.3.14f1で開く。既に開いていれば再起動不要。
+3. MCPが未接続ならStatusで確認し、必要時にプロジェクトのPowerShellで `./tools/UnityAgent.ps1 Start` を実行する。既存の同版サーバーは再利用する。
+4. 接続が必要ならUnityで **Tools > Unity Agent > Connect Local MCP**。または **Window > MCP for Unity > Toggle MCP Window** の Connect。
 5. Codexは `mcpforunity://instances` と `mcpforunity://project/info` を読み、プロジェクトの絶対パスを照合して対象を選択する。複数Editorがあるときは名前だけで推測しない。
 
 MCPのアドレスは `http://127.0.0.1:8080/mcp`。サーバーはこのPC内のみ。サーバー起動に管理者権限・有料アカウントは不要。自動起動するWindowsサービスや定期実行タスクは作っていない。
@@ -41,7 +41,7 @@ AGENTS.mdは重大・復元困難な変更を確認し、通常の可逆的な�
 
 Unityの **Tools > Unity Agent** に次の操作を追加している。
 
-- **Run Input Regression Tests**: 独立したPlay Modeの5テストを実行し、`artifacts/tests/<UTC時刻>/playmode.xml` へ保存する。未保存のシーンがあれば実行を拒否する。
+- **Run Input Regression Tests**: `GraduationProject.PlayModeTests`を実行し、`artifacts/tests/<UTC時刻>/playmode.xml` へ保存する。件数は現行コードと結果XMLで確認する。対象を絞る場合は既存の`RunInputTests(string[] testNames)`やMCPのtest filterを使う。未保存のシーンがあれば実行を拒否する。
 - **Run Serialization Checks**: 保存フィールド名の重複と既存Prefabの保存値を検証し、`editmode.xml` へ保存する。
 - **Capture Game View**: Play Mode中のGame ViewをPNGと撮影条件JSONとして `artifacts/captures/` に保存する。実行要求とファイル保存完了は別なので、ファイルが生成されたことを確認して画像を開く。Game Viewを表示しておく。
 - **Build Windows Development**: 現在有効なビルドシーンでWindows64のDevelopment Buildを作り、`artifacts/builds/<UTC時刻>/build.json` と実行ファイルを保存する。シーンは自動保存せず、未保存状態なら拒否する。プラットフォームも自動変更しない。

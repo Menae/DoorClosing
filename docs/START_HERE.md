@@ -1,68 +1,49 @@
 # GraduationProject：開発の入口
 
-作業場所: C:\Users\menae\Desktop\Unity_Projects\GraduationProject
-Unity 6000.3.14f1 / URP 17.3.0。日本語でやり取りする。
+Unity 6000.3.14f1 / URP 17.3.0。日本語でやり取りする。Codexでこの保存済みローカルプロジェクトを開いて作業する。
 
 ## 人が普段すること
 
-通常は **Sol medium / Fast無効** を選び、既存の開発taskで下の一文を送る。人は工程ごとのモデル選択を行わない。Astraへの切替が必要な場合だけCodexが理由と引継ぎを用意する。モデル設定は文書では自動変更されない。
+開発を開始・再開するときは、次の一文でよい。
 
-Codexでこの保存済みローカルプロジェクトを開き、次の一文で開発を開始・再開できる。
+> AGENTS.mdとdocs/START_HERE.mdに従い、PROJECT_STATUSの現在地と最新の担当指定から、依頼済み・承認済みの開発を進めて。必要な実装、関連検証、不具合修正、記録、commit／pushまで任せます。人の判断が必要な部分は具体化して示し、独立して進められる作業は続けて。
 
-> AGENTS.mdとdocs/START_HERE.mdに従い、現在地を確認して、承認済み仕様の開発をROADMAPの次の作業から進めて。通常の実装・検証・記録更新は任せます。
+「一旦停止」で中断、「続けて」で再開する。利用制限や強制終了の後はCodexが差分と実行中処理を照合する。自動継続・自動リセットは設定していない。人の体験評価が必要なときは、Codexが遊べる短いビルドと確認内容を用意する。
 
-Unityが開いていなければ同じ場所を開く。接続はCodexが既存MCPの状態を確認・復旧する。手動操作が必要な場合だけ、Codexが必要な画面と最短の操作を案内する。体験評価では、Codexが提示した短いビルドを遊び、感じたことを伝える。
+## 作業に応じた参照
 
-開始済みの作業は「一旦停止」で中断、「続けて」で再開できる。中断時は可能な安全な区切りで現在地を残す。利用制限や強制終了では最後の記録以後の状態が未反映の場合があるため、次のCodexが差分と実行中処理を照合する。自動継続や自動リセットは設定していない。
+入口は [AGENTS.md](../AGENTS.md) の権限・Git規約と [PROJECT_STATUS.md](PROJECT_STATUS.md) の現在地・担当。そこから今回の判断に必要な節を読む。小さな文書修正やツール復旧に仕様全文を読み直す必要はない。
 
-## Codexの必読順序
+| 今回の作業 | 読む資料・使うスキル |
+|---|---|
+| 次工程を選ぶ／ゲーム開発を引き継ぐ | PROJECT_STATUS、[ROADMAP](ROADMAP.md) の対象工程・依存。全体の経験や規則の関係が不明なら [GAME_SPEC](GAME_SPEC.md) 全体を確認 |
+| ゲーム挙動を実装・変更する | GAME_SPECの対象規則と関係する例外、[DECISIONS](DECISIONS.md)／[OPEN_QUESTIONS](OPEN_QUESTIONS.md) の該当ID、実コード・シーン。unity-verified-developmentと [VALIDATION](VALIDATION.md) の必要な検証 |
+| 見た目・音・体験を検討する | GAME_SPECの該当節、最新VIS決定、[VISUAL_REFERENCES](VISUAL_REFERENCES.md)、[PLAYTEST_PLAN](PLAYTEST_PLAN.md)。設計比較・人の評価にはhorror-design-review |
+| Unity接続・環境の復旧 | [DEVELOPMENT](DEVELOPMENT.md) の該当手順、[KNOWN_ISSUES](KNOWN_ISSUES.md)。MCP操作にはunity-mcp-orchestrator。Windows実画面・実入力は [接続確認](DEVELOPMENT.md#windows-computer-useの接続確認) とインストール済みcomputer-useスキル |
+| 文書・運用の修正 | 対象文書と参照元、関係するWORK決定。スキル編集にはskill-creator。Unity起動は不要 |
+| 過去の不具合・証跡を調べる | [PROJECT_HISTORY](PROJECT_HISTORY.md) の対象工程、[ENVIRONMENT_REPORT](ENVIRONMENT_REPORT.md) は環境導入当時の履歴 |
 
-1. ルートAGENTS.md: 権限・保存・開始時の規則。
-2. [PROJECT_STATUS.md](PROJECT_STATUS.md): 今の工程・担当・実行中処理・次の一手。
-3. [GAME_SPEC.md](GAME_SPEC.md) 全文: 体験の全体像、規則、例外、優先順位。
-4. [ROADMAP.md](ROADMAP.md): 開発順と今回の見える成果・受入条件。
-5. [DECISIONS.md](DECISIONS.md) と [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md): 決定理由、委任、保留。必要な項目を読む。
-6. Unity実装時はunity-verified-developmentスキル、[DEVELOPMENT.md](DEVELOPMENT.md)、[VALIDATION.md](VALIDATION.md)。体験検討時はhorror-design-reviewスキルと [PLAYTEST_PLAN.md](PLAYTEST_PLAN.md)。
+見出しやIDを検索して必要な範囲から読み、依存先や矛盾が見つかったら広げる。同じ連続作業で変わっていない全文・成功ログを繰り返し出力しない。進捗の要約をゲーム仕様の代用にしない。
 
-Windowsの実画面・実入力確認では、[DEVELOPMENT.md「Windows Computer Useの接続確認」](DEVELOPMENT.md#windows-computer-useの接続確認)を使う。`cua_repl`のアプリ一覧が空でも、Windows用の`node_repl`＋`@oai/sky`を確認するまで「Computer Use不可」と判断しない。ユーザーが毎回接続方法を指示する必要はない。
+## 作業の完了と継続
 
-仕様を作業メモに重複コピーして別の正本を作らない。短い進捗だけからゲームを想像し直さない。
+開始時にPROJECT_STATUSへ対象・期待結果・変更範囲・完了に必要な検証を短く記録する。既存の依頼、ROADMAPと仕様で定まる範囲は確認し直さず進め、重要な新規判断だけを切り分ける。
+
+完了は、依頼された変更に必要な検証と発見した回帰の修正、記録、WORK-005に沿った保存まで終えた状態。実装だけ・コンパイルだけを完成にしない。検証の選び方は [VALIDATION](VALIDATION.md#変更に応じた検証) を参照し、合格後の拡大・再実行は新しい変更・失敗・未解決の懸念がある場合に限る。
+
+継続開発の依頼では、単位完了後も承認済み範囲の次へ進む。人の判断待ちは依存部分だけ止め、何を判断するかと必要な根拠を具体化する。対象全体の完了、明示停止、または独立して進められる作業がない実際のblockerで区切る。未検証・人の未受入は残したまま明記する。
 
 ## 利用枠を節約する運用 — WORK-003
 
-- 通常の実装・検証・記録はSol mediumで一貫して進める。Luna/Sparkへの細分化やAstraの常時監督は初期運用に含めない。サブエージェントをこの規則だけで起動しない。
-- モデル切替の要否はCodexが判断する。同じ不具合について根拠のある異なる仮説を2回検証しても原因特定・解消に進展がない場合、または状態遷移・扉・救済期限・保存の整合性に具体的な未解決問題があり受入条件を説明できない場合、Astra mediumへの引継ぎを準備する。単に工程が変わっただけでは切り替えない。
-- 引継ぎ時はPROJECT_STATUSへ対象仕様、変更ファイル、再現条件、試行と結果、未解決点、次に調べる箇所を短く残す。安全な区切りで対象作業を止め、必要な切替と理由を簡潔に伝える。権限不足・接続障害・人の設計判断待ちはモデル変更で解決すると扱わない。
-- 人は通知された場合だけ同じtaskをAstra mediumに切り替え、「引継ぎの難所を解決・検証し、Solに戻せる区切りで記録して止めて」と送る。Astraは対象難所と関連検証に集中し、完了後にSol mediumへ戻す旨を伝える。切替後は「続けて」で再開できる。
-- モデルを変えてもVALIDATIONの検証と承認条件は維持する。報告は通常5行程度で成果・検証・未解決点を伝え、詳細証拠はファイルに残す。必要な失敗・制限・権限説明は省略しない。
-- 開始・再開時の必読は維持する。同じ連続作業内で変更のない文書全文や成功ログを繰り返し出力しない。節約率は未実測で、最適性を保証しない。手戻りが続く作業は記録を根拠に運用を見直す。
+- 基本の運用案はSol medium / Fast無効。**最新のユーザー指定を優先する。現在はVIS-004以降のAstra継続・全面引継ぎ保留が有効**で、工程の区切りだけでSolへ戻さない。文書はモデル設定を自動変更しない。
+- 通常Sol運用で、異なる根拠のある仮説を2回検証しても進展がない場合、または状態・扉・期限・保存の整合性に具体的な難所が残る場合、CodexがAstra mediumへの引継ぎを準備する。権限・接続・人の設計判断待ちをモデル変更で解決すると扱わない。
+- 引継ぎには対象仕様、再現条件、変更、試行と結果、未解決点、完了条件を残す。「この難所だけ解決して止める」は限定レビューを依頼された場合に使う。開発継続を任されているtaskを、初回実装や検証直前で止めるためには使わない。
+- Lunaへの細分化、Astra常時監督、サブエージェント起動をこの運用から自動的に追加しない。モデル比較・節約効果は未実測。SolでもAstraでも同じ仕様・証拠・承認境界を使う。
 
-## 毎回の実装手順
+## 記録の正本
 
-1. git status/diff、Editor接続先、未保存状態、PROJECT_STATUSの担当を確認する。ユーザーの既存作業を保護。
-2. 次の単位を選び、担当チャット・場所・対象仕様・期待する行動・変更候補ファイル・検証をPROJECT_STATUSへ記録。
-3. 承認済み仕様を小さく実装。通常の可逆的技術判断は任せられている。演出・数値の詳細は試作と明記し、勝手に正式採用しない。
-4. Console・関連テスト・通常入力・最終Game View・必要なWindows Player確認を実施。API成功応答とテスト合格を混同しない。
-5. 作業単位ごとにPROJECT_STATUSを更新。設計変更はDECISIONS、未決はOPEN_QUESTIONS、体験結果はPLAYTEST_PLANの様式で記録。
-6. 承認済み範囲の次の単位へ続ける。毎回継続確認を求めない。人の評価が必要なときは技術的に遊べる状態と短い確認内容を提示する。
+- ゲームの必須規則はGAME_SPEC、決定理由と委任はDECISIONS、保留はOPEN_QUESTIONS。現在地はPROJECT_STATUS、過去の詳細はPROJECT_HISTORY。仕様を別の作業メモへ重複コピーしない。
+- Gitは [AGENTS.mdのGit workflow](../AGENTS.md#git-workflow) に集約。通常commit／既存upstreamへのpushはWORK-005で委任済み。新規公開・リリース・破壊的操作は別の判断。
+- artifactsはAssets外・Git対象外の証拠保存先。別PCへ自動同期されず、自動削除方針は未合意。
 
-## 役割と限界
-
-- Codex: 実装、配線、可逆的な技術判断、テスト・撮影・ビルド、進捗と課題管理、プレイテスト準備。
-- ユーザー: 必要時のみUnity操作、初見演出への感想、未承認の重大な設計・範囲変更、費用・公開等の判断。
-- ルールや必須範囲の無断変更、大型置換、破壊的操作、課金・公開は委任に含めない。既存承認を毎回聞き直さない。
-- 同じEditorと同じファイルを複数チャットから同時に編集しない。別チャットは担当確認までは読み取りのみ。PROJECT_STATUSは実行を強制排他する機構ではない。
-- 別worktree・別PCには未コミットの文書や進捗は自動で届かない。普段はこの保存済みフォルダを使う。WORK-005に従いCodexが作業単位でcommit、区切りでpushする。別環境への取込みは別操作であり自動同期ではない。
-- AGENTS.mdの読込と文書参照を運用の基礎にする。すべてのモデルの完全な理解・遵守を保証するものではない。
-
-## 記録の見方
-
-Gitの手順は [AGENTS.mdのGit workflow](../AGENTS.md#git-workflow) に集約。普段の開発指示は同じでよい。検証済みの作業単位で自動commit、工程や終了の区切りで既存upstreamへ自動pushするため、毎回の指示は不要。既存の混在変更は一括で取り込まず、送信失敗・要確認事項はCodexが報告する。
-
-現在工程はPROJECT_STATUSだけを見れば分かる。仕様承認、実装済み、コンパイル済み、自動テスト済み、画像確認済み、Player確認済み、人の評価済みを分ける。以前の7テスト成功・Windowsビルド成功は環境導入時の旧挙動の記録で、新しいゲーム仕様の完成ではない。
-
-接続問題はDEVELOPMENT、既知の問題は [KNOWN_ISSUES.md](KNOWN_ISSUES.md)、環境導入の履歴は [ENVIRONMENT_REPORT.md](ENVIRONMENT_REPORT.md)。証拠はAssets外のartifactsへ保存し自動削除しない。
-
-## この運用の根拠
-
-リポジトリのAGENTS.mdからプロジェクト固有の指示を読み込む仕組みを利用する。読込方法と範囲は [OpenAI公式文書](https://learn.chatgpt.com/docs/agent-configuration/agents-md) を参照（2026-09-07確認）。仕様全文は別ファイルに保ち、AGENTSは入口と作業規約に絞る。
+今回の運用整理の根拠と確認範囲は [2026-09-15運用監査](WORKFLOW_AUDIT_2026-09-15.md)。これはゲーム仕様やモデル設定の変更記録ではない。
