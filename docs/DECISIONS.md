@@ -322,3 +322,11 @@
 - Context: 誘引の機能遷移と死亡復帰はテストできたが、既存stand-inはReveal用Light/drone参照がなく、状態ログ以外ではReveal・Graceの差が弱かった。通常中の正誤ラベル・説明overlayは禁止されている。
 - Decision / reason: 未配線時だけruntime Point Lightと生成droneを補完し、初回誤答は赤、救済猶予は橙、救済完了は閉扉と怪異消失、死亡は既存黒fade、再挑戦は既存1階ホールで示す。環境の因果を保ち、説明UIや外部素材を増やさない。
 - Trial / limits: Light強度5.0/3.5、色、生成drone音量0.28・pitch 0.65は人の評価前の試作値。Game Viewの連続画像と自動状態を照合済みだが、初見理解・聴感・恐怖・正式採用は人の実プレイ待ち。
+
+## DEMO-002 — 掲示による学習と編集箇所を明示する
+
+- Status / date / owner: ユーザー明示指定、2026-09-15。実装担当Astra。
+- Context / decision: DEMO-001の導入＋怪異１夜を続行。プレイヤーがエレベーター横の注意書き・掲示板からルールを学べる動線と、Unity Hierarchyで分かる文章編集箇所を優先する。
+- Delegated implementation: 既存M2を基にデモ専用SceneをUnity APIで作成し、通常帰宅→翌夜を接続。日本語名の各掲示にEditableNoticeを付け、見出し／本文をInspectorで編集。内装再適用でも編集文を保持。通常・怪異の比較と三原則を提示し、読了チェックは強制しない。
+- UI / sound: 既存委任内の試作として開始・設定・ポーズ・完了・再プレイを実装。メニュー中はゲーム入力・時間・音を停止。感度／反転／視野角／明るさ／音量／画面を調整できるが永続保存は追加しない。足音と小音量の換気音を独自生成。具体的な怖さ・音色の正式受入とは別。
+- Effects / limits: PlayableDemoが通常buildの入口。M1/M2は個別Sceneとして保持し、掲示の文章はSceneごとに所有するため自動同期しない。編集案内はDEMO_AUTHORING。全４夜の仕様・判定規則は変更しない。初見理解と恐怖は人のプレイで確認する。

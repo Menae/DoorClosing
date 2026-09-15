@@ -43,6 +43,7 @@ public class RunManager : MonoBehaviour
     private bool runClearInProgress;
     private bool deathRestartInProgress;
     private bool awaitingHomeReturn;
+    internal event System.Action HomeRunCompleted;
 
     private void Awake()
     {
@@ -349,6 +350,7 @@ public class RunManager : MonoBehaviour
 
         yield return FadeBlackImage(0f, 1f, clearFadeSeconds);
         nightClearText.gameObject.SetActive(true);
+        HomeRunCompleted?.Invoke();
     }
 
     private IEnumerator FadeBlackImage(float fromAlpha, float toAlpha, float seconds)

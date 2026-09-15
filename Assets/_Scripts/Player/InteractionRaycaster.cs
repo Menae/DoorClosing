@@ -43,6 +43,7 @@ public class InteractionRaycaster : MonoBehaviour
 
     private void Update()
     {
+        if (DemoSession.BlocksGameplay) { SetCurrentTarget(null); return; }
         ScanForInteractable();
         var mouse = Mouse.current;
         if (mouse == null || !mouse.leftButton.wasPressedThisFrame || processedPressFrame == Time.frameCount)

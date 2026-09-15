@@ -283,3 +283,16 @@
 - Player含有物: ScriptingAssemblies.jsonにTests/Editorアセンブリなし。既存MCPForUnity.Runtime.dllは含まれる（互換/シリアライズ/撮影ヘルパー）；Editor接続ブリッジは含まれない。MCP全体を除去済みとはしない。
 - 残り: OS連続移動・走り専用回帰・音・性能・初見の理解/怖さ、既存Main統合、怪異3系統/全4夜/保存。音素材はこの試作へ未配線。M1全受入または完成ゲームとは認定しない。
 - Git: 変更した追跡済みゲームコードのdiff --check合格。既存Sandbox等の差分を保持、コミットなし。
+
+## DEMO-002 掲示編集とデモ接続（2026-09-15）
+
+- 開始main clean / 8ae08e1。ユーザーが導入＋怪異1夜の続行と、掲示での学習・Hierarchyで文章調整を明示指定。Astra単独で実装、追加依存・保存形式・外部公開なし。
+- EditableNoticeと日本語Inspectorを追加。EntranceHall/掲示物_文章編集はこちらに3掲示。再生成で文章を保持し、既存M1/M2にも適用。右掲示の柱遮蔽を発見してx=2.12へ修正。紙のA3相当寸法は保持し、短文・掲示用照明で読みやすくした。強すぎた照明を減光。ExecuteAlways再適用で開くだけでdirtyになる問題も修正。
+- PlayableDemoをUnity APIでM2から複製し、DemoSessionで導入→翌夜→完了→再プレイを接続。既存NormalJourney/RunManagerへ完了イベントを追加。メニューとゲームの入力・時間・音を分離し、復帰クリックを遮断。Settingsは既存URP/TMP/Input Systemで実装。元M1/M2の進行を保持。
+- デモ限定で距離ベースの足音と低音量の換気音を追加。独自生成wav5点、再生成scriptを保存。発火・再生とpauseを技術確認。音を聴いた／自然さを承認したとはしない。
+- 初回テスト060513はテスト期待値Entranceと実enum WaitingForCallの不一致。060607は怪異生成直後（提示前）に押したため次遭遇待ちで失敗。正しい状態待機へ修正し061008は導入から再プレイまで1/1。ゲームの判定をテストに合わせて弱めていない。
+- PlayMode全回帰34/34（artifacts/tests/20260915-061502-693/playmode.xml、305秒）。EditMode2/2（062129-324）。追加したデモ死亡・再挑戦・怪異中ポーズを含む最終通し1/1（062149-789、143秒）。いずれも最終実施分の失敗・skip0。入力は合成デバイスから実UI／Raycastを経由。最終画像artifacts/demo-02/input-20260915-062153。
+- 保存・再生成・Scene再読込の文章保持をexecute_codeで確認し、試験文言を元へ復元。その後の明示的な文章短縮も各Sceneのsource欄に反映。Inspectorはartifacts/demo-02/notice-inspector.png。最終読み込みPlayableDemoはdirty=false。
+- Windows通常build 20260915-062502-491はSucceeded、14.6秒、error/warning0、Tests assemblyなし。READMEと公式OFL（既存ttf内部copyright照合）を同梱。artifacts/demo-02/PlayableDemo-20260915.zipはruntime・README・licensesのみを選び、before/after-build記録やBurstDebugInformation_DoNotShipは含めない。
+- Computer Useで実Playerの開始・設定・720→1080・反転表示と復帰・フォーカス喪失ポーズを確認。skyキー送信ではW/Esc反応を観測できず、ユーザーが実キーボードのEsc・Wは正常と回答。クリック成功や合成試験をOS全経路の実行へ読み替えない。Player.logに新規例外なし、従来のD3D12 info queue行あり。WMI機器照会はsandboxで拒否され、性能認定はしていない。
+- Playerはユーザーの確認用に起動したまま残す。Editorは保存済みPlayableDemo、test/build処理なし。初見理解・怖さ・聴感・Windows全経路/終了・性能・長時間安定性は人の評価・追加確認が必要。Solへの全面引継ぎは保留を維持。

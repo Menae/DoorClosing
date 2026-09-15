@@ -20,6 +20,13 @@ public class PlayerLook : MonoBehaviour
 
     private float pitch;
     private float verticalSpeed;
+    private bool invertY;
+
+    internal void SetLookSettings(float sensitivity, bool inverted)
+    {
+        mouseSensitivity = sensitivity;
+        invertY = inverted;
+    }
 
     private void Awake()
     {
@@ -36,7 +43,7 @@ public class PlayerLook : MonoBehaviour
 
     private void Start()
     {
-        if (lockCursorOnStart)
+        if (lockCursorOnStart && !DemoSession.BlocksGameplay)
         {
             LockCursor();
         }
@@ -44,6 +51,7 @@ public class PlayerLook : MonoBehaviour
 
     private void Update()
     {
+        if (DemoSession.BlocksGameplay) return;
         HandleCursorLock();
 
         if (Cursor.lockState == CursorLockMode.Locked)
@@ -76,7 +84,7 @@ public class PlayerLook : MonoBehaviour
 
         Vector2 mouseDelta = Mouse.current.delta.ReadValue();
         float yaw = mouseDelta.x * mouseSensitivity;
-        float pitchDelta = mouseDelta.y * mouseSensitivity;
+        float pitchDelta = mouseDelta.y * mouseSensitivity * (invertY ? -1f : 1f);
 
         transform.Rotate(Vector3.up, yaw, Space.Self);
 

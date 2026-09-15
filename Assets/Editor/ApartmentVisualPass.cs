@@ -21,9 +21,9 @@ namespace GraduationProject.EditorTools
         {
             var scene = SceneManager.GetActiveScene();
             if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling || scene.isDirty)
-                throw new InvalidOperationException("Requires a saved M1/M2 scene in idle Edit Mode.");
-            if (scene.path != M1NormalRouteBuilder.ScenePath && scene.path != M2VerticalSliceBuilder.ScenePath)
-                throw new InvalidOperationException("Only M1NormalRoute and M2VerticalSlice are supported.");
+                throw new InvalidOperationException("Requires a saved M1/M2/PlayableDemo scene in idle Edit Mode.");
+            if (scene.path != M1NormalRouteBuilder.ScenePath && scene.path != M2VerticalSliceBuilder.ScenePath && scene.path != PlayableDemoBuilder.ScenePath)
+                throw new InvalidOperationException("Only M1NormalRoute, M2VerticalSlice and PlayableDemo are supported.");
             PrepareMaterials();
             var roots = scene.GetRootGameObjects();
             var building = roots.Single(x => x.name == "Building").transform;

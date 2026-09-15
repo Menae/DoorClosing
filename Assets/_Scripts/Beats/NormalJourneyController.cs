@@ -31,6 +31,14 @@ public class NormalJourneyController : MonoBehaviour
     private bool homePresented;
     private Vector3 nightStartPosition;
     private Quaternion nightStartRotation;
+    internal event System.Action IntroductionCompleted;
+
+    internal void SetDemoNight(bool encounters)
+    {
+        routeThroughEncounterRun = encounters;
+        if (fade != null) fade.gameObject.SetActive(false);
+        if (playerLook != null) playerLook.enabled = true;
+    }
 
     public bool IsBodyInside
     {
@@ -234,6 +242,7 @@ public class NormalJourneyController : MonoBehaviour
         if (completionText != null) completionText.gameObject.SetActive(true);
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+        IntroductionCompleted?.Invoke();
     }
 
     private void ChangeState(JourneyState state)

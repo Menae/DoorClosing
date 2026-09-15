@@ -4,6 +4,8 @@ Unity 6000.3.14f1 / URP 17.3.0。日本語でやり取りする。Codexでこの
 
 ## 人が普段すること
 
+デモの起動・掲示の文章調整は [DEMO_AUTHORING.md](DEMO_AUTHORING.md)。`PlayableDemo` を開き、Hierarchyで `文章編集` を検索すると編集箇所へ進める。
+
 開発を開始・再開するときは、次の一文でよい。
 
 > AGENTS.mdとdocs/START_HERE.mdに従い、PROJECT_STATUSの現在地と最新の担当指定から、依頼済み・承認済みの開発を進めて。必要な実装、関連検証、不具合修正、記録、commit／pushまで任せます。人の判断が必要な部分は具体化して示し、独立して進められる作業は続けて。

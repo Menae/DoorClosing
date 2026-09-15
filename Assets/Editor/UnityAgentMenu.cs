@@ -252,6 +252,15 @@ namespace GraduationProject.EditorTools
             EditorApplication.delayCall += () => BuildWindows(new[] { M2VerticalSliceBuilder.ScenePath }, false);
         }
 
+        [MenuItem("Tools/Unity Agent/Build Playable Demo Windows")]
+        public static void RequestDemoBuild()
+        {
+            RequireCleanEditMode();
+            if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.StandaloneWindows64 || !File.Exists(PlayableDemoBuilder.ScenePath))
+                throw new InvalidOperationException("Requires Windows64 and the saved playable demo.");
+            EditorApplication.delayCall += () => BuildWindows(new[] { PlayableDemoBuilder.ScenePath }, false);
+        }
+
         private static void BuildWindows(string[] requestedScenes, bool development = true)
         {
             RequireCleanEditMode();
@@ -287,7 +296,17 @@ namespace GraduationProject.EditorTools
                 info.seconds = report.summary.totalTime.TotalSeconds;
                 info.bytes = report.summary.totalSize;
                 if (report.summary.result != BuildResult.Succeeded) Debug.LogError("[Unity Agent] Build failed: " + statusFile);
-                else Debug.Log("[Unity Agent] Windows build succeeded: " + info.executable);
+                else
+                {
+                    if (scenes.Length == 1 && scenes[0] == PlayableDemoBuilder.ScenePath)
+                    {
+                        File.Copy(Path.Combine(Root,"docs","DEMO_README.txt"),Path.Combine(directory,"README.txt"),true);
+                        var licenses=Path.Combine(directory,"licenses");Directory.CreateDirectory(licenses);
+                        foreach(var source in Directory.GetFiles(Path.Combine(Root,"docs","licenses"),"*.txt"))
+                            File.Copy(source,Path.Combine(licenses,Path.GetFileName(source)),true);
+                    }
+                    Debug.Log("[Unity Agent] Windows build succeeded: " + info.executable);
+                }
             }
             catch (Exception ex) { info.status = "Exception"; info.error = ex.ToString(); Debug.LogException(ex); }
             finally

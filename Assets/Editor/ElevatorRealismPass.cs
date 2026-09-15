@@ -148,15 +148,27 @@ namespace GraduationProject.EditorTools
             var old=hall.Find("InteriorVisuals");
             foreach(Transform child in old)
                 if(child.name.StartsWith("MaintenanceNotice") || child.name.StartsWith("Tape"))child.gameObject.SetActive(false);
-            var v=ApartmentVisualPass.Group(hall,"RealismNotices");
+            var v=hall.Find("掲示物_文章編集はこちら");
+            if(v==null) v=ApartmentVisualPass.Group(hall,"RealismNotices");
+            v.name="掲示物_文章編集はこちら";
             ApartmentVisualPass.Box(v,"BoardFrame",new Vector3(-2.48f,1.57f,1.84f),new Vector3(.80f,.68f,.035f),steel);
             ApartmentVisualPass.Box(v,"BoardFelt",new Vector3(-2.48f,1.57f,1.817f),new Vector3(.762f,.642f,.008f),dark);
-            Sheet(v,"UseNotice",new Vector3(-2.66f,1.56f,1.802f),"エレベーターご利用案内",
-                "ご入居の皆さまへ\n\n扉の開閉時は、手やお荷物を\n挟まれないようご注意ください。\n\nかご内では静かにご利用ください。\nお子さまには大人の方が\n付き添ってください。\n\n設備の異常にお気づきの際は\n管理室までお知らせください。\n\nマンション管理室");
-            Sheet(v,"Inspection",new Vector3(-2.30f,1.56f,1.802f),"定期点検のお知らせ",
-                "入居者各位\n\n共用設備の安全点検を行います。\n作業中は係員の案内に従って\nご通行をお願いいたします。\n\n【点検対象】\n照明・防災設備・エレベーター\n\nご不便をおかけいたしますが\nご理解とご協力をお願いいたします。\n\nマンション管理室");
-            Sheet(v,"EmergencyContacts",new Vector3(2.30f,1.56f,1.878f),"緊急時の連絡先",
-                "【設備の故障・トラブル発生時】\n\n給排水設備・共用照明・エレベーターの\n不具合は管理室へお知らせください。\n\n管理窓口　マンション管理室\n受付時間　９：００〜１７：００\n\n【エレベーター内の異常】\n\n扉を無理に開けず、落ち着いて\n非常停止ボタンを押してください。\n\n【ガス・電気のトラブル】\n\n入居時にお渡ししたご案内の\n各事業者窓口へご連絡ください。");
+            Sheet(v,"UseNotice","01_帰宅の手順_文章編集",new Vector3(-2.66f,1.56f,1.802f),"８階へお帰りの方へ",
+                "呼びボタンで扉を開け、\n中に入って「８」を押してください。\n\n到着したら、降りる前に\n廊下の様子をお確かめください。\n\nいつもの廊下を通り、\n突き当たりのご自宅へ。\n\n見慣れない廊下の場合は\nかご内に留まり、「閉」を押して\n次の到着をお待ちください。\n\nマンション管理室");
+            Sheet(v,"Inspection","02_困ったときの対処_文章編集",new Vector3(-2.30f,1.56f,1.802f),"慌てずお戻りください",
+                "廊下へ出て違和感に気づいたら、\nすぐに身体をかご内へ戻し、\n「閉」を押してください。\n外から扉を閉めないでください。\n\n放送に誘われて押してしまっても、\n続けてボタンを押さず、\n静かになるまでお待ちください。\n\n階数と走行音が異常なときは\n「非常停止」で止めてください。\n\n扉の前に立ち止まらず、\n落ち着いて対応を。");
+            Sheet(v,"EmergencyContacts","03_乗車前の三原則_文章編集",new Vector3(2.12f,1.68f,1.878f),"乗車前の注意事項",
+                "一　降りる前に廊下を確認\n８階の表示だけで降りず、\n普段と違えば車内で「閉」。\n\n二　放送だけで停止しない\n停止を求める放送や呼び声は\n操作せず、静かに待つ。\n\n三　階数と走行音を確認\n８を越えて上がり続け、\n音も高く速くなったら\n「非常停止」で止める。\n\nマンション管理室");
+            foreach (float x in new[]{-2.48f,2.12f})
+            {
+                var fixture=ApartmentVisualPass.Group(v,x<0?"掲示板照明":"注意書き照明");
+                fixture.position=new Vector3(x,2.18f,1.79f);
+                Box(fixture,"Housing",x,2.18f,1.79f,.38f,.045f,.18f,steel);
+                Box(fixture,"Diffuser",x,2.155f,1.76f,.32f,.012f,.11f,Material("FluorescentDiffuser"));
+                var lamp=fixture.GetComponent<Light>(); if(lamp==null)lamp=fixture.gameObject.AddComponent<Light>();
+                lamp.type=LightType.Point;lamp.range=1.5f;lamp.intensity=.65f;
+                lamp.color=new Color(1f,.96f,.85f);lamp.shadows=LightShadows.None;
+            }
             var sticker=Panel(cabin,"DoorCaution",Vector3.zero,0);
             Box(sticker,"Paper",0,1.56f,0,.15f,.18f,.003f,paper);
             Text(sticker,"Heading","扉にご注意",0,1.613f,-.004f,.14f,.035f,.24f,new Color(.6f,.02f,.015f));
@@ -164,15 +176,20 @@ namespace GraduationProject.EditorTools
             Finish(sticker,new Vector3(-1.23f,0,2.14f),180);
         }
 
-        private static void Sheet(Transform parent,string name,Vector3 position,string heading,string body)
+        private static void Sheet(Transform parent,string id,string name,Vector3 position,string heading,string body)
         {
-            var p=Panel(parent,name,Vector3.zero,0);
-            Box(p,"Paper",0,0,0,.210f,.297f,.002f,paper);
-            Text(p,"Heading","<u><b>"+heading+"</b></u>",0,.105f,-.002f,.185f,.035f,.20f,Color.black);
-            var text=Text(p,"Body",body,0,-.023f,-.002f,.180f,.212f,.078f,Color.black);
+            var authored=parent.GetComponentsInChildren<EditableNotice>(true).FirstOrDefault(n=>n.ContentId==id);
+            var p=authored!=null?authored.transform:Panel(parent,id,Vector3.zero,0);
+            p.SetPositionAndRotation(Vector3.zero,Quaternion.identity); p.localScale=Vector3.one;p.name=name;
+            Box(p,"Paper",0,0,0,.297f,.420f,.002f,paper);
+            var title=Text(p,"Heading","",0,.169f,-.0025f,.270f,.041f,.26f,Color.black);
+            var text=Text(p,"Body","",0,-.027f,-.0025f,.263f,.329f,.16f,Color.black);
             text.alignment=TextAlignmentOptions.TopLeft;text.lineSpacing=0;
             for(int side=-1;side<=1;side+=2)
-                Box(p,"Tape"+side,side*.087f,.144f,-.003f,.027f,.035f,.001f,paper);
+                Box(p,"Tape"+side,side*.127f,.204f,-.003f,.027f,.035f,.001f,paper);
+            if(authored==null)authored=p.gameObject.AddComponent<EditableNotice>();
+            authored.Bind(id,title,text,heading,body);
+            EditorUtility.SetDirty(authored);
             Finish(p,position,0);
         }
 

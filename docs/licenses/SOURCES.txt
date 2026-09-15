@@ -1,0 +1,10 @@
+Sources for bundled font notices
+
+NotoSansJP-OFL.txt
+https://raw.githubusercontent.com/google/fonts/main/ofl/notosansjp/OFL.txt
+Retrieved 2026-09-15. The existing NotoSansJP-Regular.ttf name table identifies Adobe 2014-2021, Reserved Font Name Source, SIL OFL 1.1. This matches the upstream notice.
+
+LiberationSans-OFL.txt
+Copied unchanged from Assets/TextMesh Pro/Fonts/LiberationSans - OFL.txt for the existing TMP fallback font.
+
+No new font files or third-party audio samples were added by DEMO-002.
