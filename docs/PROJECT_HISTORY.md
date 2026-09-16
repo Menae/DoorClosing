@@ -324,3 +324,11 @@ Astra、開始main c97208d。内容・出典はDECISIONS/FEEDBACK-001とVISUAL_R
 ElevatorController.MoveDoorsの移動距離を先に判定し、両扉が既に閉じている再指示では再開扉を抑止。実移動時の安全処理、参照なしfixture、Lureの全身帰還・閉操作・死亡仕様は維持。旧到着後ダッシュ試験も残し、到着前からの保持と到着まで扉位置不変のassertを追加。
 
 PlayMode052426-846は28/28成功・skip0。LureGraceRecoveryの実シーン入力、全InteractionInputTestsを含む。artifacts/lure-02/before-arrival-reveal.png実見、Console error0。通常build・Windows実入力は再実行なし。ユーザーの未保存文章／音量・時間設定をコピー保護して保存し、検証終了後SHA256で完全一致を確認。シーンは今回コミット対象外。MCPの接続はComputer Useで既存EditorのConnect Local MCPを操作して復旧した。
+
+## MONITOR-001 かご内モニターのスライド（2026-09-16）
+
+ユーザー指定の複数文・Inspector編集・フェード速度設定をCabinInformationDisplayへ実装。先頭文はGameTextCollectionの既存cabin.standbyを正本として保持、追加Listと表示／片道fade秒数はモニターに保存。GameTextCollectionEditorから同じSerializedObjectを編集でき、データ二重化を避ける。モニター本体にも日本語Inspector。既存文章を創作・変更せず、作者が追加するための空リストで提供。
+
+Restore/OnEnableで最初から再開、OnDisable/Presentで通常循環を停止。怪異の提示fadeは既存0.15秒を維持して対応時間を変えない。通常fadeは初期0.5秒×往復、完全表示5秒。1枚時は点滅なし、空欄尊重、0秒切替を許可。
+
+対象PlayMode054452-045は2/2、failed/skip0。スライド境界・停止・割込みと3怪異一巡を検証。最終画像はartifacts/monitor-01、InspectorはComputer Useで実見し追加＋を展開。ユーザーSceneの未コミット編集を維持、今回Scene変更なし。Windows buildは再実行していない。

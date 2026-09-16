@@ -187,6 +187,60 @@ namespace GraduationProject.Tests
         }
 
         [UnityTest]
+        public IEnumerator CabinSlideshow_FadesLoopsPausesAndYieldsToAnnouncements()
+        {
+            yield return UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/M2VerticalSlice.unity",new LoadSceneParameters(LoadSceneMode.Single));
+            fixtureScene=SceneManager.GetSceneByPath("Assets/Scenes/M2VerticalSlice.unity"); SceneManager.SetActiveScene(fixtureScene);
+            var roots=fixtureScene.GetRootGameObjects(); player=roots.Single(r=>r.name=="Player").transform;
+            camera=player.GetComponentInChildren<Camera>(); journey=FindGameComponent("NormalJourneyController");
+            yield return WalkTo(new Vector3(0,.95f,.5f)); yield return ClickAt(new Vector3(1.25f,1.5f,1.82f));
+            yield return Until(()=>JourneyState=="Boarding","boarding"); yield return WaitForDoors();
+            yield return WalkTo(new Vector3(0,.95f,3.2f));
+            var display=FindGameComponent("CabinInformationDisplay");
+            var content=(TMPro.TMP_Text)new UnityEditor.SerializedObject(display).FindProperty("content").objectReferenceValue;
+            yield return Aim(content.transform.position);
+            string first=content.text;
+            const string second="二枚目の表示確認\n改行も保持します";
+            GameAccess.Set(display,"additionalMessages",new List<string>{second,""});
+            GameAccess.Set(display,"displaySeconds",.4f); GameAccess.Set(display,"fadeSeconds",.5f);
+            GameAccess.Call(display,"Restore");
+            Assert.That(content.text,Is.EqualTo(first)); Assert.That(content.alpha,Is.EqualTo(1f));
+            Directory.CreateDirectory("artifacts/monitor-01");
+            yield return Capture("artifacts/monitor-01/01-first.png");
+            yield return Until(()=>content.text==first && content.alpha<.8f && content.alpha>.1f,"first fade");
+            yield return Capture("artifacts/monitor-01/02-fade.png");
+            float pausedAlpha=content.alpha;
+            float previousScale=Time.timeScale;
+            try
+            {
+                Time.timeScale=0f; yield return new WaitForSecondsRealtime(.15f);
+                Assert.That(content.alpha,Is.EqualTo(pausedAlpha).Within(.001f));
+            }
+            finally { Time.timeScale=previousScale; }
+            yield return Until(()=>content.text==second && content.alpha>=.99f,"second slide fully visible");
+            yield return Capture("artifacts/monitor-01/03-second.png");
+            yield return Until(()=>content.text=="" && content.alpha>=.99f,"intentional blank slide");
+            yield return Until(()=>content.text==first && content.alpha>=.99f,"loop returns to authored first slide");
+            yield return Until(()=>content.alpha<.7f,"interrupt mid-fade");
+            GameAccess.Call(display,"Present","怪異表示の確認");
+            yield return Until(()=>ReadBool(display,"IsShowingAnnouncement"),"announcement fade completes");
+            yield return new WaitForSeconds(2f);
+            Assert.That(content.text,Is.EqualTo("怪異表示の確認"),"Slideshow must not overwrite the encounter");
+            Assert.That(content.alpha,Is.EqualTo(1f));
+            GameAccess.Call(display,"Restore");
+            Assert.That(content.text,Is.EqualTo(first)); Assert.That(content.alpha,Is.EqualTo(1f));
+            GameAccess.Set(display,"fadeSeconds",0f);
+            yield return Until(()=>content.text==second,"zero duration transition");
+            Assert.That(content.alpha,Is.EqualTo(1f));
+            ((Behaviour)display).enabled=false; ((Behaviour)display).enabled=true;
+            Assert.That(content.text,Is.EqualTo(first)); Assert.That(content.alpha,Is.EqualTo(1f));
+            GameAccess.Set(display,"additionalMessages",new List<string>());
+            GameAccess.Call(display,"Restore");
+            yield return new WaitForSeconds(1.2f);
+            Assert.That(content.text,Is.EqualTo(first)); Assert.That(content.alpha,Is.EqualTo(1f),"One slide must not blink");
+        }
+
+        [UnityTest]
         public IEnumerator HijackPresentation_PassesThirteenKeepsCadenceAndStopsOnCleanup()
         {
             yield return UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/M2VerticalSlice.unity",new LoadSceneParameters(LoadSceneMode.Single));
