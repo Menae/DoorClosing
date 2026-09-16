@@ -316,3 +316,11 @@ Astra、開始main c97208d。内容・出典はDECISIONS/FEEDBACK-001とVISUAL_R
 検証の試行: 085057-414全37件34成功3失敗→外側開始fixture誤Reveal修正、Hijack新fixtureのStart完了待ち、デモtimeout診断追加→085853-402対象29件28成功1失敗（退出境界が扉より前）→扉平面修正→090555-342対象26/26成功。デモ全経路・階数継続は085853で成功済み。EditMode090719-963は2/2。最終全回帰一括再実行なし。画像inside-door-selected／sprint-revealを実見。
 
 通常build090821-735成功13.5秒・error/warning0。Player起動windowは返ったがComputer Useのprocess id取得失敗が再接続でも継続したため、Windows画面検証は未完と記録。音素材はHerbertBoland/CC BY4.0、配布用licensesへ同梱。聴感・怖さは人の受入待ち。元の写真・取得音源・検証画像はartifactsに留め外部へ送らない。
+
+## LURE-002 到着前からのダッシュ（2026-09-16）
+
+ユーザー報告をM2実シーンのKeyboard Shift+W保持＋Mouseクリックで再現。初回052234-658はReveal待ちtimeoutで失敗。原因は到着時のラッチ単独ではなく、NormalJourney→RunBeatの再CloseDoorsが、閉扉済みでも密着プレイヤーを安全センサーで検出し再開扉することだった。プレイヤーはArrive前に廊下へ出て、Lure退出履歴が成立しない。
+
+ElevatorController.MoveDoorsの移動距離を先に判定し、両扉が既に閉じている再指示では再開扉を抑止。実移動時の安全処理、参照なしfixture、Lureの全身帰還・閉操作・死亡仕様は維持。旧到着後ダッシュ試験も残し、到着前からの保持と到着まで扉位置不変のassertを追加。
+
+PlayMode052426-846は28/28成功・skip0。LureGraceRecoveryの実シーン入力、全InteractionInputTestsを含む。artifacts/lure-02/before-arrival-reveal.png実見、Console error0。通常build・Windows実入力は再実行なし。ユーザーの未保存文章／音量・時間設定をコピー保護して保存し、検証終了後SHA256で完全一致を確認。シーンは今回コミット対象外。MCPの接続はComputer Useで既存EditorのConnect Local MCPを操作して復旧した。

@@ -136,7 +136,12 @@ namespace GraduationProject.Tests
         }
 
         [UnityTest]
-        public IEnumerator SprintThroughOpeningDoor_RevealsLureAndLightsHall()
+        public IEnumerator SprintThroughOpeningDoor_RevealsLureAndLightsHall() => SprintThroughOpeningDoor(false);
+
+        [UnityTest]
+        public IEnumerator SprintBeforeArrivalThroughOpeningDoor_RevealsLureAndLightsHall() => SprintThroughOpeningDoor(true);
+
+        private IEnumerator SprintThroughOpeningDoor(bool beforeArrival)
         {
             yield return UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/M2VerticalSlice.unity",new LoadSceneParameters(LoadSceneMode.Single));
             fixtureScene=SceneManager.GetSceneByPath("Assets/Scenes/M2VerticalSlice.unity"); SceneManager.SetActiveScene(fixtureScene);
@@ -150,11 +155,22 @@ namespace GraduationProject.Tests
             yield return Aim(new Vector3(0,camera.transform.position.y,1.8f));
             yield return WaitForDoors();
             ScreenCapture.CaptureScreenshot("artifacts/feedback-01/inside-door-selected.png"); yield return null;
-            yield return Until(()=>Count("Arrive")>0,"arrival",40);
-            float chimeAt=Time.time;
+            if (beforeArrival)
+            {
+                Press(keyboard.leftShiftKey,queueEventOnly:true); Press(keyboard.wKey,queueEventOnly:true);
+                yield return new WaitForSeconds(2f);
+                Assert.That(Count("Arrive"),Is.Zero,"Sprint must start during travel, before anomaly arrival");
+                Assert.That(Count("Reveal"),Is.Zero,"Running into a closed door is safe");
+            }
             var door=roots.Single(r=>r.name=="Building").transform.Find("DoorLeft"); var closed=door.position;
+            yield return Until(()=>
+            {
+                Assert.That(door.position,Is.EqualTo(closed),"Closed doors must stay closed across the journey-to-encounter handoff");
+                return Count("Arrive")>0;
+            },"arrival",40);
+            float chimeAt=Time.time;
             yield return new WaitForSeconds(.8f); Assert.That(door.position,Is.EqualTo(closed),"Chime must precede door movement");
-            Press(keyboard.leftShiftKey,queueEventOnly:true); Press(keyboard.wKey,queueEventOnly:true);
+            if (!beforeArrival) { Press(keyboard.leftShiftKey,queueEventOnly:true); Press(keyboard.wKey,queueEventOnly:true); }
             yield return new WaitForSeconds(.3f); Assert.That(Count("Reveal"),Is.Zero,"Pushing against a closed door must not reveal");
             yield return Until(()=>Count("Reveal")>0,"Early exit must reveal",5);
             Release(keyboard.wKey,queueEventOnly:true); Release(keyboard.leftShiftKey,queueEventOnly:true); yield return null;
@@ -166,7 +182,8 @@ namespace GraduationProject.Tests
             Assert.That(player.position.z,Is.LessThan(2.15f),"Body must cross the threshold, not lean against the door");
             yield return WalkTo(new Vector3(0,.95f,.5f));
             yield return Aim(new Vector3(0,1.6f,-6));
-            ScreenCapture.CaptureScreenshot("artifacts/feedback-01/sprint-reveal.png"); yield return null;
+            Directory.CreateDirectory("artifacts/lure-02");
+            yield return Capture("artifacts/lure-02/"+(beforeArrival ? "before-arrival" : "during-arrival")+"-reveal.png");
         }
 
         [UnityTest]

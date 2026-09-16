@@ -150,17 +150,19 @@ public class ElevatorController : MonoBehaviour
 
     private IEnumerator MoveDoors(float targetOpenAmount)
     {
-        if (targetOpenAmount == 0f && IsDoorwayOccupied())
-        {
-            LastCloseObstructed = true;
-            yield return MoveDoors(1f);
-            yield break;
-        }
         Vector3 leftStart = leftDoor != null ? leftDoor.localPosition : Vector3.zero;
         Vector3 rightStart = rightDoor != null ? rightDoor.localPosition : Vector3.zero;
         Vector3 leftTarget = Vector3.Lerp(leftDoorClosedLocalPosition, leftDoorClosedLocalPosition + leftDoorOpenLocalOffset, targetOpenAmount);
         Vector3 rightTarget = Vector3.Lerp(rightDoorClosedLocalPosition, rightDoorClosedLocalPosition + rightDoorOpenLocalOffset, targetOpenAmount);
         bool hasDistance = (leftStart-leftTarget).sqrMagnitude + (rightStart-rightTarget).sqrMagnitude > .00001f;
+        // A repeated close on an already closed door must not reopen it during travel.
+        // Keep obstruction handling for real movement and reference-free test fixtures.
+        if (targetOpenAmount == 0f && (hasDistance || leftDoor == null || rightDoor == null) && IsDoorwayOccupied())
+        {
+            LastCloseObstructed = true;
+            yield return MoveDoors(1f);
+            yield break;
+        }
         if (doorAudioSource != null && hasDistance && doorSlideSeconds > 0f) { if(tuning!=null) doorAudioSource.volume=0; doorAudioSource.Play(); }
 
         if (doorSlideSeconds <= 0f || (!hasDistance && leftDoor != null && rightDoor != null))
