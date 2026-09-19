@@ -127,8 +127,38 @@ public class RunManager : MonoBehaviour
     {
         var campaign = GetComponent<HomecomingCampaign>();
         attemptDefinitions = campaign != null && campaign.FullStory ? campaign.CreateAttempt() : null;
+        if (attemptDefinitions != null)
+        {
+            var extras = new List<BeatDefinition>();
+            BeatDefinition extra;
+            while ((extra = campaign.TakePendingExtra()) != null) extras.Add(extra);
+            attemptDefinitions.InsertRange(0, extras);
+        }
         nightJourney?.PrepareEncounterEnvironment();
         StartRunFromBeginning();
+    }
+
+    internal float NormalStopSeconds => nightJourney != null ? nightJourney.EmergencyStopSeconds : 1f;
+
+    internal bool AcceptNormalStop()
+    {
+        var campaign = GetComponent<HomecomingCampaign>();
+        if (campaign == null || !campaign.FullStory || campaign.CurrentNight == 0) return false;
+        campaign.DrawForNormalStop();
+        return true;
+    }
+
+    // Called by the FSM only at the end of normal travel, before any anomaly spawns.
+    internal BeatDefinition InsertPendingExtraBeforeCurrent()
+    {
+        var campaign = GetComponent<HomecomingCampaign>();
+        if (campaign == null || !campaign.FullStory || attemptDefinitions == null) return null;
+        var extra = campaign.TakePendingExtra();
+        if (extra == null) return null;
+        attemptDefinitions.Insert(currentBeatIndex, extra);
+        currentBeat = extra;
+        Debug.Log("[Run] Insert extra before remaining regular encounters: " + extra.DebugLabel, this);
+        return extra;
     }
 
     public void CompleteRunAfterHome()
@@ -299,6 +329,7 @@ public class RunManager : MonoBehaviour
     private void BeginDeathRestart()
     {
         deathRestartInProgress = true;
+        GetComponent<HomecomingCampaign>()?.DiscardPendingExtras();
 
         if (deathRoutine != null)
         {

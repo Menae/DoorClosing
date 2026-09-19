@@ -34,6 +34,9 @@ public class BeatStateMachine : MonoBehaviour
     private bool hasPendingAction;
     private bool acceptsPlayerAction;
     private bool lureArrivalStartedInside;
+    private bool normalTravelWindow;
+    private float normalStopRemaining;
+    private RunManager run;
 
     public bool IsPassengerInsideCabin => CabinOccupancy.FullyContains(cabin, passenger);
 
@@ -51,6 +54,7 @@ public class BeatStateMachine : MonoBehaviour
 
     private void Awake()
     {
+        run = GetComponent<RunManager>();
         if (responseEvaluator == null)
         {
             responseEvaluator = GetComponent<ResponseEvaluator>();
@@ -92,11 +96,21 @@ public class BeatStateMachine : MonoBehaviour
         currentBeat = def;
         ClearPendingAction();
         acceptsPlayerAction = false;
+        normalTravelWindow = false;
+        normalStopRemaining = 0f;
         beatRoutine = StartCoroutine(RunBeat(def));
     }
 
     public void SubmitAction(PlayerAction action, int floorNumber = -1)
     {
+        if (normalTravelWindow && action == PlayerAction.PressEmergencyStop && normalStopRemaining <= 0f &&
+            elevatorController != null && elevatorController.IsTravelling && !elevatorController.IsDoorMoving &&
+            run != null && run.AcceptNormalStop())
+        {
+            normalStopRemaining = run.NormalStopSeconds;
+            elevatorController.SetTravelling(false);
+            return;
+        }
         if (!acceptsPlayerAction || hasPendingAction)
         {
             return;
@@ -120,7 +134,9 @@ public class BeatStateMachine : MonoBehaviour
         elevatorController?.CloseDoors();
         while (elevatorController != null && elevatorController.IsDoorMoving) yield return null;
         elevatorController?.SetTravelling(true);
-        yield return WaitForSecondsFromDefinition(def.TravelSeconds);
+        yield return WaitForNormalTravel(def.TravelSeconds);
+        var extra = run != null ? run.InsertPendingExtraBeforeCurrent() : null;
+        if (extra != null) currentBeat = def = extra;
 
         while (true)
         {
@@ -222,6 +238,22 @@ public class BeatStateMachine : MonoBehaviour
             beatRoutine = null;
             yield break;
         }
+    }
+
+    private IEnumerator WaitForNormalTravel(float remaining)
+    {
+        normalTravelWindow = true;
+        while (remaining > 0f || normalStopRemaining > 0f)
+        {
+            yield return null;
+            if (normalStopRemaining > 0f)
+            {
+                normalStopRemaining -= Time.deltaTime;
+                if (normalStopRemaining <= 0f) elevatorController?.SetTravelling(true);
+            }
+            else remaining -= Time.deltaTime;
+        }
+        normalTravelWindow = false;
     }
 
     private IEnumerator ArriveForDiagnosis(BeatDefinition def)

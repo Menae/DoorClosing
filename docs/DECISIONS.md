@@ -1,5 +1,13 @@
 # Decisions
 
+## M3-05 — 通常走行の停止と追加遭遇
+- Status/date/owner: 2026-09-19、Astra。GAME-008の既定規則をWORK-001内で実装。
+- Decision: 既存の通常走行・Input System経路をExtend。受理した停止だけがHomecomingCampaignへ抽選を依頼する。1/3の当選時に全6assetから均等選択し、次の遭遇直前に追加する。追加遭遇の連鎖も同時発生させず、元の通常3件を保持する。
+- Timing/lifetime: 初回乗車中の分は通常走行終了後、遭遇間の分はその走行終了後から通常のDiagnosisへ。停止は既存NormalJourneyの1秒設定を共有し、その間は走行タイマーを止める。待機列・実行定義コピーはメモリ内だけで、死亡時に待機列を破棄、再試行開始／夜移行／シーン終了でコピーを解放。
+- Exceptions: 導入免除、停止中連打は再受付なし、走行中の閉は無効、暴走の正解停止はFSMの解決へ進み抽選しない。比較モードと既存デモは本編の追加抽選対象外。
+- Reuse: 既存CoroutineとList／Queueで管理でき、外部scheduler・イベント基盤の置換や依存追加は不要。正式な文章・怖さの受入は別途。
+- Random: 夜構成と追加抽選はcomponent所有のSystem.Randomを共有し、揺れ・旧モニター演出・Editor等が消費するUnityEngine.Randomから独立。シード固定はtest fixture内だけで、通常製品に強制発生APIや設定を追加しない。
+
 ## M3-04 — 全4夜の連続進行
 - Status/date/owner: 2026-09-19、Astra。GAME-002／003／006の実装、WORK-001内。文章微調整は後工程という最新指定を保持。
 - Decision: HomecomingのNormalJourneyへHomecomingCampaignを追加。既存RunManagerを1夜の列処理、DemoSessionを開始／ポーズ／暗転としてExtendする。シーン複製や新しい保存形式は追加しない。既存PlayableDemoは本編componentなしで従来の2夜デモを維持。

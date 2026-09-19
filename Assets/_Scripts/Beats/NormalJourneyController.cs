@@ -26,6 +26,7 @@ public class NormalJourneyController : MonoBehaviour
 
     public JourneyState State { get; private set; }
     public int AcceptedEmergencyStops { get; private set; }
+    internal float EmergencyStopSeconds => emergencyStopSeconds;
     private int changedFrame = -1;
     private float travelRemaining;
     private float stopRemaining;
@@ -109,8 +110,9 @@ public class NormalJourneyController : MonoBehaviour
                 stopRemaining = emergencyStopSeconds;
                 elevator.SetTravelling(false);
                 ChangeState(JourneyState.EmergencyStopped);
+                if (routeThroughEncounterRun) encounterRun?.AcceptNormalStop();
             }
-            return; // Introduction has no extra-anomaly draw; close/open/floors are inert.
+            return; // Introduction is exempt; close/open/floors are inert.
         }
         if (State == JourneyState.Closing || State == JourneyState.EmergencyStopped || elevator.IsDoorMoving) return;
 

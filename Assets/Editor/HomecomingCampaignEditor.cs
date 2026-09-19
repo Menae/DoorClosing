@@ -17,6 +17,7 @@ public sealed class HomecomingCampaignEditor : Editor
         {
             var campaign = (HomecomingCampaign)target;
             EditorGUILayout.LabelField("現在の夜 / 試行", campaign.CurrentNight + " / " + campaign.Attempt);
+            EditorGUILayout.LabelField("通常停止の抽選 / 待機中の追加", campaign.NormalStopDraws + " / " + campaign.PendingExtras);
         }
         serializedObject.ApplyModifiedProperties();
     }

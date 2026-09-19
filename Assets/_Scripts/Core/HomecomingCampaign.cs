@@ -10,18 +10,46 @@ public sealed class HomecomingCampaign : MonoBehaviour
     [SerializeField] private BeatDefinition[] secondNight;
     [SerializeField, Range(.5f, 1f)] private float laterGraceScale = .9f;
     private readonly List<BeatDefinition> copies = new List<BeatDefinition>();
+    private readonly Queue<BeatDefinition> pendingExtras = new Queue<BeatDefinition>();
+    // Presentation jitter and Editor tooling must not consume the encounter lottery.
+    private System.Random random = new System.Random();
 
     public bool FullStory => enabled && playFullStory;
     public int CurrentNight { get; private set; }
     public bool HasFollowingNight => CurrentNight < 3;
     public int Attempt { get; private set; }
+    public int NormalStopDraws { get; private set; }
+    public int PendingExtras => pendingExtras.Count;
 
-    internal void ResetStory() { ReleaseCopies(); CurrentNight = 0; Attempt = 0; }
+    internal void ResetStory() { ReleaseCopies(); DiscardPendingExtras(); CurrentNight = 0; Attempt = 0; }
     internal void AdvanceNight()
     {
         if (!HasFollowingNight) throw new InvalidOperationException("All four nights are complete.");
-        ReleaseCopies(); CurrentNight++; Attempt = 0;
+        ReleaseCopies(); DiscardPendingExtras(); CurrentNight++; Attempt = 0;
     }
+
+    // Only the normal-travel owners call this after accepting a new stop edge.
+    internal void DrawForNormalStop()
+    {
+        if (!FullStory || CurrentNight == 0) return;
+        ValidateNight(firstNight); ValidateNight(secondNight);
+        NormalStopDraws++;
+        if (random.NextDouble() >= 1.0 / 3.0) return;
+        int index = random.Next(6);
+        var definition = index < 3 ? firstNight[index] : secondNight[index - 3];
+        pendingExtras.Enqueue(definition);
+        Debug.Log("[Campaign] Extra queued: " + definition.DebugLabel, this);
+    }
+
+    internal BeatDefinition TakePendingExtra()
+    {
+        if (pendingExtras.Count == 0) return null;
+        var copy = pendingExtras.Dequeue().CopyForRun(CurrentNight >= 2 ? laterGraceScale : 1f);
+        copies.Add(copy);
+        return copy;
+    }
+
+    internal void DiscardPendingExtras() { pendingExtras.Clear(); NormalStopDraws = 0; }
 
     internal List<BeatDefinition> CreateAttempt()
     {
@@ -34,12 +62,12 @@ public sealed class HomecomingCampaign : MonoBehaviour
         {
             foreach (var category in new[] { AnomalyCategory.Lure, AnomalyCategory.Provocation, AnomalyCategory.Hijack })
             {
-                var source = UnityEngine.Random.Range(0, 2) == 0 ? firstNight : secondNight;
+                var source = random.Next(2) == 0 ? firstNight : secondNight;
                 selected.Add(Array.Find(source, b => b.Category == category));
             }
             for (int i = selected.Count - 1; i > 0; i--)
             {
-                int other = UnityEngine.Random.Range(0, i + 1);
+                int other = random.Next(i + 1);
                 var value = selected[i]; selected[i] = selected[other]; selected[other] = value;
             }
         }

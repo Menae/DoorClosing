@@ -229,7 +229,14 @@ namespace GraduationProject.Tests
   [UnityTest, Timeout(600000)] public IEnumerator Homecoming_FourNightsAndFinalNightRetry_UseInputSystem()
    => HomecomingRoute(false,false,false,false,true);
 
-  private IEnumerator HomecomingRoute(bool recoverLure, bool wetLure=false, bool outsideVoices=false, bool spatialHijacks=false, bool fullStory=false)
+  [UnityTest, Timeout(360000)] public IEnumerator Homecoming_NormalStopsAddEncountersWithoutConsumingRegularQuota_UseInputSystem()
+  {
+   var random=UnityEngine.Random.state;
+   try { yield return HomecomingRoute(false,false,false,false,true,true); }
+   finally { UnityEngine.Random.state=random; }
+  }
+
+  private IEnumerator HomecomingRoute(bool recoverLure, bool wetLure=false, bool outsideVoices=false, bool spatialHijacks=false, bool fullStory=false, bool extraStops=false)
   {
    const string path = "Assets/Scenes/Homecoming.unity";
    yield return UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(path, new LoadSceneParameters(LoadSceneMode.Single));
@@ -275,7 +282,7 @@ namespace GraduationProject.Tests
     list.GetArrayElementAtIndex(6).objectReferenceValue=UnityEditor.AssetDatabase.LoadMainAssetAtPath("Assets/Data/hijack.asset");
     setup.ApplyModifiedPropertiesWithoutUndo();
    }
-   string evidence=Path.GetFullPath((fullStory?"artifacts/m3-04/":spatialHijacks?"artifacts/m3-03/":outsideVoices?"artifacts/m3-02/":wetLure?"artifacts/m3-01/":"artifacts/opening-03/")+(recoverLure?"recovery-":"safe-")+DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")); Directory.CreateDirectory(evidence);
+   string evidence=Path.GetFullPath((extraStops?"artifacts/m3-05/":fullStory?"artifacts/m3-04/":spatialHijacks?"artifacts/m3-03/":outsideVoices?"artifacts/m3-02/":wetLure?"artifacts/m3-01/":"artifacts/opening-03/")+(recoverLure?"recovery-":"safe-")+DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")); Directory.CreateDirectory(evidence);
    var presentation=Find("LureCorridorPresentation");
    Assert.That(presentation,Is.Not.Null);
    bool Revealing() => (bool)presentation.GetType().GetProperty("IsRevealing").GetValue(presentation);
@@ -312,8 +319,13 @@ namespace GraduationProject.Tests
    Assert.That(marker.color.a,Is.GreaterThan(.9f)); Assert.That(marker.transform.localScale.x,Is.GreaterThan(1.1f),"Focused target uses shape/size as well as color");
    Assert.That(marker.transform.position.y,Is.LessThan(camera.WorldToScreenPoint(mailbox+Vector3.up*.056f).y),"Mailbox cue must stay in its own row, not point at 905");
    Vector2 initialMarkPosition=marker.rectTransform.anchoredPosition;
-   yield return new WaitForSeconds(.6f);
-   Assert.That(Vector2.Distance(initialMarkPosition,marker.rectTransform.anchoredPosition),Is.GreaterThan(.05f),"A stationary view has a subtle floating cue");
+   float floatObservationEnd=Time.time+.6f, greatestMarkMovement=0f;
+   while(Time.time<floatObservationEnd)
+   {
+    yield return null;
+    greatestMarkMovement=Mathf.Max(greatestMarkMovement,Vector2.Distance(initialMarkPosition,marker.rectTransform.anchoredPosition));
+   }
+   Assert.That(greatestMarkMovement,Is.GreaterThan(.05f),"A stationary view has a subtle floating cue throughout the observation window");
    yield return Aim(mailbox+new Vector3(0,.28f,0)); yield return new WaitForSeconds(.3f);
    Assert.That(marker.transform.localScale.x,Is.EqualTo(1).Within(.02f),"Unfocused near target remains discoverable without focus emphasis");
    ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"02b-near-marker.png"));
@@ -341,7 +353,9 @@ namespace GraduationProject.Tests
    yield return Aim(new Vector3(-2.55f,1.75f,1.85f)); ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"05-hall.png"));
    yield return WalkTo(new Vector3(0,.95f,.5f)); yield return ClickAt(new Vector3(1.25f,1.5f,1.82f));
    yield return WaitState("Boarding"); yield return WaitForDoors(); yield return WalkTo(new Vector3(0,.95f,3.6f));
-   yield return ClickAt(Control("Floor8")); yield return WaitState("Arrived");
+   yield return ClickAt(Control("Floor8"));
+   if(extraStops) { yield return WaitState("Travelling"); yield return CheckNormalStop(story,true); }
+   yield return WaitState("Arrived");
    yield return Aim(new Vector3(0,1.6f,-10)); ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"06-normal-corridor.png"));
    yield return WalkTo(new Vector3(0,.95f,-10.7f)); yield return ClickAt(new Vector3(0,1.35f,-11.85f));
    yield return Until(()=>!Flag("IsIntroduction")&&!Flag("IsTransitioning"),"continuous next night",20);
@@ -350,8 +364,9 @@ namespace GraduationProject.Tests
    ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"07-following-night.png"));
    if(fullStory)
    {
-    yield return VerifyFourNights(story,evidence);
-    File.WriteAllText(Path.Combine(evidence,"context.txt"),"Homecoming full four nights and final-night death/retry. Synthetic Input System -> Raycast -> click; no gameplay calls/teleport. "+Screen.width+"x"+Screen.height);
+    if(extraStops) yield return VerifyExtraStops(story,evidence);
+    else yield return VerifyFourNights(story,evidence);
+    File.WriteAllText(Path.Combine(evidence,"context.txt"),(extraStops?"Homecoming normal emergency stops, extra encounters and regular quota.":"Homecoming full four nights and final-night death/retry.")+" Synthetic Input System -> Raycast -> click; no gameplay calls/teleport. "+Screen.width+"x"+Screen.height);
     yield break;
    }
    yield return WalkTo(new Vector3(0,.95f,.5f)); yield return ClickAt(new Vector3(1.25f,1.5f,1.82f));
@@ -474,6 +489,85 @@ namespace GraduationProject.Tests
     }
     else yield return Until(()=>State=="WaitingForCall","death returns to hall",12);
    }
+  }
+
+  private static void SeedNextStop(Component story,int expectedIndex)
+  {
+   for(int seed=0;seed<1000;seed++)
+   {
+    var random=new System.Random(seed);
+    bool hit=random.NextDouble()<1.0/3.0;
+    int index=hit?random.Next(6):-1;
+    if(index==expectedIndex)
+    {
+     story.GetType().GetField("random",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).SetValue(story,new System.Random(seed));
+     return;
+    }
+   }
+   Assert.Fail("No test seed for expected draw");
+  }
+
+  private int StoryInt(Component story,string property)=>(int)story.GetType().GetProperty(property).GetValue(story);
+
+  private IEnumerator CheckNormalStop(Component story,bool introduction,bool fsmTravel=false,int expectedIndex=3)
+  {
+   var elevator=Find("ElevatorController");
+   bool Moving()=>(bool)elevator.GetType().GetProperty("IsTravelling").GetValue(elevator);
+   int previous=StoryInt(story,"NormalStopDraws"), queued=StoryInt(story,"PendingExtras");
+   yield return Aim(Control("SideRightEmergency")); SeedNextStop(story,expectedIndex);
+   Press(mouse.leftButton,queueEventOnly:true); yield return null; yield return null;
+   Assert.That(Moving(),Is.False,"Normal stop immediately silences travelling motor");
+   int expected=previous+(introduction?0:1);
+   Assert.That(StoryInt(story,"NormalStopDraws"),Is.EqualTo(expected));
+   Assert.That(StoryInt(story,"PendingExtras"),Is.EqualTo(queued+(!introduction&&expectedIndex>=0?1:0)));
+   yield return new WaitForSeconds(.12f); Release(mouse.leftButton,queueEventOnly:true); yield return null;
+   yield return ClickAt(Control("SideRightEmergency"));
+   Assert.That(StoryInt(story,"NormalStopDraws"),Is.EqualTo(expected),"Held or repeated clicks during stop never redraw");
+   Press(keyboard.escapeKey,queueEventOnly:true); yield return null; Release(keyboard.escapeKey,queueEventOnly:true); yield return null;
+   Assert.That(Flag("IsPaused"),Is.True); yield return new WaitForSecondsRealtime(.3f);
+   Assert.That(Moving(),Is.False,"Pause freezes stopped interval");
+   yield return Ui("再開"); yield return Until(Moving,"normal travel resumes",5);
+   Assert.That(StoryInt(story,"NormalStopDraws"),Is.EqualTo(expected));
+   if(!fsmTravel) Assert.That(State,Is.EqualTo("Travelling"));
+  }
+
+  private IEnumerator VerifyExtraStops(Component story,string evidence)
+  {
+   var machine=Find("BeatStateMachine");
+   object Field(string name)=>machine.GetType().GetField(name,System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).GetValue(machine);
+   string BeatState()=>Field("currentState").ToString();
+   string Label()=>Field("currentBeat").GetType().GetProperty("DebugLabel").GetValue(Field("currentBeat")).ToString();
+   yield return WalkTo(new Vector3(0,.95f,.5f)); yield return ClickAt(new Vector3(1.25f,1.5f,1.82f));
+   yield return WaitState("Boarding"); yield return WaitForDoors(); yield return WalkTo(new Vector3(0,.95f,3.6f));
+   yield return ClickAt(Control("Floor8")); yield return WaitState("Travelling");
+   yield return CheckNormalStop(story,false); // An extra from night two is possible in the first anomaly night.
+   yield return CheckNormalStop(story,false,false,-1); // New stop accepted after resume; this draw misses.
+   Assert.That(StoryInt(story,"NormalStopDraws"),Is.EqualTo(2));
+   yield return Until(()=>Find("AnomalyBehaviour")!=null&&BeatState()=="Diagnosis","queued wet corridor",40);
+   Assert.That(Label(),Is.EqualTo("Lure - Wet Corridor"));
+   Assert.That(StoryInt(story,"PendingExtras"),Is.Zero);
+   ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"extra-wet.png"));
+   var anomaly=Find("AnomalyBehaviour"); yield return ClickAt(Control("SideRightClose"));
+   yield return Until(()=>anomaly==null && BeatState()=="Travel" && (bool)Field("normalTravelWindow"),"between-encounter normal travel");
+   yield return CheckNormalStop(story,false,true,4); // Insert an outside voice before the still-unconsumed regular Lure.
+   var expectedLabels=new[]{"Provocation - Outside Voice","Lure - Prototype A","Provocation - Prototype A","Hijack - Prototype A"};
+   foreach(var expectedLabel in expectedLabels)
+   {
+    yield return Until(()=>Find("AnomalyBehaviour")!=null&&BeatState()=="Diagnosis","extra plus regular sequence",20);
+    Assert.That(Label(),Is.EqualTo(expectedLabel));
+    Assert.That(UnityEngine.Object.FindObjectsByType(GameAccess.Type("AnomalyBehaviour"),FindObjectsSortMode.None).Length,Is.EqualTo(1));
+    anomaly=Find("AnomalyBehaviour");
+    if(expectedLabel.StartsWith("Lure")) yield return ClickAt(Control("SideRightClose"));
+    else if(expectedLabel.StartsWith("Hijack")) yield return ClickAt(Control("SideRightEmergency"));
+    yield return Until(()=>anomaly==null,"resolve extra or regular encounter",15);
+    Assert.That(StoryInt(story,"NormalStopDraws"),Is.EqualTo(3),"Correct Hijack stop must not draw an extra");
+   }
+   yield return WaitState("Arrived");
+   ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"home-after-five.png"));
+   yield return WalkTo(new Vector3(0,.95f,-10.7f)); yield return ClickAt(new Vector3(0,1.35f,-11.85f));
+   yield return Until(()=>StoryInt(story,"CurrentNight")==2&&!Flag("IsTransitioning"),"extra encounters do not prevent night completion",20);
+   Assert.That(StoryInt(story,"PendingExtras"),Is.Zero);
+   Assert.That(StoryInt(story,"NormalStopDraws"),Is.Zero);
   }
 
   private IEnumerator VerifyFourNights(Component story,string evidence)
