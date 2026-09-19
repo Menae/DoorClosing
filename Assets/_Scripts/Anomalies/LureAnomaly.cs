@@ -18,6 +18,9 @@ public class LureAnomaly : AnomalyBehaviour
 
     private AudioClip generatedRevealClip;
     private bool usesGeneratedRevealLight;
+    private LureCorridorPresentation presentation;
+
+    internal void BindPresentation(LureCorridorPresentation value) => presentation = value;
 
     protected override void Awake()
     {
@@ -35,10 +38,12 @@ public class LureAnomaly : AnomalyBehaviour
         base.OnDiagnosisStart();
         SetActiveIfPresent(hallwayRoot, nameof(hallwayRoot), true);
         SetTextOrLog(plateText, nameof(plateText), GameTextCollection.Get(this, "lure.plate", fakePlateString));
+        if (presentation != null) presentation.Begin(this);
     }
 
     public override void OnReveal()
     {
+        if (presentation != null) { presentation.Reveal(this); return; }
         base.OnReveal();
 
         if (HasReference(hallwayLight, nameof(hallwayLight)))
@@ -56,6 +61,7 @@ public class LureAnomaly : AnomalyBehaviour
 
     public override void OnGraceStart()
     {
+        if (presentation != null) return;
         base.OnGraceStart();
         if (hallwayLight != null)
         {
@@ -69,6 +75,7 @@ public class LureAnomaly : AnomalyBehaviour
 
     public override void OnGraceEnd(bool recovered)
     {
+        if (presentation != null) return;
         base.OnGraceEnd(recovered);
         if (recovered && hallwayLight != null)
         {
@@ -78,6 +85,7 @@ public class LureAnomaly : AnomalyBehaviour
 
     public override void OnCleanup()
     {
+        if (presentation != null) presentation.Restore(this);
         base.OnCleanup();
         SetActiveIfPresent(hallwayRoot, nameof(hallwayRoot), false);
         StopAudioIfPresent(revealDrone, nameof(revealDrone));
@@ -87,6 +95,13 @@ public class LureAnomaly : AnomalyBehaviour
             Destroy(generatedRevealClip);
             generatedRevealClip = null;
         }
+    }
+
+    protected override void OnDestroy()
+    {
+        if (presentation != null) presentation.Restore(this);
+        if (generatedRevealClip != null) Destroy(generatedRevealClip);
+        base.OnDestroy();
     }
 
     private void EnsurePrototypeRevealPresentation()

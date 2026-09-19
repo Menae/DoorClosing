@@ -12,6 +12,7 @@ namespace GraduationProject.EditorTools
     public static class HomecomingSceneBuilder
     {
         public const string ScenePath = "Assets/Scenes/Homecoming.unity";
+        private const float KeypadScale = .5f;
         private static Material steel, dark, plaster, floor, stone, glass, diffuser;
         private static TMP_FontAsset font;
         private static GameTextCollection copy;
@@ -222,7 +223,8 @@ namespace GraduationProject.EditorTools
 
         private static TMP_Text Keypad(Transform parent, EntranceAccessController system)
         {
-            var group = Group(parent, "オートロック操作盤"); group.localPosition = new Vector3(1.48f, 1.36f, -5.14f);
+            var group = Group(parent, "オートロック操作盤");
+            PlaceCompactKeypad(group);
             Box(group, "パネル", Vector3.zero, new(.41f, .88f, .065f), steel, true);
             Box(group, "表示窓", new(0, .27f, -.037f), new(.30f, .12f, .015f), dark);
             var display = Label(group, "入力番号", "---", new(0, .27f, -.049f), new(.27f, .10f), .63f, false);
@@ -232,6 +234,23 @@ namespace GraduationProject.EditorTools
             for (int i = 0; i < 4; i++)
                 Box(group, "スピーカー孔" + i, new(-.10f + i * .066f, .385f, -.035f), new(.035f, .006f, .01f), dark);
             return display;
+        }
+        private static void PlaceCompactKeypad(Transform group)
+        {
+            group.localScale = Vector3.one * KeypadScale;
+            // The sleeve wall's entrance-facing surface is z=-5.08; keep the case flush after scaling.
+            group.localPosition = new Vector3(1.48f, 1.36f, -5.08f - .0325f * KeypadScale);
+        }
+        [MenuItem("Tools/Unity Agent/Compact Homecoming Keypad")]
+        public static void CompactKeypad()
+        {
+            var scene = SceneManager.GetActiveScene();
+            if (scene.path != ScenePath || scene.isDirty || EditorApplication.isPlayingOrWillChangePlaymode)
+                throw new InvalidOperationException("Requires saved Homecoming in Edit Mode.");
+            var group = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<Transform>())
+                .Single(t => t.name == "オートロック操作盤");
+            Undo.RecordObject(group, "Compact entrance keypad"); PlaceCompactKeypad(group);
+            EditorSceneManager.MarkSceneDirty(scene); EditorSceneManager.SaveScene(scene);
         }
         private static void Key(Transform parent, EntranceAccessController system, string symbol, int col, int row)
         {

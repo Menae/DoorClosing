@@ -4,6 +4,19 @@
 
 ## 現在のゲーム開発
 
+### OPENING-003 操作盤縮小と代表Lureの演出（2026-09-19、実装・関連検証済み）
+- 担当Astra、main ef3bb33。PlayableDemoの作者差分は除外。ユーザーは入口の他の改善を好評価、操作盤だけ大きすぎると指定し開発継続を指示。
+- 範囲／工程: 操作盤を幅205×高さ440mmへ縮小し壁との接触を保つ→本編HomecomingだけにLure演出componentを接続→入力／救済／状態復元と最終画像→Docs・保存。
+- 演出試作: 日常の廊下との差を柱で判別し、誤降車後に奥から照明が弱まり機械的な低音が立ち上がる。手前の帰還経路と操作盤は保持。正解操作・期限・移動距離・新怪異・物語文は変更しない（GAME-015／OPENING-001）。既存デモの色演出は互換経路として維持。
+- 保守性: 既存のProvocation表示接続と同じく、状態機械はタイミング、シーンcomponentは参照・演出値・復元を担当。新framework・新依存を導入せず、人がInspectorから調整できるようにする。
+- 完了条件: 小型盤の実Raycastクリックで805解錠。Lureの車内観察が安全、誤降車の変化と徒歩帰還＋閉で救済、演出後に元の照明・音へ戻る。通常シーン・作者編集保持。技術合格と恐怖の受入は別。
+- 成果: 幅205×高さ440mm・厚さ32.5mmの操作盤を壁に密着。入口操作Inspectorに配置選択ボタン。本編のLureは奥→中央2灯の減光（遅れ0.35秒／0.65秒で6%）と設備音（0.12／1.2秒fade）に置換し、手前1灯・柱の材質・判定は保持。Hierarchy最上部 `演出調整_誘引の廊下` に日本語Inspector。参照・演出・復元を専用component、受付と期限を既存FSMに分離。編集方法はDEMO_AUTHORING。
+- 検証: import／compile成功。最初の対象PlayModeは3成功・1失敗・skip0（`artifacts/tests/20260919-065748-797/playmode.xml`、310秒）。新しい救済試験がReveal中に早押ししていたため、既存仕様のGrace受付開始を待つよう試験を修正。対象だけ再実行1/1成功・failed/skip0（`artifacts/tests/20260919-070346-893/playmode.xml`、110秒）。ゲームの期待結果は緩和していない。
+- 成功範囲: 小型キーの誤入力・取消・805解錠、通常帰宅と翌夜、6秒車内観察で演出なし、誤降車後の奥→手前の減光、ポーズ中の停止、帰路の光を保持した徒歩帰還＋閉、次の遭遇へ進行・光と音の復元。既存M2の到着前ダッシュと救済も成功。合成Input System→Raycast→clickで実施。全件回帰・EditModeは今回未実施。
+- 実画像: `artifacts/opening-03/recovery-20260919-070355/` の最終Game View（763×429）で操作盤・診断時／変貌時を比較。Windows版は `artifacts/builds/20260919-070620-792/GraduationProject.exe`、非Development・11.7秒・build error/warning0・Tests assemblyなし、README／licenses同梱。Computer Useで実クリック開始とフェード後の入口（1920幅）を確認し `artifacts/opening-03/windows-entrance.png` 保存。日本語Inspectorも実見。
+- 限界／既知: Windows全経路・音の聴感・怖さは未評価。Player.logには既存D3D12 info queue取得診断とURP shadow atlas縮小warning。Editorの既存Lure plateText未接続warningは表札を使わない構成による。再試験後Console error0。CUのEditor前面化は一度timeoutしたが再観察でbuild完了を確認、重複要求なし。
+- 保全／次: Homecomingの既存object削除0、意味変更は操作盤Transform・FSM参照・SceneRootsのみ、演出object追加6。既存PlayableDemoのSHA256は開始前と同じ4112DABE…F6F8DB56で未ステージ保持。Editorは保存済みEdit Mode、演出調整を選択、Windows版は起動したまま。Astra継続。代表Lureの怖さ・音と早押しの体感評価を受け、その後に既定の残り表現／M3へ。技術合格だけで本編完成とはしない。
+
 ### OPENING-002 近距離マーカー・集合ポストの改善（2026-09-19、実装・関連検証済み）
 - 担当: Astra / task 01a07fbb-3ac2-7a62-a049-19d919724625。main b14b85bから。既存PlayableDemo.unityの作者差分は対象外。
 - 明示決定: user-inputで1階共用入口、2〜10階各6戸、計54戸。805を調べる必須導線は維持する。

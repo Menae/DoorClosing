@@ -1,5 +1,11 @@
 # Decisions
 
+## OPENING-003 — 操作盤の縮小と保守可能な代表Lure演出
+- Status/date/owner: 2026-09-19、操作盤が大きすぎるとの明示修正依頼と開発継続。実装Astra。Lureの具体値はGAME-015／OPENING-001内の試作で、怖さの正式採用とは別。
+- Decision/reason: 操作盤を幅205×高さ440mmとし壁に密着。キー・文字・Colliderは親のScaleで揃える。本編Lureは既存の異常柱を保ち、誤降車後に奥から減光・低い設備音を開始する。帰還側の1灯と既存ルールは維持。
+- Maintainability/options: 既存のシーン表示接続パターンをExtend。状態機械は開始・終了の通知だけを持ち、LureCorridorPresentationが日本語Inspector、光・音、復元を担当する。複数演出用の汎用frameworkや新しい状態は現段階では作らない。新しい系統にも再利用が必要になった時点で共通化を検討する。
+- Effects: Homecoming、入口Editor、LureAnomalyの任意接続、BeatStateMachineの参照、関連入力試験・DEMO_AUTHORING。既存M2／PlayableDemoでは未接続時の演出を保持。ユーザー執筆内容・既存PlayableDemo差分は対象外。
+
 ## OPENING-002 — 54戸の集合ポストと近距離表示の改善
 - Status/date/owner: 2026-09-19、ユーザーがuser-inputで「1階共用入口、2〜10階各6戸、計54戸」を選択。UI・実物の調査と改善は今回の明示依頼。実装Astra。
 - Decision: Homecomingの集合郵便受けを54戸へ拡張し、805の検査→805入力を維持。▲の近距離表示を保ちながら、控えめな浮遊・出現消失・注視強調・テンキーでの密集抑制を試作する。

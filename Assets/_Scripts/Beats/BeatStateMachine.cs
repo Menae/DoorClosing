@@ -4,6 +4,7 @@ using UnityEngine;
 public class BeatStateMachine : MonoBehaviour
 {
     [SerializeField] private CabinInformationDisplay informationDisplay;
+    [SerializeField] private LureCorridorPresentation lurePresentation;
     [Header("References")]
     [SerializeField] private BeatDefinition initialBeat;
     [SerializeField] private ResponseEvaluator responseEvaluator;
@@ -472,6 +473,7 @@ public class BeatStateMachine : MonoBehaviour
         currentAnomalyInstance.transform.localScale = def.PresentationLocalScale;
         currentAnomaly = currentAnomalyInstance.GetComponentInChildren<AnomalyBehaviour>();
         if (currentAnomaly is ProvocationAnomaly provocation) provocation.BindMountedDisplay(informationDisplay);
+        if (currentAnomaly is LureAnomaly lure) lure.BindPresentation(lurePresentation);
 
         if (currentAnomaly == null)
         {

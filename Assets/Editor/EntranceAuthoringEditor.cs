@@ -17,6 +17,11 @@ public sealed class EntranceAuthoringEditor : Editor
         EditorGUILayout.PropertyField(serializedObject.FindProperty("keySound"), new GUIContent("キー操作音（空欄で内蔵音）"));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("doorSound"), new GUIContent("自動扉の動作音"));
         serializedObject.ApplyModifiedProperties();
+        if (GUILayout.Button("操作盤の配置・大きさを選択"))
+        {
+            var display = serializedObject.FindProperty("display").objectReferenceValue as Component;
+            if (display != null) Selection.activeGameObject = display.transform.parent.gameObject;
+        }
     }
 }
 

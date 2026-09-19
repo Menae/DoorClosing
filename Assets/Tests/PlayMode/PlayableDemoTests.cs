@@ -206,6 +206,12 @@ namespace GraduationProject.Tests
   }
 
   [UnityTest] public IEnumerator Homecoming_PostboxKeypadGateAndContinuousNight_UseInputSystem()
+   => HomecomingRoute(false);
+
+  [UnityTest] public IEnumerator Homecoming_LureDarkeningAndRecovery_UseInputSystem()
+   => HomecomingRoute(true);
+
+  private IEnumerator HomecomingRoute(bool recoverLure)
   {
    const string path = "Assets/Scenes/Homecoming.unity";
    yield return UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(path, new LoadSceneParameters(LoadSceneMode.Single));
@@ -214,7 +220,14 @@ namespace GraduationProject.Tests
    camera=player.GetComponentInChildren<Camera>(); journey=Find("NormalJourneyController"); demo=Find("DemoSession");
    var entrance=Find("EntranceAccessController");
    bool EntryFlag(string name)=>(bool)entrance.GetType().GetProperty(name).GetValue(entrance);
-   string evidence=Path.GetFullPath("artifacts/opening-02/input-"+DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")); Directory.CreateDirectory(evidence);
+   string evidence=Path.GetFullPath("artifacts/opening-03/"+(recoverLure?"recovery-":"safe-")+DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")); Directory.CreateDirectory(evidence);
+   var presentation=Find("LureCorridorPresentation");
+   Assert.That(presentation,Is.Not.Null);
+   bool Revealing() => (bool)presentation.GetType().GetProperty("IsRevealing").GetValue(presentation);
+   var fixtures=fixtureScene.GetRootGameObjects().Single(r=>r.name=="HomeCorridor").transform.Find("InteriorVisuals");
+   var lights=Enumerable.Range(0,3).Select(i=>fixtures.Find("FixtureLight"+i).GetComponent<Light>()).ToArray();
+   var baseline=lights.Select(l=>l.intensity).ToArray();
+   var drone=presentation.GetComponentInChildren<AudioSource>();
    yield return null;
    Assert.That(UnityEngine.Object.FindObjectsByType<TMPro.TMP_Text>(FindObjectsSortMode.None).Any(t=>t.text.Contains("初日は何も")),Is.False);
    yield return Ui("はじめる");
@@ -283,7 +296,32 @@ namespace GraduationProject.Tests
    yield return ClickAt(Control("Floor8")); yield return Until(()=>Find("LureAnomaly")!=null,"first anomaly",40);
    yield return Until(()=>Find("BeatStateMachine").GetType().GetField("currentState",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).GetValue(Find("BeatStateMachine")).ToString()=="Diagnosis","lure diagnosis");
    yield return Aim(new Vector3(0,1.6f,-6)); ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"08-first-lure.png"));
-   yield return ClickAt(Control("SideRightClose")); yield return Until(()=>Find("ProvocationAnomaly")!=null,"Lure still rejects correctly",20);
+   yield return new WaitForSeconds(6);
+   Assert.That(Revealing(),Is.False,"Observation from inside must not start the danger cue or deadline");
+   for(int i=0;i<3;i++) Assert.That(lights[i].intensity,Is.EqualTo(baseline[i]).Within(.001f));
+   if(recoverLure)
+   {
+    yield return WalkTo(new Vector3(0,.95f,1.5f));
+    yield return Until(Revealing,"Threshold starts scene presentation");
+    yield return new WaitForSeconds(.15f);
+    Assert.That(lights[2].intensity/baseline[2],Is.LessThan(lights[1].intensity/baseline[1]),"Darkening travels from far to near");
+    Press(keyboard.escapeKey,queueEventOnly:true); yield return null; Release(keyboard.escapeKey,queueEventOnly:true); yield return null;
+    Assert.That(Flag("IsPaused"),Is.True);
+    float pausedLight=lights[2].intensity; yield return new WaitForSecondsRealtime(.3f);
+    Assert.That(lights[2].intensity,Is.EqualTo(pausedLight).Within(.001f),"Presentation freezes with gameplay");
+    yield return Ui("再開");
+    yield return WalkTo(new Vector3(0,.95f,3.6f));
+    yield return Aim(new Vector3(0,1.6f,-6)); yield return new WaitForSeconds(.1f);
+    Assert.That(lights[0].intensity,Is.EqualTo(baseline[0]).Within(.001f),"Return path lamp stays unchanged");
+    Assert.That(lights[2].intensity,Is.LessThan(baseline[2]*.2f));
+    Assert.That(drone.isPlaying,Is.True); Assert.That(drone.volume,Is.InRange(.001f,.121f));
+    ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"09-reveal-from-cabin.png")); yield return null;
+    // Reveal deliberately rejects input; recovery is accepted only once Grace starts.
+    yield return Until(()=>Find("BeatStateMachine").GetType().GetField("currentState",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).GetValue(Find("BeatStateMachine")).ToString()=="Grace","recovery input becomes available");
+   }
+   yield return ClickAt(Control("SideRightClose")); yield return Until(()=>Find("ProvocationAnomaly")!=null,"Lure closes and progresses",20);
+   Assert.That(Revealing(),Is.False); Assert.That(drone.isPlaying,Is.False);
+   for(int i=0;i<3;i++) Assert.That(lights[i].intensity,Is.EqualTo(baseline[i]).Within(.001f),"No lighting state leaks into the following encounter");
    File.WriteAllText(Path.Combine(evidence,"context.txt"),"Homecoming: synthetic Input System Keyboard/Mouse -> world/UI raycast clicks; no teleport/SubmitAction. "+Screen.width+"x"+Screen.height);
   }
  }
