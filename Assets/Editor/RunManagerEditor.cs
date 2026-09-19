@@ -36,6 +36,8 @@ public sealed class RunManagerEditor : Editor
     }
     private void ReplaceVariant(string path)
     {
+        if (Application.isPlaying && ((RunManager)target).GetComponent<HomecomingCampaign>() is HomecomingCampaign campaign && campaign.FullStory)
+        { Debug.LogWarning("全4夜から比較へ切り替えるときはPlayを停止してください。",target); return; }
         var definition=AssetDatabase.LoadAssetAtPath<BeatDefinition>(path);
         if(definition==null) { Debug.LogWarning("先に怪異assetを作成してください: "+path); return; }
         var list=serializedObject.FindProperty("beatDefinitions");
@@ -43,8 +45,17 @@ public sealed class RunManagerEditor : Editor
         {
             var item=list.GetArrayElementAtIndex(i);
             if(item.objectReferenceValue is BeatDefinition beat && beat.Category==definition.Category)
-            { item.objectReferenceValue=definition; return; }
+            { item.objectReferenceValue=definition; UseComparisonList((RunManager)target); return; }
         }
         Debug.LogWarning("この遭遇リストに対象系統がありません。",target);
+    }
+
+    internal static void UseComparisonList(RunManager run)
+    {
+        var campaign = run.GetComponent<HomecomingCampaign>();
+        if (campaign == null) return;
+        var so = new SerializedObject(campaign);
+        so.FindProperty("playFullStory").boolValue = false;
+        so.ApplyModifiedProperties();
     }
 }

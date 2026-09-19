@@ -226,7 +226,10 @@ namespace GraduationProject.Tests
   [UnityTest] public IEnumerator Homecoming_SpatialHijackStopRecoveryDeath_UseInputSystem()
    => HomecomingRoute(false,true,false,true);
 
-  private IEnumerator HomecomingRoute(bool recoverLure, bool wetLure=false, bool outsideVoices=false, bool spatialHijacks=false)
+  [UnityTest, Timeout(600000)] public IEnumerator Homecoming_FourNightsAndFinalNightRetry_UseInputSystem()
+   => HomecomingRoute(false,false,false,false,true);
+
+  private IEnumerator HomecomingRoute(bool recoverLure, bool wetLure=false, bool outsideVoices=false, bool spatialHijacks=false, bool fullStory=false)
   {
    const string path = "Assets/Scenes/Homecoming.unity";
    yield return UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(path, new LoadSceneParameters(LoadSceneMode.Single));
@@ -235,6 +238,9 @@ namespace GraduationProject.Tests
    camera=player.GetComponentInChildren<Camera>(); journey=Find("NormalJourneyController"); demo=Find("DemoSession");
    var entrance=Find("EntranceAccessController");
    bool EntryFlag(string name)=>(bool)entrance.GetType().GetProperty(name).GetValue(entrance);
+   var story=Find("HomecomingCampaign");
+   if(story!=null) ((Behaviour)story).enabled=fullStory;
+   if(fullStory) Assert.That(story,Is.Not.Null);
    // Explicit fixture sequence: the author may be comparing a single encounter locally.
    // Only this Play instance is changed; no saved scene or author tuning is overwritten.
    var sequence=new UnityEditor.SerializedObject(Find("RunManager"));
@@ -269,7 +275,7 @@ namespace GraduationProject.Tests
     list.GetArrayElementAtIndex(6).objectReferenceValue=UnityEditor.AssetDatabase.LoadMainAssetAtPath("Assets/Data/hijack.asset");
     setup.ApplyModifiedPropertiesWithoutUndo();
    }
-   string evidence=Path.GetFullPath((spatialHijacks?"artifacts/m3-03/":outsideVoices?"artifacts/m3-02/":wetLure?"artifacts/m3-01/":"artifacts/opening-03/")+(recoverLure?"recovery-":"safe-")+DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")); Directory.CreateDirectory(evidence);
+   string evidence=Path.GetFullPath((fullStory?"artifacts/m3-04/":spatialHijacks?"artifacts/m3-03/":outsideVoices?"artifacts/m3-02/":wetLure?"artifacts/m3-01/":"artifacts/opening-03/")+(recoverLure?"recovery-":"safe-")+DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")); Directory.CreateDirectory(evidence);
    var presentation=Find("LureCorridorPresentation");
    Assert.That(presentation,Is.Not.Null);
    bool Revealing() => (bool)presentation.GetType().GetProperty("IsRevealing").GetValue(presentation);
@@ -342,6 +348,12 @@ namespace GraduationProject.Tests
    Assert.That(Flag("IsPaused"),Is.False,"No next-night explanation/menu interrupt");
    Assert.That(player.position.z,Is.GreaterThan(-2),"Following night begins in the hall, no repeated postbox chore");
    ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"07-following-night.png"));
+   if(fullStory)
+   {
+    yield return VerifyFourNights(story,evidence);
+    File.WriteAllText(Path.Combine(evidence,"context.txt"),"Homecoming full four nights and final-night death/retry. Synthetic Input System -> Raycast -> click; no gameplay calls/teleport. "+Screen.width+"x"+Screen.height);
+    yield break;
+   }
    yield return WalkTo(new Vector3(0,.95f,.5f)); yield return ClickAt(new Vector3(1.25f,1.5f,1.82f));
    yield return WaitState("Boarding"); yield return WaitForDoors(); yield return WalkTo(new Vector3(0,.95f,3.6f));
    yield return ClickAt(Control("Floor8")); yield return Until(()=>Find("LureAnomaly")!=null,"first anomaly",40);
@@ -461,6 +473,83 @@ namespace GraduationProject.Tests
      Assert.That(Find("HijackAnomaly"),Is.Null,"Motor source stops during resolve");
     }
     else yield return Until(()=>State=="WaitingForCall","death returns to hall",12);
+   }
+  }
+
+  private IEnumerator VerifyFourNights(Component story,string evidence)
+  {
+   int Night()=>(int)story.GetType().GetProperty("CurrentNight").GetValue(story);
+   int Attempt()=>(int)story.GetType().GetProperty("Attempt").GetValue(story);
+   var machine=Find("BeatStateMachine");
+   string BeatState()=>machine.GetType().GetField("currentState",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).GetValue(machine).ToString();
+   string Category()
+   {
+    var beat=machine.GetType().GetField("currentBeat",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).GetValue(machine);
+    return beat.GetType().GetProperty("Category").GetValue(beat).ToString();
+   }
+   for(int night=1;night<=3;night++)
+   {
+    Assert.That(Night(),Is.EqualTo(night));
+    for(int retry=0;retry<(night==3?2:1);retry++)
+    {
+     yield return WalkTo(new Vector3(0,.95f,.5f)); yield return ClickAt(new Vector3(1.25f,1.5f,1.82f));
+     yield return WaitState("Boarding"); yield return WaitForDoors(); yield return WalkTo(new Vector3(0,.95f,3.6f));
+     yield return ClickAt(Control("Floor8"));
+     yield return Until(()=>Find("AnomalyBehaviour")!=null,"campaign encounter starts",40);
+     Assert.That(Attempt(),Is.EqualTo(retry+1));
+     if(night==3 && retry==0)
+     {
+      yield return Until(()=>BeatState()=="Diagnosis","final-night diagnosis");
+      var wrong=Category()=="Lure"?"SideRightEmergency":"SideRightClose";
+      yield return ClickAt(Control(wrong)); yield return Until(()=>BeatState()=="Grace","first wrong action");
+      yield return ClickAt(Control(wrong));
+      yield return Until(()=>State=="WaitingForCall","final-night death",12);
+      Assert.That(Night(),Is.EqualTo(3),"Completed nights are preserved");
+      Assert.That(Flag("IsIntroduction"),Is.False);
+      continue;
+     }
+     var categories=new System.Collections.Generic.HashSet<string>();
+     for(int encounter=0;encounter<3;encounter++)
+     {
+      yield return Until(()=>Find("AnomalyBehaviour")!=null && BeatState()=="Diagnosis","campaign diagnosis",25);
+      var anomaly=Find("AnomalyBehaviour"); var category=Category();
+      Assert.That(categories.Add(category),Is.True,"One encounter from each category per night");
+      if(category=="Lure")
+      {
+       if(night==2)
+       {
+        yield return WalkTo(new Vector3(0,.95f,1.3f));
+        yield return WalkTo(new Vector3(0,.95f,3.6f));
+        yield return Until(()=>BeatState()=="Grace","later-night walking recovery");
+       }
+       yield return ClickAt(Control("SideRightClose"));
+      }
+      else if(category=="Hijack")
+      {
+       if(night==2) yield return Until(()=>BeatState()=="Grace","later-night timeout rescue");
+       else yield return new WaitForSeconds(1.1f);
+       yield return ClickAt(Control("SideRightEmergency"));
+      }
+      // Provocation is deliberately ignored through the ordinary gameplay path.
+      yield return Until(()=>anomaly==null,"campaign encounter resolved",15);
+     }
+     Assert.That(categories.Count,Is.EqualTo(3));
+     yield return WaitState("Arrived");
+     yield return Aim(new Vector3(0,1.6f,-10)); ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"night-"+night+"-home.png"));
+     yield return WalkTo(new Vector3(0,.95f,-10.7f)); yield return ClickAt(new Vector3(0,1.35f,-11.85f));
+     if(night<3)
+     {
+      yield return Until(()=>Night()==night+1 && !Flag("IsTransitioning"),"next authored night",20);
+      Assert.That(Flag("IsPaused"),Is.False); Assert.That(Flag("IsComplete"),Is.False);
+      Assert.That(State,Is.EqualTo("WaitingForCall"));
+     }
+     else
+     {
+      yield return Until(()=>Flag("IsComplete"),"four-night completion",15);
+      Assert.That(UnityEngine.Object.FindObjectsByType<TMPro.TMP_Text>(FindObjectsSortMode.None).Any(t=>t.text.Contains("デモはここまで")),Is.False);
+      ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"four-nights-complete.png")); yield return null;
+     }
+    }
    }
   }
 

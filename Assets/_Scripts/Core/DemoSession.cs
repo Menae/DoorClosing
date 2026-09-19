@@ -19,6 +19,7 @@ public sealed class DemoSession : MonoBehaviour
     [SerializeField] private Camera view;
     [SerializeField] private TMP_FontAsset font;
     [SerializeField] private HomecomingPresentation opening;
+    private HomecomingCampaign campaign;
     private static DemoSession instance;
     private int blockedFrame;
     private bool menuOpen = true, introduction = true, transition, completed;
@@ -46,6 +47,8 @@ public sealed class DemoSession : MonoBehaviour
         oldTimeScale = Time.timeScale; oldAudioPause = AudioListener.pause; oldVolume = AudioListener.volume;
         fov = view.fieldOfView;
         journey.SetDemoNight(false);
+        campaign = run.GetComponent<HomecomingCampaign>();
+        campaign?.ResetStory();
         journey.IntroductionCompleted += AfterIntroduction;
         run.HomeRunCompleted += AfterHome;
         volumeProfile = ScriptableObject.CreateInstance<VolumeProfile>();
@@ -122,6 +125,8 @@ public sealed class DemoSession : MonoBehaviour
             opening.Cover();
             yield return new WaitForSeconds(opening.NightBlackSeconds);
             introduction = false;
+            if (campaign != null && campaign.FullStory) campaign.AdvanceNight();
+            run.PrepareFollowingNight();
             opening.PrepareFollowingNight(journey);
             journey.SetDemoNight(true);
             journey.RestartNightAtEntrance();
@@ -143,9 +148,14 @@ public sealed class DemoSession : MonoBehaviour
 
     private void AfterHome()
     {
+        if (campaign != null && campaign.FullStory && campaign.HasFollowingNight)
+        {
+            if (!transition) StartCoroutine(NextNight());
+            return;
+        }
         completed = true; SetMenu(true); Clear("Complete");
         Heading(W("menu.AfterHome.1", "帰宅しました"));
-        Copy(W("menu.AfterHome.2", "デモはここまでです。\nお疲れさまでした。"));
+        if (campaign == null || !campaign.FullStory) Copy(W("menu.AfterHome.2", "デモはここまでです。\nお疲れさまでした。"));
         Button(W("menu.AfterHome.3", "最初から遊ぶ"), Restart);
         Button(W("menu.AfterHome.4", "終了"), Quit);
     }

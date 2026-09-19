@@ -43,6 +43,8 @@ public class RunManager : MonoBehaviour
     private bool runClearInProgress;
     private bool deathRestartInProgress;
     private bool awaitingHomeReturn;
+    private List<BeatDefinition> attemptDefinitions;
+    private IList<BeatDefinition> ActiveDefinitions => attemptDefinitions ?? beatDefinitions;
     internal event System.Action HomeRunCompleted;
 
     private void Awake()
@@ -102,7 +104,7 @@ public class RunManager : MonoBehaviour
 
     public void StartRunFromBeginning()
     {
-        if (beatDefinitions == null || beatDefinitions.Count == 0)
+        if (ActiveDefinitions == null || ActiveDefinitions.Count == 0)
         {
             Debug.LogError($"{nameof(RunManager)} needs at least one {nameof(BeatDefinition)}.", this);
             return;
@@ -123,6 +125,8 @@ public class RunManager : MonoBehaviour
 
     public void BeginEncounterRun()
     {
+        var campaign = GetComponent<HomecomingCampaign>();
+        attemptDefinitions = campaign != null && campaign.FullStory ? campaign.CreateAttempt() : null;
         nightJourney?.PrepareEncounterEnvironment();
         StartRunFromBeginning();
     }
@@ -141,14 +145,14 @@ public class RunManager : MonoBehaviour
 
     private void StartBeatAtIndex(int beatIndex)
     {
-        if (beatIndex < 0 || beatIndex >= beatDefinitions.Count)
+        if (beatIndex < 0 || beatIndex >= ActiveDefinitions.Count)
         {
             Debug.LogError($"{nameof(RunManager)} beat index {beatIndex} is out of range.", this);
             return;
         }
 
         currentBeatIndex = beatIndex;
-        currentBeat = beatDefinitions[currentBeatIndex];
+        currentBeat = ActiveDefinitions[currentBeatIndex];
 
         if (currentBeat == null)
         {
@@ -159,7 +163,7 @@ public class RunManager : MonoBehaviour
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         WarnIfFinalBeatCannotClearWithDebugKey();
 #endif
-        Debug.Log($"[Run] Begin beat {currentBeatIndex + 1}/{beatDefinitions.Count}: {currentBeat.DebugLabel}", this);
+        Debug.Log($"[Run] Begin beat {currentBeatIndex + 1}/{ActiveDefinitions.Count}: {currentBeat.DebugLabel}", this);
         beatStateMachine.BeginBeat(currentBeat);
     }
 
@@ -253,7 +257,7 @@ public class RunManager : MonoBehaviour
         }
 
         int nextBeatIndex = currentBeatIndex + 1;
-        if (nextBeatIndex < beatDefinitions.Count)
+        if (nextBeatIndex < ActiveDefinitions.Count)
         {
             StartBeatAtIndex(nextBeatIndex);
             return;
@@ -265,7 +269,17 @@ public class RunManager : MonoBehaviour
 
     private bool IsFinalBeat()
     {
-        return beatDefinitions != null && currentBeatIndex == beatDefinitions.Count - 1;
+        return ActiveDefinitions != null && currentBeatIndex == ActiveDefinitions.Count - 1;
+    }
+
+    internal void PrepareFollowingNight()
+    {
+        runClearInProgress = false;
+        awaitingHomeReturn = false;
+        currentBeat = null;
+        currentBeatIndex = -1;
+        attemptDefinitions = null;
+        PrepareClearUi();
     }
 
     private void CompleteRun()

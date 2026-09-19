@@ -20,9 +20,12 @@ namespace GraduationProject.EditorTools
             var run = UnityEngine.Object.FindFirstObjectByType<RunManager>();
             var definition = AssetDatabase.LoadAssetAtPath<BeatDefinition>(DefinitionPath);
             if (run == null || definition == null) throw new InvalidOperationException("Homecomingと空間異常assetが必要です。");
+            if (Application.isPlaying && run.GetComponent<HomecomingCampaign>() is HomecomingCampaign campaign && campaign.FullStory)
+                throw new InvalidOperationException("全4夜から単独比較へ切り替えるときはPlayを停止してください。");
             var so = new SerializedObject(run);
             var list = so.FindProperty("beatDefinitions"); list.arraySize = 1;
             list.GetArrayElementAtIndex(0).objectReferenceValue = definition;
+            RunManagerEditor.UseComparisonList(run);
             so.ApplyModifiedProperties(); Selection.activeGameObject = run.gameObject;
         }
 

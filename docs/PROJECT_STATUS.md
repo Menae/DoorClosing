@@ -4,6 +4,16 @@
 
 ## 現在のゲーム開発
 
+### M3-04 全4夜・最終夜抽選（2026-09-19、実装・対象検証済み）
+- 担当Astra、main 797acc6。M3-03をcommit/push済み。6表現を既定の導入＋3/3/3へ接続する。Homecomingに任意の本編進行componentを追加し、既存デモ／単独怪異比較を維持する。
+- 範囲: 夜ごとの定義・最終夜の系統別抽選と順序shuffle、現在夜の死亡再試行、後半猶予90%の試作、暗転で次夜へ。UIは既存開始／ポーズ／帰宅終了を再利用し、途中の説明画面は増やさない。保存形式・新依存なし。M4保存／結果集計、通常停止の追加遭遇は別単位。
+- 方針: RunManagerは1夜内、HomecomingCampaignは夜の構成、DemoSessionは既存UI／暗転。定義assetを直接変更せず、短縮値は実行用コピーで破棄する。全4夜と作者の単独比較はInspectorで明示切替。
+- 検証: 固定夜各3件・各系統1回、最終夜の同条件再現・死亡時再抽選、元asset非変更／コピー破棄、通常入力で全4夜帰宅、後半の救済、ポーズと既存デモ回帰。今回のシーン追加hunkと作者の声1件／音量調整を分離して保存。
+- 結果: 085942-265の抽選／定義保全・既存デモ2件は成功。全4夜はUnity既定の180秒制限で中断したため当該試験のみ600秒へ延長（ゲーム内の所要時間は変更なし）。`artifacts/tests/20260919-090730-599/playmode.xml` は1/1成功・failed/skip0・312.7秒。合成Input System→Raycast→clickで全4夜帰宅、最終夜の死亡→再乗車・再抽選、後半の徒歩帰還／暴走期限超過救済を確認。
+- 画像: `artifacts/m3-04/safe-20260919-090735/` の各夜帰宅とfour-nights-complete。最終Game Viewの終了画面を実見し、途中のデモ終了表示がないことを検証。全回帰一括・怖さの受入は未実施。
+- Windows: `artifacts/builds/20260919-091347-408/GraduationProject.exe`、非Development・11.85秒・error/warning0・Tests assemblyなし・README／licenses同梱。設定5ファイルをbuild直前値へ一致復元。PlayableDemoの開始時SHA256一致。Homecomingの作者の声1件／音量0.518は保持し、追加componentだけをcommit対象とする。
+- Windows実見: Computer Useの実クリックではじめる→入口表示を確認。Windows全4夜・OS移動入力は未検証で、全4夜の通し証拠はEditor。次はGAME-008の通常停止による追加遭遇。
+
 ### M3-03 かご内の空間異常（2026-09-19、実装・対象検証済み）
 - 担当Astra、main 41b15c7。ユーザーは概ね満足と評価し、文章の微調整を後回しにして継続を指示。次の既定表現をGAME-015内で試作する。
 - 方針: 既存Hijackの判定・階上昇・走行音をExtendし、天井と照明が上へ遠ざかる専用PrefabをBuild。上部壁を伸ばし、床・操作盤・移動範囲・カメラは固定。全面的な空間変形shader／外部frameworkは採らず、新依存なし。既存UnityのTransform／Rendererを使用する狭い実装比較で、OSS移植は不要。

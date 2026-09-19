@@ -78593,6 +78593,7 @@ GameObject:
   - component: {fileID: 1396851128}
   - component: {fileID: 1396851127}
   - component: {fileID: 1396851126}
+  - component: {fileID: 1396851129}
   m_Layer: 0
   m_Name: NormalJourney
   m_TagString: Untagged
@@ -78785,6 +78786,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2f7e54800a604304a21f4fa7d759db4a, type: 3}
   m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::ResponseEvaluator
+--- !u!114 &1396851129
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1396851121}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a78700f51dcab9841974f07a68f65dee, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::HomecomingCampaign
+  playFullStory: 1
+  firstNight:
+  - {fileID: 11400000, guid: 445dffe295095cd42b97447201707aac, type: 2}
+  - {fileID: 11400000, guid: df7977d59848d814db2cbcc14ebde5fb, type: 2}
+  - {fileID: 11400000, guid: 1eb3cb02e9383044e92306ea5e520dd3, type: 2}
+  secondNight:
+  - {fileID: 11400000, guid: c29c22906e9d43f48961e52b96afe827, type: 2}
+  - {fileID: 11400000, guid: 3e0b1b411c1ed7e4bbab5505da291596, type: 2}
+  - {fileID: 11400000, guid: c395cd177b8b3334da82e58acb7383d9, type: 2}
+  laterGraceScale: 0.9
 --- !u!1 &1398037135
 GameObject:
   m_ObjectHideFlags: 0

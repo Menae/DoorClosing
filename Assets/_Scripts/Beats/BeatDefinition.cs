@@ -43,4 +43,12 @@ public class BeatDefinition : ScriptableObject
     public Vector3 PresentationLocalScale => presentationLocalScale == Vector3.zero ? Vector3.one : presentationLocalScale;
     public bool HasHijackDeadline => category == AnomalyCategory.Hijack && hijackDeadlineSeconds > 0f;
     public bool HasPassiveSuccess => category == AnomalyCategory.Provocation && passiveSuccessSeconds > 0f;
+
+    internal BeatDefinition CopyForRun(float graceScale)
+    {
+        var copy = Instantiate(this);
+        copy.hideFlags = HideFlags.DontSave;
+        copy.graceSeconds = graceSeconds * Mathf.Clamp(graceScale, .5f, 1f);
+        return copy;
+    }
 }
