@@ -16,6 +16,8 @@ public class InteractionRaycaster : MonoBehaviour
     [SerializeField] private LayerMask interactableLayers;
 
     private Interactable currentTarget;
+    internal Interactable CurrentTarget => currentTarget;
+    internal float InteractionDistance => interactDistance;
     private int stateChangedFrame = -1;
     private int processedPressFrame = -1;
 
@@ -55,7 +57,9 @@ public class InteractionRaycaster : MonoBehaviour
         if (Time.frameCount == stateChangedFrame || currentTarget == null)
             return;
 
-        if (normalJourney != null && normalJourney.isActiveAndEnabled)
+        if (currentTarget.TryGetComponent<EntranceControl>(out var entrance))
+            entrance.Use();
+        else if (normalJourney != null && normalJourney.isActiveAndEnabled)
             normalJourney.SubmitAction(currentTarget.ActionType, currentTarget.FloorNumber);
         else if (beatStateMachine != null)
             beatStateMachine.SubmitAction(currentTarget.ActionType, currentTarget.FloorNumber);
@@ -73,7 +77,9 @@ public class InteractionRaycaster : MonoBehaviour
         if (Physics.Raycast(ray, out RaycastHit hit, interactDistance, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)
             && (interactableLayers.value & (1 << hit.collider.gameObject.layer)) != 0)
         {
-            SetCurrentTarget(hit.collider.GetComponentInParent<Interactable>());
+            var target = hit.collider.GetComponentInParent<Interactable>();
+            if (target != null && target.TryGetComponent<EntranceControl>(out var entrance) && !entrance.Available) target = null;
+            SetCurrentTarget(target);
             return;
         }
         SetCurrentTarget(null);

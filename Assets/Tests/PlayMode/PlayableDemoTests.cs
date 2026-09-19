@@ -204,6 +204,68 @@ namespace GraduationProject.Tests
    Assert.That(Flag("IsIntroduction"),Is.True); Assert.That(Flag("IsPaused"),Is.True);
    File.WriteAllText(Path.Combine(evidence,"context.txt"),"Input System synthetic mouse/keyboard, real menu raycasts and world raycast clicks. No direct gameplay actions or teleport. "+Screen.width+"x"+Screen.height);
   }
+
+  [UnityTest] public IEnumerator Homecoming_PostboxKeypadGateAndContinuousNight_UseInputSystem()
+  {
+   const string path = "Assets/Scenes/Homecoming.unity";
+   yield return UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(path, new LoadSceneParameters(LoadSceneMode.Single));
+   fixtureScene=SceneManager.GetSceneByPath(path); SceneManager.SetActiveScene(fixtureScene);
+   player=fixtureScene.GetRootGameObjects().Single(g=>g.name=="Player").transform;
+   camera=player.GetComponentInChildren<Camera>(); journey=Find("NormalJourneyController"); demo=Find("DemoSession");
+   var entrance=Find("EntranceAccessController");
+   bool EntryFlag(string name)=>(bool)entrance.GetType().GetProperty(name).GetValue(entrance);
+   string evidence=Path.GetFullPath("artifacts/opening-01/input-"+DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")); Directory.CreateDirectory(evidence);
+   yield return null;
+   Assert.That(UnityEngine.Object.FindObjectsByType<TMPro.TMP_Text>(FindObjectsSortMode.None).Any(t=>t.text.Contains("初日は何も")),Is.False);
+   yield return Ui("はじめる");
+   Press(keyboard.escapeKey,queueEventOnly:true); yield return null; Release(keyboard.escapeKey,queueEventOnly:true); yield return null;
+   Assert.That(Flag("IsPaused"),Is.True,"Opening fade must allow pause");
+   yield return new WaitForSecondsRealtime(.2f);
+   Assert.That(Flag("IsTransitioning"),Is.True,"Paused fade must not advance");
+   yield return Ui("再開"); yield return Until(()=>!Flag("IsTransitioning"),"opening fade");
+   ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"01-entrance.png"));
+   yield return WalkTo(new Vector3(1.48f,.95f,-6.2f));
+   yield return ClickAt(Control("EntranceKey_8")); yield return ClickAt(Control("EntranceKey_0")); yield return ClickAt(Control("EntranceKey_5"));
+   Assert.That(EntryFlag("Unlocked"),Is.False,"Number alone cannot bypass examining own mailbox");
+   Assert.That(entrance.GetType().GetProperty("EnteredNumber").GetValue(entrance),Is.EqualTo(""));
+   yield return WalkTo(new Vector3(0,.95f,-6.3f)); yield return Aim(new Vector3(0,.95f,-3.5f),true);
+   Press(keyboard.wKey,queueEventOnly:true); yield return new WaitForSeconds(.8f); Release(keyboard.wKey,queueEventOnly:true); yield return null;
+   Assert.That(player.position.z,Is.LessThan(-5.1f),"Closed glass doors physically block entry");
+   yield return WalkTo(new Vector3(-2.30f,.95f,-7.15f)); yield return Aim(Control("805_郵便受け"));
+   yield return null; ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"02-postbox-marker.png"));
+   Assert.That(UnityEngine.Object.FindObjectsByType<TMPro.TMP_Text>(FindObjectsSortMode.None).Any(t=>t.name=="805_郵便受け_▲"),Is.True);
+   yield return ClickAt(Control("805_郵便受け"));
+   Assert.That(EntryFlag("MailboxInspected"),Is.True);
+   yield return new WaitForSeconds(.5f); ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"03-postbox-open.png"));
+   yield return WalkTo(new Vector3(1.48f,.95f,-6.2f));
+   foreach(string n in new[]{"9","9","9"}) yield return ClickAt(Control("EntranceKey_"+n));
+   Assert.That(EntryFlag("Unlocked"),Is.False,"Wrong room number must not open entrance");
+   yield return new WaitForSeconds(.8f);
+   yield return ClickAt(Control("EntranceKey_8")); yield return ClickAt(Control("EntranceKey_C"));
+   Assert.That(entrance.GetType().GetProperty("EnteredNumber").GetValue(entrance),Is.EqualTo(""),"Cancel clears entry");
+   foreach(string n in new[]{"8","0","5"}) yield return ClickAt(Control("EntranceKey_"+n));
+   Assert.That(EntryFlag("Unlocked"),Is.True);
+   yield return Until(()=>EntryFlag("DoorOpen"),"entrance opens");
+   ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"04-unlocked.png"));
+   yield return WalkTo(new Vector3(0,.95f,-6.2f)); yield return WalkTo(new Vector3(0,.95f,-3.5f));
+   yield return Aim(new Vector3(-2.55f,1.75f,1.85f)); ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"05-hall.png"));
+   yield return WalkTo(new Vector3(0,.95f,.5f)); yield return ClickAt(new Vector3(1.25f,1.5f,1.82f));
+   yield return WaitState("Boarding"); yield return WaitForDoors(); yield return WalkTo(new Vector3(0,.95f,3.6f));
+   yield return ClickAt(Control("Floor8")); yield return WaitState("Arrived");
+   yield return Aim(new Vector3(0,1.6f,-10)); ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"06-normal-corridor.png"));
+   yield return WalkTo(new Vector3(0,.95f,-10.7f)); yield return ClickAt(new Vector3(0,1.35f,-11.85f));
+   yield return Until(()=>!Flag("IsIntroduction")&&!Flag("IsTransitioning"),"continuous next night",20);
+   Assert.That(Flag("IsPaused"),Is.False,"No next-night explanation/menu interrupt");
+   Assert.That(player.position.z,Is.GreaterThan(-2),"Following night begins in the hall, no repeated postbox chore");
+   ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"07-following-night.png"));
+   yield return WalkTo(new Vector3(0,.95f,.5f)); yield return ClickAt(new Vector3(1.25f,1.5f,1.82f));
+   yield return WaitState("Boarding"); yield return WaitForDoors(); yield return WalkTo(new Vector3(0,.95f,3.6f));
+   yield return ClickAt(Control("Floor8")); yield return Until(()=>Find("LureAnomaly")!=null,"first anomaly",40);
+   yield return Until(()=>Find("BeatStateMachine").GetType().GetField("currentState",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).GetValue(Find("BeatStateMachine")).ToString()=="Diagnosis","lure diagnosis");
+   yield return Aim(new Vector3(0,1.6f,-6)); ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"08-first-lure.png"));
+   yield return ClickAt(Control("SideRightClose")); yield return Until(()=>Find("ProvocationAnomaly")!=null,"Lure still rejects correctly",20);
+   File.WriteAllText(Path.Combine(evidence,"context.txt"),"Homecoming: synthetic Input System Keyboard/Mouse -> world/UI raycast clicks; no teleport/SubmitAction. "+Screen.width+"x"+Screen.height);
+  }
  }
 }
 #endif

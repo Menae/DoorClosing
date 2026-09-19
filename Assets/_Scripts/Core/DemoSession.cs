@@ -18,6 +18,7 @@ public sealed class DemoSession : MonoBehaviour
     [SerializeField] private PlayerLook player;
     [SerializeField] private Camera view;
     [SerializeField] private TMP_FontAsset font;
+    [SerializeField] private HomecomingPresentation opening;
     private static DemoSession instance;
     private int blockedFrame;
     private bool menuOpen = true, introduction = true, transition, completed;
@@ -37,6 +38,7 @@ public sealed class DemoSession : MonoBehaviour
     public bool IsIntroduction => introduction;
     public bool IsPaused => menuOpen;
     public bool IsComplete => completed;
+    public bool IsTransitioning => transition;
 
     private void Awake()
     {
@@ -59,7 +61,7 @@ public sealed class DemoSession : MonoBehaviour
 
     private void Update()
     {
-        if (transition || completed || Keyboard.current == null) return;
+        if (completed || Keyboard.current == null || (transition && opening == null)) return;
         if (Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             if (!menuOpen) { SetMenu(true); ShowPause(); }
@@ -70,7 +72,7 @@ public sealed class DemoSession : MonoBehaviour
 
     private void OnApplicationFocus(bool focused)
     {
-        if (!focused && !menuOpen && !transition && !completed) { SetMenu(true); ShowPause(); }
+        if (!focused && !menuOpen && (!transition || opening != null) && !completed) { SetMenu(true); ShowPause(); }
     }
 
     private void OnDestroy()
@@ -100,10 +102,34 @@ public sealed class DemoSession : MonoBehaviour
     }
 
     private void Resume() { page = "Playing"; SetMenu(false); }
+    private void Begin()
+    {
+        Resume();
+        if (opening != null) StartCoroutine(RevealOpening());
+    }
+    private IEnumerator RevealOpening()
+    {
+        transition = true;
+        yield return opening.Reveal();
+        transition = false; blockedFrame = Time.frameCount;
+    }
     private void AfterIntroduction() { if (introduction && !transition) StartCoroutine(NextNight()); }
     private IEnumerator NextNight()
     {
         transition = true;
+        if (opening != null)
+        {
+            opening.Cover();
+            yield return new WaitForSeconds(opening.NightBlackSeconds);
+            introduction = false;
+            opening.PrepareFollowingNight(journey);
+            journey.SetDemoNight(true);
+            journey.RestartNightAtEntrance();
+            if (!menuOpen) { Cursor.lockState = CursorLockMode.Locked; Cursor.visible = false; }
+            yield return opening.Reveal();
+            transition = false; blockedFrame = Time.frameCount;
+            yield break;
+        }
         yield return new WaitForSecondsRealtime(1.2f);
         introduction = false;
         journey.SetDemoNight(true);
@@ -143,9 +169,9 @@ public sealed class DemoSession : MonoBehaviour
     private void ShowTitle()
     {
         Clear("Title"); Heading(W("menu.ShowTitle.1", "帰宅 / プレイアブルデモ"));
-        Copy(W("menu.ShowTitle.2", "あなたの自宅は８階です。\nまずは普段どおりに帰り、廊下の様子を覚えてください。\n\n乗る前に、エレベーター横の注意書きをご確認ください。"));
+        if (opening == null) Copy(W("menu.ShowTitle.2", "あなたの自宅は８階です。\nまずは普段どおりに帰り、廊下の様子を覚えてください。\n\n乗る前に、エレベーター横の注意書きをご確認ください。"));
         Copy(W("menu.ShowTitle.3", "WASD：移動　Shift：走る　マウス：視点\n左クリック：操作　Esc：一時停止"), 24);
-        Button(W("menu.ShowTitle.4", "はじめる"), Resume);
+        Button(W("menu.ShowTitle.4", "はじめる"), Begin);
         Button(W("menu.ShowTitle.5", "設定"), ShowSettings);
         Button(W("menu.ShowTitle.6", "終了"), Quit);
     }

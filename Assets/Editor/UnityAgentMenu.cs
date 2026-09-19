@@ -261,6 +261,15 @@ namespace GraduationProject.EditorTools
             EditorApplication.delayCall += () => BuildWindows(new[] { PlayableDemoBuilder.ScenePath }, false);
         }
 
+        [MenuItem("Tools/Unity Agent/Build Homecoming Windows")]
+        public static void RequestHomecomingBuild()
+        {
+            RequireCleanEditMode();
+            if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.StandaloneWindows64 || !File.Exists(HomecomingSceneBuilder.ScenePath))
+                throw new InvalidOperationException("Requires Windows64 and the saved Homecoming scene.");
+            EditorApplication.delayCall += () => BuildWindows(new[] { HomecomingSceneBuilder.ScenePath }, false);
+        }
+
         private static void BuildWindows(string[] requestedScenes, bool development = true)
         {
             RequireCleanEditMode();

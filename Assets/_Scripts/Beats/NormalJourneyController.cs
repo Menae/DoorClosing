@@ -22,6 +22,7 @@ public class NormalJourneyController : MonoBehaviour
     [SerializeField, Min(0.1f)] private float travelSeconds = 4f;
     [SerializeField, Min(0.1f)] private float emergencyStopSeconds = 1f;
     [SerializeField, Min(0f)] private float fadeSeconds = 0.75f;
+    [SerializeField] private bool showCompletionText = true;
 
     public JourneyState State { get; private set; }
     public int AcceptedEmergencyStops { get; private set; }
@@ -32,6 +33,10 @@ public class NormalJourneyController : MonoBehaviour
     private Vector3 nightStartPosition;
     private Quaternion nightStartRotation;
     internal event System.Action IntroductionCompleted;
+    internal void SetNightStartPose(Vector3 position, Quaternion rotation)
+    {
+        nightStartPosition = position; nightStartRotation = rotation;
+    }
 
     internal void SetDemoNight(bool encounters)
     {
@@ -242,7 +247,7 @@ public class NormalJourneyController : MonoBehaviour
             }
             fade.color = Color.black;
         }
-        if (completionText != null) completionText.gameObject.SetActive(true);
+        if (completionText != null) completionText.gameObject.SetActive(showCompletionText);
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
         IntroductionCompleted?.Invoke();
