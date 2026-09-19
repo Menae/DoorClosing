@@ -220,7 +220,10 @@ namespace GraduationProject.Tests
   [UnityTest] public IEnumerator Homecoming_WetLureRecovery_UseInputSystem()
    => HomecomingRoute(true,true);
 
-  private IEnumerator HomecomingRoute(bool recoverLure, bool wetLure=false)
+  [UnityTest] public IEnumerator Homecoming_OutsideVoicePassiveRecoveryAndDeath_UseInputSystem()
+   => HomecomingRoute(false,true,true);
+
+  private IEnumerator HomecomingRoute(bool recoverLure, bool wetLure=false, bool outsideVoices=false)
   {
    const string path = "Assets/Scenes/Homecoming.unity";
    yield return UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(path, new LoadSceneParameters(LoadSceneMode.Single));
@@ -236,7 +239,17 @@ namespace GraduationProject.Tests
     var wet=UnityEditor.AssetDatabase.LoadMainAssetAtPath("Assets/Data/lure_wet.asset"); Assert.That(wet,Is.Not.Null);
     setup.FindProperty("beatDefinitions").GetArrayElementAtIndex(0).objectReferenceValue=wet; setup.ApplyModifiedPropertiesWithoutUndo();
    }
-   string evidence=Path.GetFullPath((wetLure?"artifacts/m3-01/":"artifacts/opening-03/")+(recoverLure?"recovery-":"safe-")+DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")); Directory.CreateDirectory(evidence);
+   if(outsideVoices)
+   {
+    // Three authored encounters exercise passive success, recovery and death without debug commits.
+    var setup=new UnityEditor.SerializedObject(Find("RunManager"));
+    var list=setup.FindProperty("beatDefinitions"); list.arraySize=5;
+    var voice=UnityEditor.AssetDatabase.LoadMainAssetAtPath("Assets/Data/provocation_voice.asset"); Assert.That(voice,Is.Not.Null);
+    for(int i=1;i<=3;i++) list.GetArrayElementAtIndex(i).objectReferenceValue=voice;
+    list.GetArrayElementAtIndex(4).objectReferenceValue=UnityEditor.AssetDatabase.LoadMainAssetAtPath("Assets/Data/hijack.asset");
+    setup.ApplyModifiedPropertiesWithoutUndo();
+   }
+   string evidence=Path.GetFullPath((outsideVoices?"artifacts/m3-02/":wetLure?"artifacts/m3-01/":"artifacts/opening-03/")+(recoverLure?"recovery-":"safe-")+DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")); Directory.CreateDirectory(evidence);
    var presentation=Find("LureCorridorPresentation");
    Assert.That(presentation,Is.Not.Null);
    bool Revealing() => (bool)presentation.GetType().GetProperty("IsRevealing").GetValue(presentation);
@@ -312,6 +325,17 @@ namespace GraduationProject.Tests
    yield return WalkTo(new Vector3(0,.95f,.5f)); yield return ClickAt(new Vector3(1.25f,1.5f,1.82f));
    yield return WaitState("Boarding"); yield return WaitForDoors(); yield return WalkTo(new Vector3(0,.95f,3.6f));
    yield return ClickAt(Control("Floor8")); yield return Until(()=>Find("LureAnomaly")!=null,"first anomaly",40);
+   if(wetLure)
+   {
+    var arrivingLure=Find("LureAnomaly");
+    Assert.That(arrivingLure.GetComponentsInChildren<Renderer>().Any(r=>r.enabled),Is.True,"Wet corridor must be prepared BEFORE the door starts opening, not at Diagnosis");
+    yield return Aim(new Vector3(0,.05f,-4));
+    var elevator=Find("ElevatorController");
+    yield return Until(()=>(bool)elevator.GetType().GetProperty("IsDoorMoving").GetValue(elevator),"arrival starts opening");
+    yield return new WaitForSeconds(.65f);
+    Assert.That(Revealing(),Is.False,"Preparing the visible corridor must not start danger");
+    ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"07b-wet-during-opening.png"));
+   }
    yield return Until(()=>Find("BeatStateMachine").GetType().GetField("currentState",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).GetValue(Find("BeatStateMachine")).ToString()=="Diagnosis","lure diagnosis");
    yield return Aim(new Vector3(0,1.6f,-6)); ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"08-first-lure.png"));
    if(wetLure)
@@ -350,7 +374,7 @@ namespace GraduationProject.Tests
     // Reveal deliberately rejects input; recovery is accepted only once Grace starts.
     yield return Until(()=>Find("BeatStateMachine").GetType().GetField("currentState",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).GetValue(Find("BeatStateMachine")).ToString()=="Grace","recovery input becomes available");
    }
-   yield return ClickAt(Control("SideRightClose")); yield return Until(()=>Find("ProvocationAnomaly")!=null,"Lure closes and progresses",20);
+   yield return ClickAt(Control("SideRightClose")); yield return Until(()=>Find(outsideVoices?"VoiceProvocationAnomaly":"ProvocationAnomaly")!=null,"Lure closes and progresses",20);
    Assert.That(Revealing(),Is.False); Assert.That(drone.isPlaying,Is.False);
    if(wetLure)
    {
@@ -358,7 +382,57 @@ namespace GraduationProject.Tests
     Assert.That(UnityEngine.Object.FindObjectsByType<ReflectionProbe>(FindObjectsSortMode.None).Length,Is.EqualTo(originalProbeCount),"Encounter reflection probe is released");
    }
    for(int i=0;i<3;i++) Assert.That(lights[i].intensity,Is.EqualTo(baseline[i]).Within(.001f),"No lighting state leaks into the following encounter");
+   if(outsideVoices) yield return VerifyOutsideVoices(evidence);
    File.WriteAllText(Path.Combine(evidence,"context.txt"),"Homecoming: synthetic Input System Keyboard/Mouse -> world/UI raycast clicks; no teleport/SubmitAction. "+Screen.width+"x"+Screen.height);
+  }
+
+  private IEnumerator VerifyOutsideVoices(string evidence)
+  {
+   string BeatState()=>Find("BeatStateMachine").GetType().GetField("currentState",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).GetValue(Find("BeatStateMachine")).ToString();
+   var elevator=Find("ElevatorController");
+   for(int scenario=0;scenario<3;scenario++)
+   {
+    var voice=Find("VoiceProvocationAnomaly");
+    var audioSource=voice.GetComponentInChildren<AudioSource>();
+    yield return Until(()=>audioSource.isPlaying,"outside plea audible");
+    Assert.That(voice.GetComponentsInChildren<Renderer>(true),Is.Empty,"No floating panel or character mesh");
+    Assert.That(audioSource.transform.position.z,Is.LessThan(2),"Voice originates outside the closed door");
+    Assert.That((bool)elevator.GetType().GetProperty("IsDoorOpen").GetValue(elevator),Is.False);
+    Assert.That((int)Find("FloorIndicator").GetType().GetProperty("CurrentDisplayedFloor").GetValue(Find("FloorIndicator")),Is.LessThanOrEqualTo(8),"Provocation must not imitate Hijack floor drift");
+    Assert.That((bool)Find("CabinInformationDisplay").GetType().GetProperty("IsShowingAnnouncement").GetValue(Find("CabinInformationDisplay")),Is.False,"Voice does not replace the physical monitor announcement");
+    yield return new WaitForSeconds(.2f);
+    Assert.That(audioSource.timeSamples,Is.GreaterThan(0));
+    if(scenario==0)
+    {
+     Press(keyboard.escapeKey,queueEventOnly:true); yield return null; Release(keyboard.escapeKey,queueEventOnly:true); yield return null;
+     Assert.That(Flag("IsPaused"),Is.True);
+     int sample=audioSource.timeSamples;
+     yield return new WaitForSecondsRealtime(.25f);
+     Assert.That(audioSource.timeSamples,Is.EqualTo(sample).Within(1024),"Pause preserves the voice sentence");
+     yield return Ui("再開");
+     yield return Aim(new Vector3(0,1.6f,1.8f));
+     ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"10-outside-voice-closed-door.png"));
+    }
+    else
+    {
+     yield return ClickAt(Control("SideRightEmergency"));
+     yield return Until(()=>(bool)voice.GetType().GetProperty("HasRevealed").GetValue(voice),"wrong press intensifies plea");
+     var expected=new UnityEditor.SerializedObject(voice).FindProperty("revealedClip").objectReferenceValue;
+     Assert.That(audioSource.clip,Is.EqualTo(expected));
+     yield return Until(()=>BeatState()=="Grace","voice recovery window");
+     if(scenario==2) yield return ClickAt(Control("SideRightClose"));
+    }
+    yield return Until(()=>voice==null,"old voice stops and is destroyed",15);
+    Assert.That(audioSource==null,Is.True,"No old AudioSource remains after resolution/death");
+    if(scenario<2) yield return Until(()=>Find("VoiceProvocationAnomaly")!=null,"passive survival proceeds to next voice",15);
+    else
+    {
+     yield return Until(()=>State=="WaitingForCall","second wrong response returns to hall",10);
+     Assert.That(Find("VoiceProvocationAnomaly"),Is.Null);
+     Assert.That(Find("HijackAnomaly"),Is.Null,"Death must not advance to next encounter");
+     Assert.That(player.position.z,Is.LessThan(2));
+    }
+   }
   }
  }
 }

@@ -1,5 +1,13 @@
 # Decisions
 
+## M3-02 — 開扉前の廊下準備と外からの声
+- Status/date/owner: 2026-09-19、担当Astra。ユーザーが濡れの遅い出現を指摘し修正＋次工程を指示。仮台詞・仮音声はM3-01で明示委任済み。
+- Lure: 見た目の準備を開扉前へ移す。危険の開始・入力受付は既存FSMに残し、開扉前の準備だけで猶予を進めない。柱も同じ準備経路を使用。
+- Voice: 既存Provocationカテゴリ・判定・猶予をExtendし、音だけのVoiceProvocationAnomalyを別PrefabとしてBuild。設備放送のモニター／点滅／英語仮パネルを継承しない。扉の外から非常停止へ誘う。階数上昇・加速音は偽装しない。人物や新規規則は追加しない。
+- Trial: 仮声はPCに導入済みのVOICEVOX 0.23.0／白上虎太郎で制作。2本のWAVだけを利用し、エンジンや新しいruntime依存は同梱しない。利用条件・再生成条件・台詞はdocs/licenses/OutsideVoice.txt。制作時だけ127.0.0.1でエンジンを起動し、出力後に当該PIDを停止。費用・インストール・公開なし。
+- Authoring: 音量、開始遅延、再生間隔、2つの音声クリップと制作メモの台本を日本語Inspectorへ。台本編集だけで音声が自動変換されるとは表示しない。無操作成功は最初の音声が終わる余裕を確保した7秒試作。猶予は元の4秒。自然さ・怖さ・数値の正式採用とは別。
+- Files: LureAnomaly／BeatStateMachine、VoiceProvocationAnomaly／Prefab／BeatDefinition、比較Inspector、関連Input System試験、作者Docs。Homecomingの作者による濡れ選択・音量は保持。次は空間異常、その後に全4夜進行。
+
 ## M3-01 — 別表現と仮音声の制作
 - Status/date/owner: 2026-09-19。ユーザーは音を一旦及第点とし、次工程の実装を指示。追加user-inputで「今回だけ仮台詞・仮音声も任せる」を選択。担当Astra。
 - Scope: GAME-005の既定6表現へ拡張。まず誘引の濡れを、通常床を変更しない独立Prefab・Material・BeatDefinitionとして制作する。車内で判別でき、同じ対処で救済できることが必要。滑り・移動速度変更・新しい罰は加えない。

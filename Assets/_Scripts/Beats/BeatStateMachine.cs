@@ -229,6 +229,7 @@ public class BeatStateMachine : MonoBehaviour
         lureArrivalStartedInside = passenger!=null && cabin!=null && cabin.bounds.Contains(passenger.bounds.center);
         SetState(BeatState.Arrive);
         SpawnAnomaly(def);
+        if (currentAnomaly is LureAnomaly arrivingLure) arrivingLure.PrepareArrival();
         floorIndicator?.SetFloor(def.DisplayFloor);
         floorIndicator?.Flicker();
 

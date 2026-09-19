@@ -33,11 +33,18 @@ public class LureAnomaly : AnomalyBehaviour
         }
     }
 
+    // Appearance is prepared while the doors are still closed. Input/danger stays
+    // owned by Diagnosis, so looking through the first gap cannot advance the timer.
+    internal void PrepareArrival()
+    {
+        SetActiveIfPresent(hallwayRoot, nameof(hallwayRoot), true);
+        SetTextOrLog(plateText, nameof(plateText), GameTextCollection.Get(this, "lure.plate", fakePlateString));
+    }
+
     public override void OnDiagnosisStart()
     {
         base.OnDiagnosisStart();
-        SetActiveIfPresent(hallwayRoot, nameof(hallwayRoot), true);
-        SetTextOrLog(plateText, nameof(plateText), GameTextCollection.Get(this, "lure.plate", fakePlateString));
+        PrepareArrival();
         if (presentation != null) presentation.Begin(this);
     }
 

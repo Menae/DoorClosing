@@ -307,9 +307,10 @@ namespace GraduationProject.EditorTools
                 if (report.summary.result != BuildResult.Succeeded) Debug.LogError("[Unity Agent] Build failed: " + statusFile);
                 else
                 {
-                    if (scenes.Length == 1 && scenes[0] == PlayableDemoBuilder.ScenePath)
+                    if (scenes.Length == 1 && (scenes[0] == PlayableDemoBuilder.ScenePath || scenes[0] == "Assets/Scenes/Homecoming.unity"))
                     {
-                        File.Copy(Path.Combine(Root,"docs","DEMO_README.txt"),Path.Combine(directory,"README.txt"),true);
+                        var readme = scenes[0] == PlayableDemoBuilder.ScenePath ? "DEMO_README.txt" : "HOMECOMING_README.txt";
+                        File.Copy(Path.Combine(Root,"docs",readme),Path.Combine(directory,"README.txt"),true);
                         var licenses=Path.Combine(directory,"licenses");Directory.CreateDirectory(licenses);
                         foreach(var source in Directory.GetFiles(Path.Combine(Root,"docs","licenses"),"*.txt"))
                             File.Copy(source,Path.Combine(licenses,Path.GetFileName(source)),true);

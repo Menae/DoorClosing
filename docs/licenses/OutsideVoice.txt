@@ -1,0 +1,31 @@
+Outside voice trial / 仮音声
+Credit: VOICEVOX:白上虎太郎
+
+Files: Assets/ApartmentVisuals/Audio/OutsidePlea.wav, OutsideInsistence.wav
+Generated locally on 2026-09-19 with the already installed VOICEVOX Engine 0.23.0.
+No model, synthesizer software, character artwork or actor recording is bundled.
+The voice is assigned to an unnamed fictional presence, not the VOICEVOX character or performer.
+
+Original trial scripts (delegated by the project author):
+OutsidePlea: 助けて。非常停止を押してください。
+OutsideInsistence: 押して。早く、非常停止を押して。
+
+Generation: style 33 (びくびく), speedScale .92 for the plea;
+style 12 (ふつう), speedScale .88 for insistence;
+intonationScale .85, volumeScale .8, prePhonemeLength .1, postPhonemeLength .15.
+24 kHz mono WAV. Unity applies spatial positioning and a configurable low-pass filter.
+This is a replaceable prototype, not final voice acting.
+
+Usage and redistribution conditions (official terms checked 2026-09-19):
+Commercial and noncommercial use is permitted under the VOICEVOX and VirVox terms.
+Retain the credit above when using these audio files, and require recipients of audio
+distributed as material to retain the same attribution obligation. Do not present the
+audio as an actual performance/statement by its source actor. No character artwork rights
+are conveyed. Other restrictions in the linked official terms also apply.
+
+VOICEVOX software terms: https://voicevox.hiroshiba.jp/term/
+VirVox output audio terms: https://www.virvoxproject.com/voicevoxの利用規約
+Official voice library notice: https://github.com/VOICEVOX/voicevox_vvm/blob/main/TERMS.txt
+
+Before publication, keep this notice with the game and include VOICEVOX:白上虎太郎
+in the final game/store credits. Publication itself has not been authorized by this task.

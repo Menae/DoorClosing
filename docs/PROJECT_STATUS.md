@@ -4,6 +4,18 @@
 
 ## 現在のゲーム開発
 
+### M3-02 開扉前の濡れ表示／外からの声（2026-09-19、実装・対象検証済み）
+- 担当Astra、main 5ba0864。濡れが開扉後に出現するという本人報告を再現・修正し、既定の次表現「外から助けを求める声」を制作する。
+- 範囲: Lureの見た目を開扉前に準備、入力受付・退出検出・猶予は維持。声は独立した音声Prefabと既存Provocation判定を組み合わせ、音源・音量・間隔をInspectorで編集。新規のゲーム規則・人物表示は追加しない。
+- 検証: 開扉途中の表示を先に失敗再現→修正→車内観察／到着前ダッシュ／帰還。声は閉扉走行・無操作成功・誤操作後の無操作救済・二度目誤操作・ポーズ／終了時停止を確認。音色の本人評価は技術確認と分離。関連Docsとcommit／pushまで行う。
+- 保全: 両シーンの既存作者差分を除外。開始時Homecoming未保存は最初のLureを濡れへ切替した差分のみで、`artifacts/m3-02/user-unsaved-before.unity`へ保全。作者の比較設定として保持する。
+- 結果: 開扉前表示の試験で失敗再現（`artifacts/tests/20260919-080334-972/playmode.xml`、0/1）→Lureの準備を開扉前へ分離。濡れ帰還＋到着前ダッシュ2/2成功（080704-653、146秒）。声は仮WAV2本・独立Prefab・日本語Inspectorを追加し、通常帰宅から濡れ→声3回（無操作／救済／二度目誤操作死亡）まで1/1成功（081242-032、133秒）。修正後failed/skip0。合成Input System→Raycast→clickで、ポーズ中の声停止・終了後の音源破棄も確認。全回帰／EditMode一括は未実施。
+- 実画像: 最終Game View 750×422の `artifacts/m3-01/recovery-20260919-080749/07b-wet-during-opening.png` で開き始めの隙間から既に濡れている床を確認。`artifacts/m3-02/safe-20260919-081250/10-outside-voice-closed-door.png` で声の際の閉扉・通常モニター・不要なパネルなしを確認。音声は再生位置の進行を検証したが聴感は未確認、自然さ・怖さの本人評価も未了。
+- Windows比較版: `artifacts/builds/20260919-082009-538/GraduationProject.exe`。最初は作者設定の濡れ、2番目を外からの声とした比較用。非Development、13.3秒、build error/warning0、Tests assemblyなし。Homecoming専用README・音声creditを含むlicenses同梱。既存build要求のdelayCallが未実行だったため、その待機callbackだけを一度dispatchして完了。重複buildなし。
+- 確認の限界: 今回のtool一覧にはWindows pluginのnode_repl入口がなく、ネイティブComputer Use／Windows版の操作検証は実施していない。cua_replだけを見た権限不可判定ではない。通し入力・画像の証拠はEditor。仮音声制作のローカルVOICEVOX helperは停止済み。
+- 保全／停止: build前コピー `artifacts/m3-02/homecoming-before-voice-build.unity` と復元後の意味差分0。2番目だけ設備放送へ復元し、作者の最初の濡れ選択・設備音量0.518を保持。PlayableDemo SHA256は開始時4112DABE…F6F8DB56と一致。両シーンはコミット対象外。build設定5ファイルは直前値へ一致復元。Editor保存済みEdit Mode、声Prefabを選択。Console error/warning0。
+- 次: Astra継続。6表現中の残り「かご内の空間異常」を制作し、その後に全4夜・最終夜抽選・追加遭遇へ接続する。現段階は5表現の技術実装で、M3完了や怖さの正式受入ではない。
+
 ### M3-01 誘引「濡れた廊下」（2026-09-19、実装・対象検証済み）
 - 担当Astra、main e0799cd。音はユーザーが一旦及第点とし次工程を指示。仮台詞・仮音声も今回だけuser-inputで委任、正式文章の執筆方針は保持。
 - 最初の単位: 誘引の別表現「濡れた廊下」。既存BeatDefinition／Lure判定／減光・帰還を再利用し、柱と別のPrefab・Materialへ分ける。通常床や歩行ルールは変更しない。作者がInspectorから比較・調整できる入口を整える。
