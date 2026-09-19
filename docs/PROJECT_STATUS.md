@@ -4,6 +4,20 @@
 
 ## 現在のゲーム開発
 
+### M3-01 誘引「濡れた廊下」（2026-09-19、実装・対象検証済み）
+- 担当Astra、main e0799cd。音はユーザーが一旦及第点とし次工程を指示。仮台詞・仮音声も今回だけuser-inputで委任、正式文章の執筆方針は保持。
+- 最初の単位: 誘引の別表現「濡れた廊下」。既存BeatDefinition／Lure判定／減光・帰還を再利用し、柱と別のPrefab・Materialへ分ける。通常床や歩行ルールは変更しない。作者がInspectorから比較・調整できる入口を整える。
+- 検証: 車内から濡れを識別できる最終Game View、車内待機の安全、退出→徒歩帰還＋閉、終了後の表面／照明／音の復元、正常廊下との比較。新依存・保存形式なし。音声・空間異常と全4夜進行は後続の実装単位。
+- 保全: 開始時はPlayableDemoに既存作者差分。Homecomingに未保存の設備音量0.12→0.518のみを確認し、`artifacts/m3-01/user-unsaved-before.unity`へコピー保全。作者調整として保持し、自動コミットへ混ぜない。
+- 進捗: 濡れPrefab・専用shader・室内反射・比較Inspectorを実装。PlayMode対象2/2成功（073659-784）、反射修正後の帰還ケース1/1成功（074249-508）。反射ベイク時にURPが追加するlight metadataを後処理で取り除き、再生成前後のシーン意味差分は作者音量のみ、Cubemap SHA256も一致。
+- 成果: 不規則な濡れ・細かい水面変化・室内照明の反射を既存廊下へ追加。車内から判別でき、Collider・歩行速度・正解・猶予を変更しない。専用Materialの日本語項目、怪異比較Inspector、配置変更時の反射再生成メニューを追加。通常初回は柱、濡れは後続夜用の別asset。
+- 試験履歴: 初回2件とも失敗（`artifacts/tests/20260919-072838-373/playmode.xml`）。旧試験の音量0.12固定を作者設定値との一致へ変更し、到着待ちをゲーム時間35秒＋実時間60秒watchdogへ修正（旧実時間32秒は通常所要約30秒に対し描画停止の余裕不足）。ゲームの成功条件・作者音量は変更しない。再実行2/2成功・failed/skip0（073659-784、220秒）。最終反射修正後の救済ケース1/1成功・failed/skip0（074249-508、110秒）。全件回帰・EditMode一括は今回未実施。
+- 確認範囲: 通常帰宅→翌夜、6秒車内観察の安全、退出後の減光、ポーズ停止、徒歩帰還＋閉、次の遭遇、照明／音／水面／反射probeの復元。合成Input System→Raycast→clickで実施。`artifacts/m3-01/recovery-20260919-074258/`の最終Game View（750×422）で水面と通常床・減光後を実見。初回shader仮表示と空の青い反射は修正済み。
+- Windows: `artifacts/builds/20260919-074650-058/GraduationProject.exe` は最初の誘引だけを濡れにした比較用。非Development・10.65秒・build error/warning0・Tests assemblyなし・README／licenses同梱。Computer Useで実クリック開始→入口を実見（1920幅）、`artifacts/m3-01/windows-entrance.png`。Editorでも比較ボタンの実クリックと定義切替を確認し `inspector.png` 保存。Windows全経路・OS移動入力・濡れ到達は未検証。通しの証拠はEditor。
+- 保全／停止: 比較build後、Homecomingの最初の定義を柱へ復元。直前コピーとの意味差分0。現在のHomecoming差分は作者の設備音量0.518のみ（Unity保存時の空白差分を除く）、PlayableDemoは開始時SHA256 4112DABE…F6F8DB56のまま。両シーンはコミット対象外。Editorは保存済みEdit Mode、Windows比較版を起動したまま。
+- 既知／限界: 室内反射は128pxの事前生成で、減光後の鏡像は正確には更新しない。反射再生成後のCubemap SHA256一致とシーン保全を確認。Player起動ログは既存D3D12 info queue診断／URP影atlas縮小warningのみ、例外・shader errorなし。怖さ・初見判別・音の正式受入は本人評価待ち。仮音声は委任を記録したが素材未作成。
+- 次: Astra継続。既定のProvocation「外から助けを求める声」、Hijack「かごの空間異常」、その後に全4夜・最終夜抽選・通常停止の追加遭遇を実装。6表現・本編完走の完成扱いにはしない。
+
 ### OPENING-003 操作盤縮小と代表Lureの演出（2026-09-19、実装・関連検証済み）
 - 担当Astra、main ef3bb33。PlayableDemoの作者差分は除外。ユーザーは入口の他の改善を好評価、操作盤だけ大きすぎると指定し開発継続を指示。
 - 範囲／工程: 操作盤を幅205×高さ440mmへ縮小し壁との接触を保つ→本編HomecomingだけにLure演出componentを接続→入力／救済／状態復元と最終画像→Docs・保存。

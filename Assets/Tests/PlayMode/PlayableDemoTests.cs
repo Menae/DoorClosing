@@ -95,9 +95,12 @@ namespace GraduationProject.Tests
 
         private IEnumerator WaitState(string expected)
         {
-            float end = Time.realtimeSinceStartup + (expected == "Arrived" ? 32 : 8);
-            while (State != expected && Time.realtimeSinceStartup < end) yield return null;
-            Assert.That(State, Is.EqualTo(expected));
+            // Gameplay timers use scaled time. Shader/import stalls can make wall time
+            // exceed the authored journey duration without advancing those timers.
+            float end = Time.time + (expected == "Arrived" ? 35 : 8);
+            float watchdog = Time.realtimeSinceStartup + 60;
+            while (State != expected && Time.time < end && Time.realtimeSinceStartup < watchdog) yield return null;
+            Assert.That(State, Is.EqualTo(expected), "timeScale=" + Time.timeScale + " paused=" + Flag("IsPaused"));
             yield return null;
         }
 
@@ -211,7 +214,13 @@ namespace GraduationProject.Tests
   [UnityTest] public IEnumerator Homecoming_LureDarkeningAndRecovery_UseInputSystem()
    => HomecomingRoute(true);
 
-  private IEnumerator HomecomingRoute(bool recoverLure)
+  [UnityTest] public IEnumerator Homecoming_WetLureSafeObservation_UseInputSystem()
+   => HomecomingRoute(false,true);
+
+  [UnityTest] public IEnumerator Homecoming_WetLureRecovery_UseInputSystem()
+   => HomecomingRoute(true,true);
+
+  private IEnumerator HomecomingRoute(bool recoverLure, bool wetLure=false)
   {
    const string path = "Assets/Scenes/Homecoming.unity";
    yield return UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(path, new LoadSceneParameters(LoadSceneMode.Single));
@@ -220,14 +229,23 @@ namespace GraduationProject.Tests
    camera=player.GetComponentInChildren<Camera>(); journey=Find("NormalJourneyController"); demo=Find("DemoSession");
    var entrance=Find("EntranceAccessController");
    bool EntryFlag(string name)=>(bool)entrance.GetType().GetProperty(name).GetValue(entrance);
-   string evidence=Path.GetFullPath("artifacts/opening-03/"+(recoverLure?"recovery-":"safe-")+DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")); Directory.CreateDirectory(evidence);
+   if(wetLure)
+   {
+    // Configure the variant before play actions, just as the author Inspector does. No gameplay action is injected.
+    var setup=new UnityEditor.SerializedObject(Find("RunManager"));
+    var wet=UnityEditor.AssetDatabase.LoadMainAssetAtPath("Assets/Data/lure_wet.asset"); Assert.That(wet,Is.Not.Null);
+    setup.FindProperty("beatDefinitions").GetArrayElementAtIndex(0).objectReferenceValue=wet; setup.ApplyModifiedPropertiesWithoutUndo();
+   }
+   string evidence=Path.GetFullPath((wetLure?"artifacts/m3-01/":"artifacts/opening-03/")+(recoverLure?"recovery-":"safe-")+DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")); Directory.CreateDirectory(evidence);
    var presentation=Find("LureCorridorPresentation");
    Assert.That(presentation,Is.Not.Null);
    bool Revealing() => (bool)presentation.GetType().GetProperty("IsRevealing").GetValue(presentation);
    var fixtures=fixtureScene.GetRootGameObjects().Single(r=>r.name=="HomeCorridor").transform.Find("InteriorVisuals");
    var lights=Enumerable.Range(0,3).Select(i=>fixtures.Find("FixtureLight"+i).GetComponent<Light>()).ToArray();
    var baseline=lights.Select(l=>l.intensity).ToArray();
+   int originalProbeCount=UnityEngine.Object.FindObjectsByType<ReflectionProbe>(FindObjectsSortMode.None).Length;
    var drone=presentation.GetComponentInChildren<AudioSource>();
+   float authoredDroneVolume=new UnityEditor.SerializedObject(presentation).FindProperty("droneVolume").floatValue;
    yield return null;
    Assert.That(UnityEngine.Object.FindObjectsByType<TMPro.TMP_Text>(FindObjectsSortMode.None).Any(t=>t.text.Contains("初日は何も")),Is.False);
    yield return Ui("はじめる");
@@ -296,6 +314,18 @@ namespace GraduationProject.Tests
    yield return ClickAt(Control("Floor8")); yield return Until(()=>Find("LureAnomaly")!=null,"first anomaly",40);
    yield return Until(()=>Find("BeatStateMachine").GetType().GetField("currentState",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).GetValue(Find("BeatStateMachine")).ToString()=="Diagnosis","lure diagnosis");
    yield return Aim(new Vector3(0,1.6f,-6)); ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"08-first-lure.png"));
+   if(wetLure)
+   {
+    var lure=Find("LureAnomaly");
+    Assert.That(lure.name,Does.StartWith("Lure_WetCorridor"));
+    Assert.That(lure.GetComponentsInChildren<Collider>(true),Is.Empty,"Water must not add a movement barrier");
+    Assert.That(lure.GetComponentsInChildren<Renderer>().Single().sharedMaterial.shader.name,Is.EqualTo("GraduationProject/Wet Floor"));
+    var reflection=lure.GetComponentInChildren<ReflectionProbe>();
+    Assert.That(reflection.mode,Is.EqualTo(UnityEngine.Rendering.ReflectionProbeMode.Custom));
+    Assert.That(reflection.customBakedTexture,Is.Not.Null,"Indoor reflection must not silently fall back to the sky");
+    yield return Aim(new Vector3(0,.05f,-4)); yield return new WaitForSeconds(.4f);
+    ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"08b-water-from-cabin.png")); yield return null;
+   }
    yield return new WaitForSeconds(6);
    Assert.That(Revealing(),Is.False,"Observation from inside must not start the danger cue or deadline");
    for(int i=0;i<3;i++) Assert.That(lights[i].intensity,Is.EqualTo(baseline[i]).Within(.001f));
@@ -314,13 +344,19 @@ namespace GraduationProject.Tests
     yield return Aim(new Vector3(0,1.6f,-6)); yield return new WaitForSeconds(.1f);
     Assert.That(lights[0].intensity,Is.EqualTo(baseline[0]).Within(.001f),"Return path lamp stays unchanged");
     Assert.That(lights[2].intensity,Is.LessThan(baseline[2]*.2f));
-    Assert.That(drone.isPlaying,Is.True); Assert.That(drone.volume,Is.InRange(.001f,.121f));
+    Assert.That(drone.isPlaying,Is.True);
+    Assert.That(drone.volume,Is.EqualTo(authoredDroneVolume).Within(.001f),"Completed fade respects the author's Inspector volume");
     ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"09-reveal-from-cabin.png")); yield return null;
     // Reveal deliberately rejects input; recovery is accepted only once Grace starts.
     yield return Until(()=>Find("BeatStateMachine").GetType().GetField("currentState",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).GetValue(Find("BeatStateMachine")).ToString()=="Grace","recovery input becomes available");
    }
    yield return ClickAt(Control("SideRightClose")); yield return Until(()=>Find("ProvocationAnomaly")!=null,"Lure closes and progresses",20);
    Assert.That(Revealing(),Is.False); Assert.That(drone.isPlaying,Is.False);
+   if(wetLure)
+   {
+    Assert.That(UnityEngine.Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None).Any(r=>r.sharedMaterial!=null && r.sharedMaterial.shader.name=="GraduationProject/Wet Floor"),Is.False,"No wet surface leaks into next encounter");
+    Assert.That(UnityEngine.Object.FindObjectsByType<ReflectionProbe>(FindObjectsSortMode.None).Length,Is.EqualTo(originalProbeCount),"Encounter reflection probe is released");
+   }
    for(int i=0;i<3;i++) Assert.That(lights[i].intensity,Is.EqualTo(baseline[i]).Within(.001f),"No lighting state leaks into the following encounter");
    File.WriteAllText(Path.Combine(evidence,"context.txt"),"Homecoming: synthetic Input System Keyboard/Mouse -> world/UI raycast clicks; no teleport/SubmitAction. "+Screen.width+"x"+Screen.height);
   }
