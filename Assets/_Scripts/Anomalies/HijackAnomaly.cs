@@ -12,6 +12,7 @@ public class HijackAnomaly : AnomalyBehaviour
     [SerializeField] private AudioSource motor;
     [SerializeField, Min(.05f)] private float driftIntervalSeconds = 1f;
     private ElevatorTuning tuning;
+    private SpatialCabinPresentation spatialPresentation;
     [SerializeField, Min(0f)] private float rampSeconds = 20f;
     [SerializeField] private float pitchStart = 1f;
     [SerializeField] private float pitchEnd = 1.6f;
@@ -28,7 +29,8 @@ public class HijackAnomaly : AnomalyBehaviour
 
     protected override void Awake()
     {
-        base.Awake();
+        spatialPresentation = GetComponent<SpatialCabinPresentation>();
+        if (spatialPresentation == null) base.Awake();
         tuning=FindFirstObjectByType<ElevatorTuning>();
         originalLocalPosition = transform.localPosition;
         EnsurePrototypeMotor();
@@ -42,7 +44,8 @@ public class HijackAnomaly : AnomalyBehaviour
 
     public override void OnDiagnosisStart()
     {
-        base.OnDiagnosisStart();
+        if (spatialPresentation == null) base.OnDiagnosisStart();
+        else spatialPresentation.Begin();
 
         FloorIndicator floorIndicator = FloorIndicator.Instance;
         if (floorIndicator != null)
@@ -74,7 +77,8 @@ public class HijackAnomaly : AnomalyBehaviour
 
     public override void OnReveal()
     {
-        base.OnReveal();
+        if (spatialPresentation == null) base.OnReveal();
+        else spatialPresentation.Reveal();
         StopRampRoutine();
 
         if (motor != null)
@@ -105,12 +109,17 @@ public class HijackAnomaly : AnomalyBehaviour
         }
 
         StopJitterRoutine();
-        jitterRoutine = StartCoroutine(JitterRoutine());
+        if (spatialPresentation == null) jitterRoutine = StartCoroutine(JitterRoutine());
+    }
+
+    public override void OnGraceStart()
+    {
+        if (spatialPresentation == null) base.OnGraceStart();
     }
 
     public override void OnGraceEnd(bool recovered)
     {
-        base.OnGraceEnd(recovered);
+        if (spatialPresentation == null) base.OnGraceEnd(recovered);
 
         if (!recovered)
         {
@@ -133,7 +142,8 @@ public class HijackAnomaly : AnomalyBehaviour
 
     public override void OnCleanup()
     {
-        base.OnCleanup();
+        if (spatialPresentation == null) base.OnCleanup();
+        else spatialPresentation.Restore();
         StopRampRoutine();
         StopJitterRoutine();
         StopMotor();

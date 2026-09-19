@@ -4,6 +4,18 @@
 
 ## 現在のゲーム開発
 
+### M3-03 かご内の空間異常（2026-09-19、実装・対象検証済み）
+- 担当Astra、main 41b15c7。ユーザーは概ね満足と評価し、文章の微調整を後回しにして継続を指示。次の既定表現をGAME-015内で試作する。
+- 方針: 既存Hijackの判定・階上昇・走行音をExtendし、天井と照明が上へ遠ざかる専用PrefabをBuild。上部壁を伸ばし、床・操作盤・移動範囲・カメラは固定。全面的な空間変形shader／外部frameworkは採らず、新依存なし。既存UnityのTransform／Rendererを使用する狭い実装比較で、OSS移植は不要。
+- 対象: HijackAnomalyの任意演出接続、空間表現・Prefab／定義・比較Inspector、対象入力試験とDocs。診断時4m・悪化時さらに2m程度の伸長を試し、成功・死亡・停止で元へ復元する。具体値や怖さは正式採用と分離する。
+- 完了条件: 閉扉中の天井伸長と階数／音の合図、非常停止成功、期限超過→救済、二度目誤操作／猶予超過死亡、ポーズと復元、既存Hijack回帰。最終Game View／Windows実見、試すシーン・手順の明示、記録・commit/push。
+- 保全: 作者の両シーン差分は除外。Homecomingの未保存内容を `artifacts/m3-03/user-unsaved-before.unity` に保全してから検証する。現在の遭遇リスト変更も作者の比較設定として保持。
+- 結果: `artifacts/tests/20260919-084459-992/playmode.xml`、PlayMode3/3・failed/skip0・157秒。通常帰宅→濡れ→声→空間異常4回で直接停止／期限超過から救済／閉から救済／二度目閉で死亡、元天井の復元・固定操作盤・ポーズを合成Input Systemで確認。既存Hijackの13超え／一定ペース／音停止と猶予超過死亡も成功。全回帰一括は未実施。
+- 実画像: `artifacts/m3-03/safe-20260919-084507/` の11-normal-ceiling／12-spatial-diagnosis／13-spatial-grace-1（最終Game View 750×422）を実見。元天井→4m伸長→6m伸長を比較。正確な間接照明・怖さは未受入。
+- Windows: `artifacts/builds/20260919-084859-219/GraduationProject.exe` は空間異常1件の比較版。非Development・15.2秒・error/warning0・Tests assemblyなし・README／licenses同梱。Computer Useで実クリック開始とフェード後の入口を1920幅で実見。Windowsの怪異到達・OS移動入力は未検証。通し入力はEditorの証拠。
+- 復元: 作者の単独「声」リスト・音量0.518を保持し、build前シーンとの意味差分0。PlayableDemoは開始時SHA256と一致。build設定5ファイル復元一致。テストConsoleの既知warningはplateText未使用・Hijack検証fixtureのRenderer未指定、errorなし。
+- 次: 6表現の実装が揃ったため、全4夜の進行／最終夜抽選へ接続する。M3全体はまだ未完。確認メニューと試す手順はDEMO_AUTHORING。
+
 ### M3-02 開扉前の濡れ表示／外からの声（2026-09-19、実装・対象検証済み）
 - 担当Astra、main 5ba0864。濡れが開扉後に出現するという本人報告を再現・修正し、既定の次表現「外から助けを求める声」を制作する。
 - 範囲: Lureの見た目を開扉前に準備、入力受付・退出検出・猶予は維持。声は独立した音声Prefabと既存Provocation判定を組み合わせ、音源・音量・間隔をInspectorで編集。新規のゲーム規則・人物表示は追加しない。

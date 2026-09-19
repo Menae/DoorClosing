@@ -26,6 +26,11 @@ public sealed class RunManagerEditor : Editor
             if(GUILayout.Button("挑発：設備放送を試す")) ReplaceVariant("Assets/Data/provocation.asset");
             if(GUILayout.Button("挑発：外からの声を試す")) ReplaceVariant(GraduationProject.EditorTools.VoiceProvocationBuilder.DefinitionPath);
         }
+        using(new EditorGUILayout.HorizontalScope())
+        {
+            if(GUILayout.Button("乗っ取り：機械暴走を試す")) ReplaceVariant("Assets/Data/hijack.asset");
+            if(GUILayout.Button("乗っ取り：空間異常を試す")) ReplaceVariant(GraduationProject.EditorTools.SpatialHijackBuilder.DefinitionPath);
+        }
         serializedObject.ApplyModifiedProperties();
         DrawDefaultInspector();
     }

@@ -40,6 +40,14 @@ Prefabを開いたHierarchyの `扉の外_音源とこもり` で位置、Audio 
 
 `Assets/Data/provocation_voice.asset` が正解・猶予の定義。無操作成功7秒、誤操作後の提示1.5秒＋猶予4秒の試作。長い音声へ差し替えたときは、開始遅延＋音声の長さ＋聞いた後の余白が無操作成功までに収まるよう調整する。仮音声クレジットと制作条件は `docs/licenses/OutsideVoice.txt`。HomecomingビルドにはREADMEとlicensesを自動同梱する。
 
+### かご内の空間異常（M3-03）
+
+確認シーンは `Assets/Scenes/Homecoming.unity`。Play前に `Tools > Unity Agent > 空間異常だけを試す（遭遇リスト変更）` を選ぶと、現在の遭遇リストを空間異常1件へ変更する。通常帰宅→翌夜、8階を選んで乗ると天井が遠ざかり階数が8を越える。非常停止で生還、最初の放置／閉で悪化し、その後の猶予内なら非常停止で救済できる。変更はUndo可能、Play中に選んだ場合は停止時に戻る。
+
+複数の遭遇順を保つ比較は `怪異構成を開く > 乗っ取り：空間異常を試す`。このボタンは既にある最初のHijackだけを差し替えるため、声だけなどHijackがないリストでは単独確認メニューを使う。
+
+`Tools > Unity Agent > 空間異常を編集` から専用Prefabを開く。Spatial Cabin Presentationの日本語Inspectorで高さ・伸びる秒数を編集する。判定・期限は `Assets/Data/hijack_space.asset`、共通怪異音量・階上昇間隔はシーンの `音・動作調整`。床と操作盤は動かさない。元天井のHierarchy名／配置／材質を変えた場合、Prefabの天井複製と参照パスも合わせる。生成メニューの再実行による作者設定の上書きは行わない。
+
 ## 編集の入口
 
 1. `Assets/Scenes/PlayableDemo.unity` を開き、Playを停止する。

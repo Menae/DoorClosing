@@ -223,7 +223,10 @@ namespace GraduationProject.Tests
   [UnityTest] public IEnumerator Homecoming_OutsideVoicePassiveRecoveryAndDeath_UseInputSystem()
    => HomecomingRoute(false,true,true);
 
-  private IEnumerator HomecomingRoute(bool recoverLure, bool wetLure=false, bool outsideVoices=false)
+  [UnityTest] public IEnumerator Homecoming_SpatialHijackStopRecoveryDeath_UseInputSystem()
+   => HomecomingRoute(false,true,false,true);
+
+  private IEnumerator HomecomingRoute(bool recoverLure, bool wetLure=false, bool outsideVoices=false, bool spatialHijacks=false)
   {
    const string path = "Assets/Scenes/Homecoming.unity";
    yield return UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(path, new LoadSceneParameters(LoadSceneMode.Single));
@@ -232,6 +235,13 @@ namespace GraduationProject.Tests
    camera=player.GetComponentInChildren<Camera>(); journey=Find("NormalJourneyController"); demo=Find("DemoSession");
    var entrance=Find("EntranceAccessController");
    bool EntryFlag(string name)=>(bool)entrance.GetType().GetProperty(name).GetValue(entrance);
+   // Explicit fixture sequence: the author may be comparing a single encounter locally.
+   // Only this Play instance is changed; no saved scene or author tuning is overwritten.
+   var sequence=new UnityEditor.SerializedObject(Find("RunManager"));
+   var definitions=sequence.FindProperty("beatDefinitions"); definitions.arraySize=3;
+   var standard=new[]{"lure","provocation","hijack"};
+   for(int i=0;i<3;i++) definitions.GetArrayElementAtIndex(i).objectReferenceValue=UnityEditor.AssetDatabase.LoadMainAssetAtPath("Assets/Data/"+standard[i]+".asset");
+   sequence.ApplyModifiedPropertiesWithoutUndo();
    if(wetLure)
    {
     // Configure the variant before play actions, just as the author Inspector does. No gameplay action is injected.
@@ -249,7 +259,17 @@ namespace GraduationProject.Tests
     list.GetArrayElementAtIndex(4).objectReferenceValue=UnityEditor.AssetDatabase.LoadMainAssetAtPath("Assets/Data/hijack.asset");
     setup.ApplyModifiedPropertiesWithoutUndo();
    }
-   string evidence=Path.GetFullPath((outsideVoices?"artifacts/m3-02/":wetLure?"artifacts/m3-01/":"artifacts/opening-03/")+(recoverLure?"recovery-":"safe-")+DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")); Directory.CreateDirectory(evidence);
+   if(spatialHijacks)
+   {
+    var setup=new UnityEditor.SerializedObject(Find("RunManager"));
+    var list=setup.FindProperty("beatDefinitions"); list.arraySize=7;
+    list.GetArrayElementAtIndex(1).objectReferenceValue=UnityEditor.AssetDatabase.LoadMainAssetAtPath("Assets/Data/provocation_voice.asset");
+    var spatial=UnityEditor.AssetDatabase.LoadMainAssetAtPath("Assets/Data/hijack_space.asset"); Assert.That(spatial,Is.Not.Null);
+    for(int i=2;i<6;i++) list.GetArrayElementAtIndex(i).objectReferenceValue=spatial;
+    list.GetArrayElementAtIndex(6).objectReferenceValue=UnityEditor.AssetDatabase.LoadMainAssetAtPath("Assets/Data/hijack.asset");
+    setup.ApplyModifiedPropertiesWithoutUndo();
+   }
+   string evidence=Path.GetFullPath((spatialHijacks?"artifacts/m3-03/":outsideVoices?"artifacts/m3-02/":wetLure?"artifacts/m3-01/":"artifacts/opening-03/")+(recoverLure?"recovery-":"safe-")+DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")); Directory.CreateDirectory(evidence);
    var presentation=Find("LureCorridorPresentation");
    Assert.That(presentation,Is.Not.Null);
    bool Revealing() => (bool)presentation.GetType().GetProperty("IsRevealing").GetValue(presentation);
@@ -374,7 +394,7 @@ namespace GraduationProject.Tests
     // Reveal deliberately rejects input; recovery is accepted only once Grace starts.
     yield return Until(()=>Find("BeatStateMachine").GetType().GetField("currentState",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).GetValue(Find("BeatStateMachine")).ToString()=="Grace","recovery input becomes available");
    }
-   yield return ClickAt(Control("SideRightClose")); yield return Until(()=>Find(outsideVoices?"VoiceProvocationAnomaly":"ProvocationAnomaly")!=null,"Lure closes and progresses",20);
+   yield return ClickAt(Control("SideRightClose")); yield return Until(()=>Find(outsideVoices||spatialHijacks?"VoiceProvocationAnomaly":"ProvocationAnomaly")!=null,"Lure closes and progresses",20);
    Assert.That(Revealing(),Is.False); Assert.That(drone.isPlaying,Is.False);
    if(wetLure)
    {
@@ -383,7 +403,65 @@ namespace GraduationProject.Tests
    }
    for(int i=0;i<3;i++) Assert.That(lights[i].intensity,Is.EqualTo(baseline[i]).Within(.001f),"No lighting state leaks into the following encounter");
    if(outsideVoices) yield return VerifyOutsideVoices(evidence);
+   if(spatialHijacks) yield return VerifySpatialHijacks(evidence);
    File.WriteAllText(Path.Combine(evidence,"context.txt"),"Homecoming: synthetic Input System Keyboard/Mouse -> world/UI raycast clicks; no teleport/SubmitAction. "+Screen.width+"x"+Screen.height);
+  }
+
+  private IEnumerator VerifySpatialHijacks(string evidence)
+  {
+   string BeatState()=>Find("BeatStateMachine").GetType().GetField("currentState",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).GetValue(Find("BeatStateMachine")).ToString();
+   var building=fixtureScene.GetRootGameObjects().Single(r=>r.name=="Building");
+   var ceiling=building.transform.Find("CabCeiling").GetComponent<Renderer>();
+   var light=building.transform.Find("CeilingLight").GetComponent<Light>();
+   float intensity=light.intensity;
+   var controls=building.GetComponentsInChildren<Collider>().ToDictionary(c=>c,c=>(c.transform.position,c.transform.localScale));
+   yield return Aim(new Vector3(0,3,4.4f));
+   ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"11-normal-ceiling.png"));
+   for(int scenario=0;scenario<4;scenario++)
+   {
+    yield return Until(()=>Find("SpatialCabinPresentation")!=null,"next spatial hijack",20);
+    var spatial=Find("SpatialCabinPresentation");
+    float Height()=>(float)spatial.GetType().GetProperty("CurrentRise").GetValue(spatial);
+    yield return Until(()=>Height()>1,"ceiling rises");
+    Assert.That(ceiling.enabled,Is.False);
+    Assert.That(spatial.GetComponentsInChildren<Collider>(true),Is.Empty,"Visual expansion adds no collision or inaccessible controls");
+    Assert.That((bool)Find("HijackAnomaly").GetType().GetProperty("IsMotorPlaying").GetValue(Find("HijackAnomaly")),Is.True);
+    Assert.That((int)Find("FloorIndicator").GetType().GetProperty("CurrentDisplayedFloor").GetValue(Find("FloorIndicator")),Is.GreaterThan(8));
+    foreach(var pair in controls)
+    {
+     Assert.That(pair.Key.transform.position,Is.EqualTo(pair.Value.Item1),"Control/collider position remains fixed");
+     Assert.That(pair.Key.transform.localScale,Is.EqualTo(pair.Value.Item2));
+    }
+    Assert.That(light.intensity,Is.EqualTo(intensity),"Readable cabin illumination remains available");
+    if(scenario==0)
+    {
+     Press(keyboard.escapeKey,queueEventOnly:true); yield return null; Release(keyboard.escapeKey,queueEventOnly:true); yield return null;
+     Assert.That(Flag("IsPaused"),Is.True); float pausedHeight=Height();
+     yield return new WaitForSecondsRealtime(.2f); Assert.That(Height(),Is.EqualTo(pausedHeight).Within(.001f));
+     yield return Ui("再開");
+     yield return Until(()=>Height()>3.9f,"diagnosis reaches full height");
+     yield return Aim(new Vector3(0,6,4.5f)); ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"12-spatial-diagnosis.png"));
+     yield return null;
+     yield return ClickAt(Control("SideRightEmergency"));
+    }
+    else
+    {
+     if(scenario>=2) yield return ClickAt(Control("SideRightClose"));
+     yield return Until(()=>BeatState()=="Grace","timeout/close enters recovery");
+     Assert.That(Height(),Is.GreaterThan(4.1f),"Reveal deepens the spatial distortion");
+     yield return Aim(new Vector3(0,7,4.5f)); ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"13-spatial-grace-"+scenario+".png"));
+     yield return ClickAt(Control(scenario==3?"SideRightClose":"SideRightEmergency"));
+    }
+    yield return Until(()=>spatial==null,"spatial encounter ends",8);
+    Assert.That(ceiling.enabled,Is.True,"Original ceiling restored immediately on stop/death");
+    Assert.That(light.intensity,Is.EqualTo(intensity));
+    if(scenario<3)
+    {
+     yield return Aim(new Vector3(0,3,4.4f)); ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"14-restored-"+scenario+".png"));
+     Assert.That(Find("HijackAnomaly"),Is.Null,"Motor source stops during resolve");
+    }
+    else yield return Until(()=>State=="WaitingForCall","death returns to hall",12);
+   }
   }
 
   private IEnumerator VerifyOutsideVoices(string evidence)

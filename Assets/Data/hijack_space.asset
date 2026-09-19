@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87e5e7fc8b334193b0f5575d786e27ac, type: 3}
+  m_Name: hijack_space
+  m_EditorClassIdentifier: Assembly-CSharp::BeatDefinition
+  debugLabel: Hijack - Spatial Cabin
+  category: 2
+  correctAction: 3
+  correctFloorNumber: -1
+  travelSeconds: 4
+  revealSeconds: 2
+  graceSeconds: 3
+  passiveSuccessSeconds: 0
+  doorsStayClosed: 1
+  displayFloor: 8
+  hijackDeadlineSeconds: 6
+  anomalyPrefab: {fileID: 6867225402724260556, guid: d2d226f7fbf84254299f5b6d48954c50, type: 3}
+  presentationLocalPosition: {x: 0, y: 0, z: 0}
+  presentationLocalScale: {x: 1, y: 1, z: 1}
