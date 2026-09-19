@@ -102,29 +102,122 @@ namespace GraduationProject.EditorTools
 
         private static Transform Mailboxes(Transform parent, EntranceAccessController system)
         {
-            var group = Group(parent, "集合郵便受け_801-809");
-            group.SetPositionAndRotation(new Vector3(-3.34f, 0, -7.15f), Quaternion.Euler(0, -90, 0));
-            Box(group, "集合ポスト背板", new(0, 1.35f, 0), new(1.55f, 1.23f, .08f), dark, true);
+            var group = Group(parent, "集合郵便受け_54戸_201-1006");
+            group.SetPositionAndRotation(new Vector3(-3.37f, 0, -7.4f), Quaternion.Euler(0, -90, 0));
+            // Six 360 mm bays, nine 120 mm rows; body depth follows a real front-access postbox.
+            Box(group, "箱体_幅2160高さ1080奥行274mm", new(0, 1.30f, -.137f), new(2.18f, 1.10f, .274f), dark, true);
+            Box(group, "上端見切り", new(0, 1.857f, -.14f), new(2.20f, .024f, .29f), steel);
+            Box(group, "下端見切り", new(0, .743f, -.14f), new(2.20f, .024f, .29f), steel);
+            foreach (int side in new[] { -1, 1 })
+                Box(group, "縦見切り" + side, new(side * 1.099f, 1.30f, -.14f), new(.018f, 1.09f, .29f), steel);
             Transform selected = null;
-            for (int row = 0; row < 3; row++) for (int col = 0; col < 3; col++)
+            for (int row = 0; row < 9; row++) for (int col = 0; col < 6; col++)
             {
-                string number = (801 + row * 3 + col).ToString();
-                float x = (col - 1) * .5f, y = 1.75f - row * .40f;
-                var hinge = Group(group, number + "_扉ヒンジ"); hinge.localPosition = new Vector3(x - .235f, y, -.051f);
-                var leaf = Box(hinge, number + "_郵便受け", new(.235f, 0, -.012f), new(.47f, .365f, .025f), steel, true);
-                Box(hinge, "投函口", new(.235f, .10f, -.029f), new(.32f, .021f, .012f), dark);
-                Box(hinge, "番号プレート", new(.235f, -.012f, -.032f), new(.15f, .066f, .014f), dark);
-                Label(hinge, "部屋番号_" + number, number, new(.235f, -.012f, -.042f), new(.13f, .05f), .32f);
-                Box(hinge, "錠", new(.40f, -.105f, -.031f), new(.04f, .04f, .012f), dark);
+                string number = ((10 - row) * 100 + col + 1).ToString();
+                float x = (col - 2.5f) * .36f, y = 1.78f - row * .12f;
+                var hinge = Group(group, number + "_扉ヒンジ"); hinge.localPosition = new Vector3(x - .176f, y, -.279f);
+                var leaf = Box(hinge, number + "_郵便受け", new(.176f, 0, 0), new(.352f, .112f, .012f), steel, true);
+                Box(hinge, "投函口", new(.167f, .030f, -.008f), new(.279f, .013f, .006f), dark);
+                Box(hinge, "投入口の返し", new(.167f, .022f, -.011f), new(.279f, .004f, .012f), steel);
+                Box(hinge, "番号プレート", new(.071f, -.021f, -.008f), new(.078f, .033f, .004f), dark);
+                Label(hinge, "部屋番号_" + number, number, new(.071f, -.021f, -.012f), new(.072f, .029f), .20f);
+                var dial = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                dial.name = "ダイヤル錠"; dial.transform.SetParent(hinge, false);
+                dial.transform.localPosition = new Vector3(.321f, -.018f, -.012f);
+                dial.transform.localRotation = Quaternion.Euler(90, 0, 0); dial.transform.localScale = new Vector3(.027f, .006f, .027f);
+                dial.GetComponent<Renderer>().sharedMaterial = dark; UnityEngine.Object.DestroyImmediate(dial.GetComponent<Collider>());
+                Box(hinge, "錠の指標", new(.321f, -.008f, -.019f), new(.002f, .005f, .002f), steel);
                 if (number == "805")
                 {
                     selected = hinge;
                     AddControl(leaf.gameObject, system, EntranceControl.Kind.Mailbox, "");
-                    Box(group, "805内部", new(x, y, -.026f), new(.45f, .35f, .014f), dark);
-                    Label(group, "805内部番号", "805", new(x, y, -.036f), new(.25f, .10f), .5f);
+                    Box(group, "805内部", new(x, y, -.276f), new(.348f, .108f, .004f), dark);
+                    Label(group, "805内部番号", "805", new(x, y, -.280f), new(.12f, .05f), .27f);
                 }
             }
+            FinishMailboxSurface(group);
             return selected;
+        }
+
+        private static void FinishMailboxSurface(Transform group)
+        {
+            const string path = "Assets/ApartmentVisuals/MailboxSteel.mat";
+            var finish = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (finish == null)
+            {
+                finish = new Material(Mat("DoorSteel")) { name = "MailboxSteel" };
+                finish.SetColor("_BaseColor", new Color(.84f, .85f, .82f));
+                finish.SetFloat("_Metallic", .42f); finish.SetFloat("_Smoothness", .4f);
+                finish.SetFloat("_Wear", .35f); finish.SetFloat("_WorldScale", 1.1f);
+                AssetDatabase.CreateAsset(finish, path);
+            }
+            foreach (var renderer in group.GetComponentsInChildren<Renderer>())
+                if (renderer.sharedMaterial == Mat("SatinSteel")) renderer.sharedMaterial = finish;
+            if (group.Find("壁面固定レール-1") == null)
+                foreach (int side in new[] { -1, 1 })
+                    Box(group, "壁面固定レール" + side, new(side * .80f, 1.30f, .01f), new(.06f, 1.08f, .06f), finish);
+            if (group.Find("ポスト照明") == null)
+            {
+                var fixture = Group(group, "ポスト照明"); fixture.localPosition = new Vector3(0, 2.08f, -.19f);
+                Box(fixture, "壁付け照明枠", Vector3.zero, new(1.80f, .065f, .30f), Mat("SatinSteel"));
+                Box(fixture, "乳白カバー", new(0, -.035f, -.018f), new(1.65f, .01f, .22f), Mat("FluorescentDiffuser"));
+                for (int i = 0; i < 2; i++)
+                {
+                    var light = Group(fixture, "下向き照明" + i).gameObject.AddComponent<Light>();
+                    light.transform.localPosition = new Vector3(i == 0 ? -.55f : .55f, -.075f, -.18f);
+                    light.transform.rotation = Quaternion.LookRotation(group.TransformDirection(new Vector3(0, -1, .10f)));
+                    light.type = LightType.Spot; light.spotAngle = 120; light.innerSpotAngle = 80;
+                    light.range = 2.3f; light.intensity = 2.0f; light.color = new Color(.95f, .96f, .88f);
+                    light.shadows = LightShadows.None;
+                }
+            }
+            var mountedFixture = group.Find("ポスト照明");
+            if (mountedFixture.Find("壁面ブラケット-1") == null)
+                foreach (int side in new[] { -1, 1 })
+                    Box(mountedFixture, "壁面ブラケット" + side, new(side * .76f, 0, .19f), new(.04f, .055f, .10f), finish);
+        }
+
+        [MenuItem("Tools/Unity Agent/Polish Homecoming Mailbox Surface")]
+        public static void PolishMailboxSurface()
+        {
+            var scene = SceneManager.GetActiveScene();
+            if (scene.path != ScenePath || scene.isDirty || EditorApplication.isPlayingOrWillChangePlaymode)
+                throw new InvalidOperationException("Requires saved Homecoming in Edit Mode.");
+            var bank = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<Transform>())
+                .Single(t => t.name == "集合郵便受け_54戸_201-1006");
+            FinishMailboxSurface(bank);
+            EditorSceneManager.MarkSceneDirty(scene); EditorSceneManager.SaveScene(scene); AssetDatabase.SaveAssets();
+        }
+
+        [MenuItem("Tools/Unity Agent/Upgrade Homecoming Mailboxes to 54 Units")]
+        public static void UpgradeMailboxes()
+        {
+            var scene = SceneManager.GetActiveScene();
+            if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling || scene.path != ScenePath || scene.isDirty)
+                throw new InvalidOperationException("Requires saved Homecoming in idle Edit Mode.");
+            var all = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<Transform>(true)).ToArray();
+            var old = all.SingleOrDefault(t => t.name == "集合郵便受け_801-809");
+            if (old == null) throw new InvalidOperationException("Original bank not found; do not overwrite an already upgraded bank.");
+            var parent = old.parent;
+            copy = all.Single(t => t.name == "09_入口・ポスト・オートロック").GetComponent<GameTextCollection>();
+            // Keep user-authored values by key; retarget surviving room labels to their new objects.
+            var retiredEntries = copy.entries.Where(e => e.target != null && e.target.transform.IsChildOf(old)).ToArray();
+            var system = parent.GetComponentInChildren<EntranceAccessController>();
+            steel = Mat("SatinSteel"); dark = Mat("Charcoal");
+            font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Font/NotoSansJP-Regular SDF.asset");
+            Undo.RegisterFullObjectHierarchyUndo(parent.gameObject, "Upgrade mailbox bank");
+            old.gameObject.SetActive(false); old.name = "旧ポスト_更新前_非表示";
+            // Preserve the original geometry and labels in-scene as an inactive author backup.
+            Set(system, "mailboxLid", Mailboxes(parent, system));
+            var markers = all.Select(t => t.GetComponent<NearbyInteractionMarkers>()).First(m => m != null);
+            var markerSettings = new SerializedObject(markers);
+            markerSettings.FindProperty("size").floatValue = 18;
+            markerSettings.ApplyModifiedProperties();
+            foreach (var entry in retiredEntries)
+                if (entry.target != null && entry.target.transform.IsChildOf(old)) entry.label += "（旧配置・非表示）";
+            copy.Apply(); EditorUtility.SetDirty(copy);
+            EditorSceneManager.MarkSceneDirty(scene); EditorSceneManager.SaveScene(scene);
+            Selection.activeGameObject = parent.gameObject;
         }
 
         private static TMP_Text Keypad(Transform parent, EntranceAccessController system)

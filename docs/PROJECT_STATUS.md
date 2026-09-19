@@ -4,6 +4,17 @@
 
 ## 現在のゲーム開発
 
+### OPENING-002 近距離マーカー・集合ポストの改善（2026-09-19、実装・関連検証済み）
+- 担当: Astra / task 01a07fbb-3ac2-7a62-a049-19d919724625。main b14b85bから。既存PlayableDemo.unityの作者差分は対象外。
+- 明示決定: user-inputで1階共用入口、2〜10階各6戸、計54戸。805を調べる必須導線は維持する。
+- 工程／範囲: ゲームUIとメーカー実例調査→Homecomingの郵便受けを実寸54戸へ更新→▲の微小浮遊・フェード・注視強調・密集抑制と調整Inspector→入口通し入力試験・最終画像→記録・commit/push。
+- 期待結果: 部屋数に整合する薄型集合ポスト、読み取れる部屋番号、操作を邪魔しない滑らかな目印。既存入力距離／遮蔽／クリックと翌夜移行を維持。表現の具体値は委任内試作で、本人の見た目・理解の受入とは分ける。
+- 実装: 6列×9段の54戸、薄型金属扉・投函口・個別番号・丸い錠・端部の見切りと壁付け照明。▲は0.18秒フェード、2.4秒周期・2.5px浮遊、注視1.25倍。ポストでは面内に収め、テンキーは1個に集約。Playerの日本語Inspectorで調整可能。旧9個は非表示で保存。
+- 検証: 入口通しPlayMode1/1（062756-487、102秒）成功後、実画面でポスト▲の段違いと金属の暗潰れを修正。最終版1/1（`artifacts/tests/20260919-063240-397/playmode.xml`、102秒、failed/skip0）。54戸の一意番号・805前の入力不可・誤番号／取消／805解錠・扉通行・▲の浮遊／注視／ポーズ非表示／完了後非表示・テンキー集約・翌夜Lureまで合成Input Systemで確認。全44件の一括回帰ではない。
+- 画像: `artifacts/opening-02/input-20260919-063244/` の最終Game Viewを実見（750×422）。最後に見切り裏の固定レール・照明ブラケットを追加し、壁との接続を補った。衝突なしの支持金具追加後はbuildとWindows画像を確認し、通し入力の再実行はしていない。
+- Windows: `artifacts/builds/20260919-063703-280/GraduationProject.exe`、非Development・6.5秒・build error/warning0・Tests assemblyなし、README／licenses同梱。Computer Useで実クリック開始、フェード後の入口を1920幅のPlayerで実見、`artifacts/opening-02/windows-entrance.png`。Windowsでの全経路・OS移動入力は今回未検証。起動ログにはD3D12 info queue取得診断と既存URPのshadow atlas縮小warningあり（描画継続）。Editorでも後者を観測。性能目標の合格とはしない。
+- 保全: PlayableDemoのSHA256は開始前と同じ4112DABE…F6F8DB56。既存Homecomingのserialized object削除0、意味変更は入口の参照／テキスト登録／旧配置非表示／Player表示設定／親の子リストに限定。EditorはHomecoming保存済みEdit Mode、Windows版は評価用に起動したまま。本人の好み・初見理解は未受入。次は入口評価と既定の代表Lure演出、Astra継続。
+
 ### OPENING-001 本編冒頭と最初の怪異の制作（2026-09-19、入口単位を実装・検証）
 - 担当: Astra / task 01a07fbb-3ac2-7a62-a049-19d919724625。開始 main 95753d1。PlayableDemo.unityの既存ユーザー編集は保持し、対象から除外する。
 - ユーザーは「導入から初回怪異を一本の体験として仕上げ、その後M3全4夜へ」を承認。導入内容はuser-inputで「帰宅の日常を中心に描く」を選択。文章の執筆は引き続きユーザー担当。

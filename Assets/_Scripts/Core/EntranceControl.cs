@@ -8,6 +8,7 @@ public sealed class EntranceControl : MonoBehaviour
     [SerializeField] private Kind kind;
     [SerializeField] private string symbol;
     internal bool Available => entrance != null && entrance.CanUse(kind);
+    internal bool IsKey => kind == Kind.Key;
     internal void Use()
     {
         if (!Available) return;
