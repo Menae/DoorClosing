@@ -637,9 +637,13 @@ namespace GraduationProject.Tests
      {
       yield return Until(()=>Find("AnomalyBehaviour")!=null && BeatState()=="Diagnosis","campaign diagnosis",25);
       var anomaly=Find("AnomalyBehaviour"); var category=Category();
+      var power=Find("CabinPowerPresentation");
+      var cabinLamp=power!=null ? new UnityEditor.SerializedObject(power).FindProperty("cabinLight").objectReferenceValue as Light : null;
+      bool mechanical=category=="Hijack" && Find("SpatialCabinPresentation")==null;
       Assert.That(categories.Add(category),Is.True,"One encounter from each category per night");
       if(category=="Lure")
       {
+       yield return Aim(new Vector3(0,1.6f,-10)); ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"night-"+night+"-lure.png")); yield return null;
        if(night==2)
        {
         yield return WalkTo(new Vector3(0,.95f,1.3f));
@@ -652,10 +656,27 @@ namespace GraduationProject.Tests
       {
        if(night==2) yield return Until(()=>BeatState()=="Grace","later-night timeout rescue");
        else yield return new WaitForSeconds(1.1f);
+       if(mechanical && power!=null)
+       {
+        Assert.That(anomaly.GetComponentsInChildren<Renderer>(true).All(r=>!r.enabled),Is.True,"No debugging cube in the finished cabin");
+        Assert.That(cabinLamp.intensity,Is.GreaterThan(0),"Panel remains illuminated");
+        Assert.That(cabinLamp.isActiveAndEnabled,Is.True,"Presentation binds a visible cabin lamp");
+        yield return Aim(new Vector3(0,2.5f,4.7f));
+       }
+       else yield return Aim(new Vector3(0,8f,4.7f));
+       ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"night-"+night+"-hijack.png")); yield return null;
        yield return ClickAt(Control("SideRightEmergency"));
+      }
+      else
+      {
+       yield return new WaitForSeconds(3.5f);
+       yield return Aim(new Vector3(-1.2f,2.05f,2.2f));
+       ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"night-"+night+"-provocation.png")); yield return null;
       }
       // Provocation is deliberately ignored through the ordinary gameplay path.
       yield return Until(()=>anomaly==null,"campaign encounter resolved",15);
+      if(mechanical && power!=null)
+       Assert.That(cabinLamp.intensity,Is.EqualTo((float)power.GetType().GetField("originalIntensity",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).GetValue(power)).Within(.001f),"Motor resolution restores normal cabin lighting");
      }
      Assert.That(categories.Count,Is.EqualTo(3));
      yield return WaitState("Arrived");

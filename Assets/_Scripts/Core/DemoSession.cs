@@ -66,6 +66,8 @@ public sealed partial class DemoSession : MonoBehaviour
     private void Update()
     {
         TickPersistence();
+        if (page == "Credits" && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        { FinishCredits(); return; }
         if (completed || Keyboard.current == null || (transition && opening == null)) return;
         if (Keyboard.current.escapeKey.wasPressedThisFrame)
         {

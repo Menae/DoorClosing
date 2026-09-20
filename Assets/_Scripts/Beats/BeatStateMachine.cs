@@ -507,6 +507,7 @@ public class BeatStateMachine : MonoBehaviour
         currentAnomaly = currentAnomalyInstance.GetComponentInChildren<AnomalyBehaviour>();
         if (currentAnomaly is ProvocationAnomaly provocation) provocation.BindMountedDisplay(informationDisplay);
         if (currentAnomaly is LureAnomaly lure) lure.BindPresentation(lurePresentation);
+        if (currentAnomaly is HijackAnomaly hijack) hijack.BindCabinPower(GetComponent<CabinPowerPresentation>());
 
         if (currentAnomaly == null)
         {

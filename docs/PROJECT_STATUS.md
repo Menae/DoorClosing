@@ -4,6 +4,21 @@
 
 ## 現在のゲーム開発
 
+### M5-01 空間・環境演出の仕上げ（2026-09-20、実装・対象検証済み／体験評価待ち）
+- 担当Astra、同checkout main a842d50。ユーザーがM5の実装・技術検証までの自走を明示委任。人の怖さ・楽しさの最終評価は後の通しプレイで行う。既存の文章・音量・比較設定は保持する。
+- 工程: 現シーン監査→未実装の退出／階段の空間ループと環境音の接続→既存6表現・導線の画面確認と必要な修正→Windows版・記録・保存。既存Unity/URP、造作・AudioSource・Input System試験をExtendし、新依存や全面置換を行わない。
+- 変更候補: Homecomingの追加造作・狭い演出component、作者用Inspector、関連入力試験、Docs。GAME-011の短い接続通路、GAME-012/015の生活設備音と日常／怪異の対比を試作。文章は作者執筆方針を保ち、新しい物語・ルール・怪異は追加しない。
+- 完了条件: 入力経路で退出→同ホール帰還、反復／ポーズ／復帰で破綻しないこと、怪異の判別・帰路の維持、最終Game View実見、音の出力条件、Console・製品build。M5全体の実装確認と人の受入は分け、残件を明記する。
+- 保全: 開始時stagedなし。Homecomingは作者のdroneVolume=.518／声1件とUnity空白差分、PlayableDemoも既存作者差分。両シーンの開始時コピー・hashをartifacts/m5-01へ保存し、今回の追加分だけをcommitする。
+- 実装: 対称通路の途中で視点pitch／移動を保って同じ場所へ接続。退路・階段口の歩行とダッシュ、反復、ポーズ、帰宅後の翌夜、固定設備音の非表示階停止と追従音非重複を追加。初回062612-311は試験の状態名AwaitingCall誤記で失敗（実装はWaitingForCall）。修正後`artifacts/tests/20260920-062801-642/playmode.xml`の対象試験1/1成功・71.23秒。
+- 追加監査: 機械暴走に残る旧発光cubeを本編だけ非表示にし、実かご照明の0.85／0.65倍への遷移・復元へ接続。全6表現・階数・期限・正解操作を維持。5戸しかなかった8階へ806を加え、番号を作者編集へ接続。結果後のページ式スタッフロール、フェード、固定スキップ、編集Inspectorを追加。新しい物語の文章は追加しない。
+- 通し結果: `artifacts/tests/20260920-063721-070/playmode.xml`、3/3成功・failed/skip0・387.36秒。全4夜＋最終夜死亡再試行、保存最終夜→結果→スタッフロール→スキップ→タイトル、長文でも固定スキップ・ページフェード・自動終了。怪異中の実照明と終了後復元、6表現の画像を確認。機械暴走の旧cube非表示と天井伸長は別経路で維持。
+- 反射更新後: `artifacts/tests/20260920-064515-349/playmode.xml`、3/3成功・failed/skip0・111.35秒。開扉前の濡れ→徒歩救済・復元、旧M2の13超えと一定間隔・停止、期限超過から非常停止で救済。`artifacts/tests/20260920-064805-301/editmode.xml`、2/2成功・failed/skip0。今回の修正後合計はPlayMode7件＋EditMode2件。全テスト一括実行ではない。Consoleには従来のLure plateText未接続warningがあり、今回のerrorなし。
+- 実画像: `artifacts/m5-01/input-20260920-062806/`の退出／階段接続・戻ったホール、`artifacts/m3-04/safe-20260920-063840/`の各夜6表現・結果、`artifacts/m4-01/tests/3eefe61acdb14dfc86cbd5cd4366851b/credits-first-page.png`、反射更新後`artifacts/m3-01/recovery-20260920-064521/07b-wet-during-opening.png`を実見。通常モニターは既存作者設定の表示6秒／フェード3秒を保持し、撮影タイミングで暗くなる。初見の読解・怖さの合格宣言はしない。
+- Windows: `artifacts/builds/20260920-064826-157/GraduationProject.exe`、非Development、15.11秒、build error/warning0、Tests assemblyなし。READMEとlicensesを同梱。設定5ファイルは直前hashへ一致復元。Computer Useで起動・1920幅のタイトル・続き表示を実見。クリック後の遷移は確認できず、次の操作で`user input was detected in this window`となったため再観測後に前面操作を終了。Playerは起動したまま、ユーザーの進行を上書きしていない。
+- Player証拠: `artifacts/m5-01/Player-title.png`／`Player-startup.log`。後者は通常ホストの読取権限で取得。起動ログに例外・shader errorなし、既存D3D12 info queue診断あり。今回のWindows操作・全4夜通しの成功とは扱わない。主な通し証拠はEditorの合成Input System入力。
+- 保全・次: Homecomingの作者音量／比較設定とPlayableDemoの開始時hashを保持し、今回の意味差分だけをGitへ保存する。Editorは保存済みEdit Mode。M5の仕上げ実装を通し評価できる版とし、次は本人の理解・怖さ・間延び・音への評価に応じて修正。M6のWindows全行程・代表環境の性能確認は残る。物語・掲示の最終文章は作者執筆という委任境界を維持。
+
 ### M4-01 保存・結果（2026-09-20、実装・対象検証済み）
 - 担当Astra、同checkout。M4_SAVE_PLAN採用と自己ベスト独立保存の回答を反映。既存JSON API／標準IOと既存メニューをExtendし、外部frameworkなし。
 - 範囲: 専用保存層、DemoSession／HomecomingCampaign／RunManager、作者用追加文章グループ、隔離保存試験。進行／プロフィールを分離し、一時ファイル＋直前backup・版／整合性検査・排他で誤上書きを防ぐ。新規／続き／タイトル・結果・設定を既存UIへ接続。

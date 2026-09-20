@@ -13,6 +13,7 @@ public class HijackAnomaly : AnomalyBehaviour
     [SerializeField, Min(.05f)] private float driftIntervalSeconds = 1f;
     private ElevatorTuning tuning;
     private SpatialCabinPresentation spatialPresentation;
+    private CabinPowerPresentation mountedPower;
     [SerializeField, Min(0f)] private float rampSeconds = 20f;
     [SerializeField] private float pitchStart = 1f;
     [SerializeField] private float pitchEnd = 1.6f;
@@ -26,6 +27,14 @@ public class HijackAnomaly : AnomalyBehaviour
     private AudioClip generatedMotorClip;
 
     public bool IsMotorPlaying => motor != null && motor.isPlaying;
+
+    internal void BindCabinPower(CabinPowerPresentation presentation)
+    {
+        if (presentation == null || spatialPresentation != null) return;
+        mountedPower = presentation;
+        // Homecoming uses the real cabin fixtures; the old debugging cube is not equipment.
+        foreach (var renderer in GetComponentsInChildren<Renderer>(true)) renderer.enabled = false;
+    }
 
     protected override void Awake()
     {
@@ -44,7 +53,8 @@ public class HijackAnomaly : AnomalyBehaviour
 
     public override void OnDiagnosisStart()
     {
-        if (spatialPresentation == null) base.OnDiagnosisStart();
+        if (mountedPower != null) mountedPower.Begin(this);
+        else if (spatialPresentation == null) base.OnDiagnosisStart();
         else spatialPresentation.Begin();
 
         FloorIndicator floorIndicator = FloorIndicator.Instance;
@@ -77,7 +87,8 @@ public class HijackAnomaly : AnomalyBehaviour
 
     public override void OnReveal()
     {
-        if (spatialPresentation == null) base.OnReveal();
+        if (mountedPower != null) mountedPower.Reveal(this);
+        else if (spatialPresentation == null) base.OnReveal();
         else spatialPresentation.Reveal();
         StopRampRoutine();
 
@@ -109,17 +120,17 @@ public class HijackAnomaly : AnomalyBehaviour
         }
 
         StopJitterRoutine();
-        if (spatialPresentation == null) jitterRoutine = StartCoroutine(JitterRoutine());
+        if (spatialPresentation == null && mountedPower == null) jitterRoutine = StartCoroutine(JitterRoutine());
     }
 
     public override void OnGraceStart()
     {
-        if (spatialPresentation == null) base.OnGraceStart();
+        if (spatialPresentation == null && mountedPower == null) base.OnGraceStart();
     }
 
     public override void OnGraceEnd(bool recovered)
     {
-        if (spatialPresentation == null) base.OnGraceEnd(recovered);
+        if (spatialPresentation == null && mountedPower == null) base.OnGraceEnd(recovered);
 
         if (!recovered)
         {
@@ -142,7 +153,8 @@ public class HijackAnomaly : AnomalyBehaviour
 
     public override void OnCleanup()
     {
-        if (spatialPresentation == null) base.OnCleanup();
+        if (mountedPower != null) mountedPower.Restore(this);
+        else if (spatialPresentation == null) base.OnCleanup();
         else spatialPresentation.Restore();
         StopRampRoutine();
         StopJitterRoutine();
@@ -257,6 +269,12 @@ public class HijackAnomaly : AnomalyBehaviour
 
         StopCoroutine(rampRoutine);
         rampRoutine = null;
+    }
+
+    protected override void OnDestroy()
+    {
+        if (mountedPower != null) mountedPower.Restore(this);
+        base.OnDestroy();
     }
 
     private void StopJitterRoutine()

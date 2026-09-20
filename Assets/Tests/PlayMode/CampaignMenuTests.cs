@@ -117,6 +117,14 @@ namespace GraduationProject.Tests
    Assert.That(CampaignSaveTests.Call(store,"SaveProgress"),Is.True); ((IDisposable)store).Dispose();
    yield return LoadPersistentScene(); yield return Ui("続きから"); yield return Until(()=>!Flag("IsTransitioning"),"continue final night");
    yield return VerifyFourNights(Find("HomecomingCampaign"),saveDirectory,3,false);
+   var credits=Find("HomecomingCredits"); Assert.That(credits,Is.Not.Null);
+   yield return Ui("スタッフロール"); yield return new WaitForSecondsRealtime(.6f);
+   Assert.That(UnityEngine.Object.FindObjectsByType<TMPro.TMP_Text>(FindObjectsSortMode.None).Any(t=>t.text.Contains("VOICEVOX:白上虎太郎")),Is.True);
+   double atCredits=Elapsed; yield return new WaitForSecondsRealtime(.2f); Assert.That(Elapsed,Is.EqualTo(atCredits));
+   ScreenCapture.CaptureScreenshot(Path.Combine(saveDirectory,"credits-first-page.png")); yield return null;
+   var old=demo; yield return Ui("タイトルへ"); yield return Until(()=>old==null,"skip credits to title"); RebindPersistentScene();
+   Assert.That(Flag("IsComplete"),Is.False); Assert.That(Flag("IsPaused"),Is.True);
+   Assert.That(CampaignSaveTests.Field<bool>(Progress,"completed"),Is.True,"Credits retain the completed run");
   }
  }
 }

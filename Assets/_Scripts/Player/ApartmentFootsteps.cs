@@ -22,7 +22,9 @@ public sealed class ApartmentFootsteps : MonoBehaviour
         foot.volume=.38f; foot.spatialBlend=0;
         room=gameObject.AddComponent<AudioSource>(); room.playOnAwake=false;
         room.clip=ventilation; room.loop=true; room.volume=.3f; room.spatialBlend=0;
-        if(ventilation!=null)room.Play();
+        // Older standalone scenes keep their authored bed. Homecoming supplies fixed
+        // room sources, so the same ventilation is not doubled at the listener.
+        if(ventilation!=null && FindFirstObjectByType<ApartmentRoomTone>()==null)room.Play();
         previous=transform.position;
     }
 

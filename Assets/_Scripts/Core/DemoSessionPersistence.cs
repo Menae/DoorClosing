@@ -161,7 +161,10 @@ public sealed partial class DemoSession
         save.SaveProgress(); save.Profile.RecordClear(save.Progress); save.SaveProfile();
         Copy(S("time") + " " + FormatDuration(save.Progress.elapsedSeconds) + "\n" + S("deaths") + " " + save.Progress.deaths);
         Copy(S("bestTime") + " " + FormatDuration(save.Profile.bestSeconds) + "\n" + S("bestDeaths") + " " + save.Profile.bestDeaths, 24);
-        SaveWarning(); Button(S("title"), Restart); Button(W("menu.AfterHome.4", "終了"), Quit);
+        SaveWarning();
+        var credits = FindFirstObjectByType<HomecomingCredits>();
+        Button(credits != null ? credits.resultButtonLabel : S("title"), ShowCredits);
+        Button(W("menu.AfterHome.4", "終了"), Quit);
     }
     private static string FormatDuration(double seconds)
     { var duration = TimeSpan.FromSeconds(Math.Floor(seconds)); return ((long)duration.TotalMinutes).ToString("00") + ":" + duration.Seconds.ToString("00"); }
