@@ -48,6 +48,18 @@ Unityの **Tools > Unity Agent** に次の操作を追加している。
 
 これらの補助コードはAssets/Editor内にあり、通常のPlayerへ入らない。PlayModeTestsはTestAssembliesとして通常ビルドから除外される。テストは既存Assembly-CSharpを維持するため、テスト用アダプター内だけで型・シリアライズフィールドを参照する。ゲーム側の型やフィールドを変更したら、テストも意図に合わせて更新する。ビルドでUnityが自動変更する既知の設定ファイルは、直前のバックアップから復元して差分を確認する。ProBuilderによる既定値の再保存など、残る差分はdocs/KNOWN_ISSUES.mdに記録している。テストが新規生成したPC情報ファイルは検証結果側へ退避する。
 
+## Mac試遊版の再作成（MAC-001）
+
+Mac Build Support導入済みの6000.3.14f1を使用する。既存Editorで保存済みHomecomingを開き、`Tools > Unity Agent > Build Homecoming Mac Playtest`を実行する。別Editorを同じprojectへ起動しない。全4夜設定・各夜3参照・missing script・テスト用metadataを検査し、非Development／Mono／Metal／Intel＋Apple Siliconの本編を明示指定して作る。元のbuild scene listと描画・backend・architecture設定は保持する。
+
+出力は`artifacts/builds/mac-<UTC時刻>`、結果はその中の`build.json`。`GRADUATION_MAC_OUTPUT`をEditor起動時に指定すれば出力先を変えられるが、既存Homecoming.appがある出力先は拒否する。`Succeeded`を確認後、`docs/MAC_PLAYTEST_README.txt`を出力先の`README.txt`へ、`docs/licenses/*.txt`を`licenses/`へコピーする。
+
+`python tools/package-mac-playtest.py <出力先> <新しいZIPのパス>`で配布ZIPを作る。Python標準ライブラリのみ。appのCPU・製品assembly・ZIP CRC・実行権限を検査する。ZIPは既存ファイルへ上書きしない。app単体をWindowsで再圧縮すると実行権限を失う可能性があるため、生成したZIPをそのままMacへ渡す。
+
+`Tools > Unity Agent > Verify Homecoming Mac Source`はEditorで全4夜＋死亡再試行／保存再開の既存Input System試験を実行し、`artifacts/tests/<UTC時刻>/playmode.xml`へ保存する。フォーカス喪失でゲームが自動ポーズするため、実行中はUnityを前面に保つ。これはMac Player検証の代用ではない。Mac実機ではREADMEの起動・入力・音・全夜・保存再開・性能を別途確認する。
+
+Developer ID署名・公証・ストア公開はこの手順に含めない。Macの警告は[Appleの案内](https://support.apple.com/ja-jp/102445)に従い、OS全体の保護を無効化しない。対応構成は[Unity 6000.3のMacビルド説明](https://docs.unity3d.com/6000.3/Documentation/Manual/macos-building.html)を参照。
+
 ## MCPツールが表示されない場合
 
 Codexを再接続するか、導入済みの公式MCP Python SDKを使ったCLIから同じサーバーを操作する。別のEditorブリッジは増やさない。

@@ -1,5 +1,12 @@
 # Decisions
 
+## MAC-001 — 他人に見せるMac版は全4夜の本編
+- Status/date/owner: 2026-09-20、ユーザーが現状分析と最適なMacビルド構成の選定・実行を委任。Codexが委任内で選定。自分のMacで確認可能、現時点の実機確認は未実施と回答。
+- Context/options: 旧PlayableDemoは短時間の3基本怪異比較向け。Homecomingは入口・全6表現・4夜・保存再開・結果が揃い、現状の作品全体を示せる。短時間の授業内実演だけなら旧デモにも利点があるが、今回の試遊配布には本編を選ぶ。
+- Decision: 保存済みHomecoming全4夜を明示指定し、非Development／Mono／Metal／Intel＋Apple Silicon Universalで作成。既存Macモジュールを採用、既存ビルド補助をExtend。Unity/URPやゲーム内容は変更しない。Universalは単一CPU版より大きいが対象Macを限定しない。
+- Effects: MacPlaytestBuild.cs、package-mac-playtest.py、MAC_PLAYTEST_README.txt。appとライセンスを実行権限付きZIPに格納。署名・公証・有料サービス・外部公開は行わない。Macの起動／描画／音／操作／全夜／再開／性能の実測が必要。Windows・Editorでの合格をMac実機合格に置き換えない。
+- Evidence: Unity 6000.3のmacos-building／macoscodesigning、Apple support 102445を2026-09-20確認。対象を固定したビルド選定のため、新規OSS導入や比較は対象外。
+
 ## M5-01 — 仕上げ実装を先行し、通し評価を後に行う
 - Status/date/owner: 2026-09-20、ユーザーがM5の実装・技術検証までAstraに任せ、後で必要な修正を返す方針を選択し実装継続を指示。試作担当Astra。人の怖さ・楽しさの承認は別。
 - Decision: GAME-011の退出／階段通路を、既存ホールへ付加する短い対称通路で実装。接続面の通過時に位置と水平向きを対応させ、入力・視点pitch・進行状態を保つ。画面を別カメラで描くportal frameworkやシーンのロードは使わない。対称な角の裏で接続するため、形・照明の片側だけを編集すると継ぎ目が見えるという制約を作者向けに明記する。

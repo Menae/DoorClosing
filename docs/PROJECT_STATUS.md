@@ -4,6 +4,19 @@
 
 ## 現在のゲーム開発
 
+### MAC-001 本編のMac試遊版（2026-09-20、build・Editor検証済み／Mac実機待ち）
+- 担当: task 01a0bdd5-4115-7920-a6b7-b5ca379d3e75。ユーザーが現状分析と他人に見せる最適構成のMac buildを委任。自分のMacで確認可能と回答。
+- 選択: Homecoming全4夜、非Development、Mono、Metal、Intel＋Apple Silicon。旧PlayableDemoは短いが現行の導入・保存・全6表現を見せられないため本編を採用。既存Unity/URPをExtend、新依存なし。今回の限定判断にOSS比較・基盤変更は不要。
+- 工程: 既存差分・設定保全→Mac build専用Editor補助→製品ビルド→構成／CPU／権限／同梱物検査→操作案内・ZIP→記録保存。実機でのプレイ合格はMac確認後。
+- 開始: main 5498120、既存Homecoming／PlayableDemo／slnx差分あり、stagedなし。初回sandbox検出ではEditorが見えなかったが、通常ホストで既存Editorを確認。二重起動ガードでbatch起動を中止し、既存Homecoming保存済みEdit ModeへMCP接続して実施。ゲーム挙動・ユーザーシーン編集なし。
+- Build: `artifacts/mac-01/player/build.json`、Succeeded、84.14秒、error/warning0、非Development／Mono／Metal／全4夜。初回補助コードの旧MacOSArchitecture型を現行OSArchitectureへ修正しcompile成功。シーンの全4夜フラグ・6参照・missing script 0をbuild前検査。
+- 配布: `artifacts/mac-01/delivery/Homecoming-Mac-20260920.zip`、58,030,970 bytes、SHA256 `b74deb14d8d4570a0744c01093becb231006275f9f9300afa4a3114675363542`。app＋操作／Mac確認案内＋素材license。全6ネイティブbinaryのIntel／ARM64、ZIP CRC・実行権限を確認。最低OS設定12.0。Developer ID署名・公証は未実施。成果物はGit外、外部公開なし。
+- 製品検査: Tests／Editor assemblyなし、ゲームdllのdebug正解／誤答・commit key・TestSaveDirectoryなし。既存MCPForUnity.Runtimeは互換／画像／serialization helperのみで残るが、Editor側の通信・serverは含まれない。CPUごとのcode signature load commandは存在するが、Mac codesignによる有効性検証とは区別。
+- 保全: シーン2枚・slnx・build設定6ファイルの開始時SHA256一致。Library内のEditorUserBuildSettingsは操作に伴う差分があるため丸ごと復元せず、build補助で元のarchitecture値へ戻した。Windowsターゲットと旧デモのbuild listは保持。
+- 入力検証: 最終`artifacts/tests/20260920-113550-355/playmode.xml`は全4夜＋最終夜死亡再試行、保存／設定／タイトル／再開の2/2 Passed、failed/skip0、317.52秒。合成Input System→Raycast→click。最終Game Viewは`artifacts/m3-04/safe-20260920-113555/`、結果画面を実見。これはWindows Editor検証でありMac入力・描画の合格ではない。
+- 試行の限界: 初回MCP経由は保存再開成功／全夜はフォーカス喪失の自動ポーズで失敗。再実行は最後の結果まで到達したがMCP監視が開始timeout扱いとなり正式結果を保持しなかった。既存UnityAgentMenuのXML保存経路へ切替え、最後の2件の合格で確認した。製品挙動やテストassertは変更していない。
+- 停止: Homecoming保存済みEdit Mode、処理中build／testなし。既存ユーザー3差分保持。再作成用Editorメニューと梱包Python／README／DEVELOPMENTを追加。人の怖さ・Mac実機の起動／全夜／音／性能は未認定。本人はMac確認「まだやってない」と回答、次は同梱READMEによる実機確認。
+
 ### SLIDES-001 ゼミ紹介資料（2026-09-20、作成・検証済み）
 - 担当: task 01a0bdd5-4115-7920-a6b7-b5ca379d3e75。ゲーム開発担当は引き継がず、Unity操作なし。対象は紹介資料と本記録のみ。
 - ユーザー選択: 現行仕様・最新進捗・既存実画面を使い、概要／遊び方／進捗／スケジュール／展望の5枚。白・黒・青1色、短文、画像は比率維持・無裁断。10月目標／12月上旬最終を記載。
