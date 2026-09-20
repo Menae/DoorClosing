@@ -236,7 +236,10 @@ namespace GraduationProject.Tests
    finally { UnityEngine.Random.state=random; }
   }
 
-  private IEnumerator HomecomingRoute(bool recoverLure, bool wetLure=false, bool outsideVoices=false, bool spatialHijacks=false, bool fullStory=false, bool extraStops=false)
+  [UnityTest] public IEnumerator Homecoming_CloseWithoutFloor_HoldsThenOpensAndDeparts_UseInputSystem()
+   => HomecomingRoute(false,false,false,false,false,false,true);
+
+  private IEnumerator HomecomingRoute(bool recoverLure, bool wetLure=false, bool outsideVoices=false, bool spatialHijacks=false, bool fullStory=false, bool extraStops=false, bool closeWithoutFloor=false)
   {
    const string path = "Assets/Scenes/Homecoming.unity";
    yield return UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(path, new LoadSceneParameters(LoadSceneMode.Single));
@@ -282,7 +285,7 @@ namespace GraduationProject.Tests
     list.GetArrayElementAtIndex(6).objectReferenceValue=UnityEditor.AssetDatabase.LoadMainAssetAtPath("Assets/Data/hijack.asset");
     setup.ApplyModifiedPropertiesWithoutUndo();
    }
-   string evidence=Path.GetFullPath((extraStops?"artifacts/m3-05/":fullStory?"artifacts/m3-04/":spatialHijacks?"artifacts/m3-03/":outsideVoices?"artifacts/m3-02/":wetLure?"artifacts/m3-01/":"artifacts/opening-03/")+(recoverLure?"recovery-":"safe-")+DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")); Directory.CreateDirectory(evidence);
+   string evidence=Path.GetFullPath((closeWithoutFloor?"artifacts/door-01/":extraStops?"artifacts/m3-05/":fullStory?"artifacts/m3-04/":spatialHijacks?"artifacts/m3-03/":outsideVoices?"artifacts/m3-02/":wetLure?"artifacts/m3-01/":"artifacts/opening-03/")+(recoverLure?"recovery-":"safe-")+DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")); Directory.CreateDirectory(evidence);
    var presentation=Find("LureCorridorPresentation");
    Assert.That(presentation,Is.Not.Null);
    bool Revealing() => (bool)presentation.GetType().GetProperty("IsRevealing").GetValue(presentation);
@@ -353,10 +356,29 @@ namespace GraduationProject.Tests
    yield return Aim(new Vector3(-2.55f,1.75f,1.85f)); ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"05-hall.png"));
    yield return WalkTo(new Vector3(0,.95f,.5f)); yield return ClickAt(new Vector3(1.25f,1.5f,1.82f));
    yield return WaitState("Boarding"); yield return WaitForDoors(); yield return WalkTo(new Vector3(0,.95f,3.6f));
+   if(closeWithoutFloor)
+   {
+    var lift=Find("ElevatorController");
+    bool DoorOpen()=>(bool)lift.GetType().GetProperty("IsDoorOpen").GetValue(lift);
+    yield return ClickAt(Control("SideRightClose")); yield return WaitState("Boarding"); yield return WaitForDoors();
+    yield return Aim(new Vector3(0,1.4f,1.9f)); yield return new WaitForSeconds(2);
+    Assert.That(DoorOpen(),Is.False,"Manual close without a floor holds closed");
+    Assert.That((bool)lift.GetType().GetProperty("IsTravelling").GetValue(lift),Is.False);
+    Assert.That((bool)lift.GetType().GetProperty("DestinationSelected").GetValue(lift),Is.False);
+    ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"closed-without-destination.png"));
+    yield return ClickAt(Control("SideRightOpen")); yield return WaitForDoors(); Assert.That(DoorOpen(),Is.True);
+    yield return ClickAt(Control("SideRightClose")); yield return WaitState("Boarding"); yield return WaitForDoors();
+    Assert.That(DoorOpen(),Is.False);
+   }
    yield return ClickAt(Control("Floor8"));
    if(extraStops) { yield return WaitState("Travelling"); yield return CheckNormalStop(story,true); }
    yield return WaitState("Arrived");
    yield return Aim(new Vector3(0,1.6f,-10)); ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"06-normal-corridor.png"));
+   if(closeWithoutFloor)
+   {
+    File.WriteAllText(Path.Combine(evidence,"context.txt"),"Homecoming: manual close without destination, hold, open, close, select 8, normal arrival. Synthetic Input System -> Raycast -> click; no gameplay calls or teleport. "+Screen.width+"x"+Screen.height);
+    yield return null; yield break;
+   }
    yield return WalkTo(new Vector3(0,.95f,-10.7f)); yield return ClickAt(new Vector3(0,1.35f,-11.85f));
    yield return Until(()=>!Flag("IsIntroduction")&&!Flag("IsTransitioning"),"continuous next night",20);
    Assert.That(Flag("IsPaused"),Is.False,"No next-night explanation/menu interrupt");

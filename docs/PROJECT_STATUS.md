@@ -4,6 +4,17 @@
 
 ## 現在のゲーム開発
 
+### M4-01 保存・結果（2026-09-20、作業中）
+- 担当Astra、同checkout。M4_SAVE_PLAN採用と自己ベスト独立保存の回答を反映。既存JSON API／標準IOと既存メニューをExtendし、外部frameworkなし。
+- 範囲: 専用保存層、DemoSession／HomecomingCampaign／RunManager、作者用追加文章グループ、隔離保存試験。進行／プロフィールを分離し、一時ファイル＋直前backup・版／整合性検査・排他で誤上書きを防ぐ。新規／続き／タイトル・結果・設定を既存UIへ接続。
+- 完了条件: 保存の正常／異常系、独立ベスト、累積・計時除外、入力経路の夜再開／設定／結果、最終画像、Windows終了→再起動→続き、Console／build、作者差分保護・Docs・commit/push。素材・物語・大規模UI刷新は行わない。
+
+### DOOR-001 行先未選択の閉扉待機（2026-09-20、実装・対象検証済み）
+- 担当Astra、main 65f124a。ユーザー指定: 8階未選択で「閉」を押したら、その場で閉じたまま待機する。既存の到着階再提示は維持。正常乗車時のCloseAndReopenを分離し、「開」・閉扉後8選択・安全再開扉を検証する。
+- 範囲: NormalJourneyController、対象Input System試験と実シーン入力、GAME-008／Docs。新状態の追加やserialized enum値変更は不要で、乗車待機状態のまま扉を閉じる。既存の作者シーン2枚は変更・commit対象外。
+- 検証: 修正前045218-082で閉扉保持の失敗を再現。修正後`artifacts/tests/20260920-045442-809/playmode.xml`、5/5成功・failed/skip0、64秒。閉扉保持・移動なし・無効ボタン・開／8選択・閉塞再開扉・正常帰宅を入力経路で確認。`artifacts/door-01/safe-20260920-045454/`で閉扉待機と到着のGame Viewを保存、閉扉画像を実見。
+- Windows build: `artifacts/builds/20260920-045843-622`、非Development、13.9秒、error/warning0。この版のWindows内操作は未実施（M4完成版と併せて確認）。作者シーン2枚のSHA256は開始時と一致。自己ベストは独立保存と回答済み。
+
 ### M3-05 通常停止の追加遭遇（2026-09-19、実装・対象検証済み）
 - 担当Astra、main 594930d（M3-04 commit/push済み）。GAME-008に従い、本編の通常走行で受理した非常停止1回につき約1/3、全6表現から均等に追加する。導入と正解の暴走停止は免除、停止中連打は再抽選しない。
 - 方針: HomecomingCampaignに実行中だけの追加待ち列、RunManagerで通常3件の手前へ挿入、NormalJourney／FSMの通常走行で短い停止と再開。通常ノルマを消費せず、追加も通常のDiagnosisから開始する。既存デモは本編componentなしで維持。新依存・保存形式なし。

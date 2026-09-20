@@ -87,6 +87,30 @@ namespace GraduationProject.Tests
         }
 
         [UnityTest]
+        public IEnumerator CloseWithoutDestination_StaysClosedUntilOpenOrFloor8()
+        {
+            yield return Board();
+            yield return Click("PressClose");
+            yield return new WaitForSeconds(1.2f);
+            bool DoorOpen() => (bool)elevator.GetType().GetProperty("IsDoorOpen").GetValue(elevator);
+            bool Moving() => (bool)elevator.GetType().GetProperty("IsTravelling").GetValue(elevator);
+            Assert.That(State, Is.EqualTo("Boarding"));
+            Assert.That(DoorOpen(), Is.False, "No destination: remain closed instead of reopening automatically");
+            Assert.That(Moving(), Is.False);
+            Assert.That((bool)elevator.GetType().GetProperty("DestinationSelected").GetValue(elevator), Is.False);
+            yield return Click("PressClose"); yield return Click("PressFloor", 7); yield return Click("PressEmergencyStop");
+            yield return new WaitForSeconds(.5f);
+            Assert.That(DoorOpen(), Is.False); Assert.That(Moving(), Is.False); Assert.That(Stops, Is.Zero);
+            yield return Click("PressOpen"); yield return new WaitForSeconds(.15f);
+            Assert.That(DoorOpen(), Is.True, "Open button still allows exit");
+            yield return Click("PressClose"); yield return new WaitForSeconds(.2f);
+            Assert.That(DoorOpen(), Is.False);
+            yield return Click("PressFloor", 8);
+            yield return Until(() => State == "Travelling", "Selecting 8 after manual close departs");
+            yield return Until(() => State == "Arrived", "Normal arrival is preserved");
+        }
+
+        [UnityTest]
         public IEnumerator NormalJourney_ClickPath_ReachesHome_WithSafeEmergencyStop()
         {
             yield return Board();

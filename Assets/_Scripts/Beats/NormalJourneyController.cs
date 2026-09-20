@@ -128,7 +128,7 @@ public class NormalJourneyController : MonoBehaviour
         }
         else if (action == PlayerAction.PressClose && (State == JourneyState.Boarding || State == JourneyState.Arrived))
         {
-            StartCoroutine(CloseAndReopen());
+            StartCoroutine(State == JourneyState.Boarding ? CloseWithoutDeparture() : CloseAndReopen());
         }
         else if (State == JourneyState.Arrived && action == PlayerAction.TouchHomeDoor && !IsBodyInside)
         {
@@ -206,6 +206,15 @@ public class NormalJourneyController : MonoBehaviour
         travelRemaining = travelSeconds;
         elevator.SetTravelling(true);
         ChangeState(JourneyState.Travelling);
+    }
+
+    private IEnumerator CloseWithoutDeparture()
+    {
+        ChangeState(JourneyState.Closing);
+        elevator.CloseDoors();
+        // The elevator's existing safety sensor reopens an obstructed door.
+        while (elevator.IsDoorMoving) yield return null;
+        ChangeState(JourneyState.Boarding);
     }
 
     private IEnumerator CloseAndReopen()
