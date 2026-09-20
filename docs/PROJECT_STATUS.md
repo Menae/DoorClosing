@@ -1,13 +1,20 @@
 # 現在地・再開情報
 
-更新: 2026-09-19。ここには現在の担当・進捗・次の作業を置く。過去の詳細は [PROJECT_HISTORY.md](PROJECT_HISTORY.md)、仕様の正本は [GAME_SPEC.md](GAME_SPEC.md)。履歴中の「現在」や古い担当を再開指示に使わない。
+更新: 2026-09-20。ここには現在の担当・進捗・次の作業を置く。過去の詳細は [PROJECT_HISTORY.md](PROJECT_HISTORY.md)、仕様の正本は [GAME_SPEC.md](GAME_SPEC.md)。履歴中の「現在」や古い担当を再開指示に使わない。
 
 ## 現在のゲーム開発
 
-### M4-01 保存・結果（2026-09-20、作業中）
+### M4-01 保存・結果（2026-09-20、実装・対象検証済み）
 - 担当Astra、同checkout。M4_SAVE_PLAN採用と自己ベスト独立保存の回答を反映。既存JSON API／標準IOと既存メニューをExtendし、外部frameworkなし。
 - 範囲: 専用保存層、DemoSession／HomecomingCampaign／RunManager、作者用追加文章グループ、隔離保存試験。進行／プロフィールを分離し、一時ファイル＋直前backup・版／整合性検査・排他で誤上書きを防ぐ。新規／続き／タイトル・結果・設定を既存UIへ接続。
 - 完了条件: 保存の正常／異常系、独立ベスト、累積・計時除外、入力経路の夜再開／設定／結果、最終画像、Windows終了→再起動→続き、Console／build、作者差分保護・Docs・commit/push。素材・物語・大規模UI刷新は行わない。
+- 現在: 保存層と既存メニュー接続、文章編集11を実装。初回050801-799は5/8成功、空／未来版のInvalidDataException捕捉漏れとEditorのbuild list外シーン再ロードが失敗。例外条件とEditor専用再ロード経路を修正。再試験`artifacts/tests/20260920-051050-622/playmode.xml`は9/9成功・failed/skip0・8.66秒。復元・設定・タイトル再ロード・上書き取消／確定・導入省略・独立ベスト・完成直後中断・破損／二重起動／IO失敗の保護を確認。
+- 通し検証: `artifacts/tests/20260920-051148-286/playmode.xml`、全4夜・最終夜死亡→結果の累積と既存PlayableDemo再プレイの2/2成功・failed/skip0、462.8秒。導入を除く247.41秒・死亡1を今回値と初回ベストへ保存。`artifacts/m4-01/tests/7de8b7af4dfe4add913bad679a44ea13/continue-title.png` と79f09163…のskip-choice.pngを実見。
+- 結果画面の実画像で旧RunManagerの帰宅文が背後に残るのを発見し、専用結果では旧文だけ非表示へ修正。`artifacts/tests/20260920-052118-563/playmode.xml`、最終夜保存→通常入力でクリアが1/1成功・failed/skip0・68.6秒。`artifacts/m4-01/tests/4d86b8a62e734c58ba9ffec39473e757/four-nights-complete.png`を実見して重複解消。文章編集の導入表示も追加。Editorのdirty表示はSaveAsCopyと現ファイルのSHA256完全一致を確認して保存した。
+- Windows: `artifacts/builds/20260920-052326-582/GraduationProject.exe`、非Development、11.17秒、error/warning0、テストassembly／Editor保存先overrideなし。build設定5ファイルを直前値へ一致復元。Computer Useで720pの音量変更→開始→フォーカス喪失ポーズ→確認付きタイトル復帰→終了、別PIDで再起動→同じ音量／サイズと続き表示→クリックで導入入口へ復帰を確認。終了後のプロセス残存なし。検証用設定は1080p・音量約1へ戻し、導入の確認用セーブを残した。
+- 証拠: `artifacts/m4-01/Player-title-after-restart.png`、`Player-settings-after-restart.png`、`Player-continued-entrance.png`、前後JSON、`Player-restarted.log`。例外／shader errorなし。既存D3D12 info queue診断と影atlas縮小あり。Computer UseのEsc送信は反応を確認できず、実キーボードの可否とは分離。Windows再起動は導入で検証し、怪異夜の再開・死亡累積・全4夜完走はEditor入力試験で検証。Windows全夜通し／人の怖さ・長さは未評価。
+- 保全: Homecomingの新文章グループだけを既存作者差分と分離して保存。作者の音量0.518／声1件、PlayableDemoの文章・音量変更は保持。PlayableDemoのSHA256は開始時と一致。Editor保存済みEdit Mode。
+- 次: M4の必須機能は実装した。Astra継続、M5の演出・空間・音と初見の理解を詰める。技術合格から面白さや10〜20分の体感を認定しない。旧節の「保存未実装／確認待ち」は当時の履歴として扱う。
 
 ### DOOR-001 行先未選択の閉扉待機（2026-09-20、実装・対象検証済み）
 - 担当Astra、main 65f124a。ユーザー指定: 8階未選択で「閉」を押したら、その場で閉じたまま待機する。既存の到着階再提示は維持。正常乗車時のCloseAndReopenを分離し、「開」・閉扉後8選択・安全再開扉を検証する。

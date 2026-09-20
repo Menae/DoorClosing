@@ -22,6 +22,11 @@ public sealed class HomecomingCampaign : MonoBehaviour
     public int PendingExtras => pendingExtras.Count;
 
     internal void ResetStory() { ReleaseCopies(); DiscardPendingExtras(); CurrentNight = 0; Attempt = 0; }
+    internal void RestoreNight(int night)
+    {
+        if (night < 0 || night > 3) throw new ArgumentOutOfRangeException(nameof(night));
+        ResetStory(); CurrentNight = night;
+    }
     internal void AdvanceNight()
     {
         if (!HasFollowingNight) throw new InvalidOperationException("All four nights are complete.");

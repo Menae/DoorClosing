@@ -28,3 +28,14 @@ PlayerPrefsへ進行を集約する方式は少量の設定には簡単だが、
 - 初回の新保存形式になるため、今後の形式変更には移行方針が必要。製品名・会社名を変更すると保存先も変わる点を記録。複数Playerの同時起動時は上書き競合を検出し、黙って後勝ちにしない。
 
 外部公開・既存データ削除は今回の採用範囲外。
+
+## 実装中の保守メモ（2026-09-20）
+
+- 保存層は `CampaignSaveStore.cs`、ゲーム／メニューへの接続は `DemoSessionPersistence.cs`。既存のメニュー描画はDemoSessionで共有し、RunManagerの死亡通知を一度だけ加算する。HomecomingCampaignは夜構成の担当のまま。
+- JSON外枠にversion=1、kind、payload、SHA-256整合性値。暗号化・不正防止ではなく、破損や異種ファイルの取り違え検出用。各値の範囲も検査する。
+- `session.lock`をFileShare.Noneで開き、同じ保存先への二重起動を拒む。空のlockファイルは終了後も残るが、OSのファイルハンドルが所有権なので残存自体は故障ではない。
+- 書込みは同じフォルダーの固有pendingファイルへflush後、既存mainをFile.Replaceで直前の`.bak`へ退避して置換。中断したpendingや読めないmain／backupは自動削除しない。破損時の自動復元は行わず、手動調査後に別途対応する。
+- 全夜クリア時はcompleted進行→profileの順に保存。間に異常終了した場合、次の読込でcompleted進行から独立した最小値を再集計する。進行とprofileを1ファイルへ統合する必要はない。
+- 怪異夜の通常進行は10秒ごと、死亡・ポーズ・夜境界・正常終了で保存。異常終了では直前10秒程度の計時を失う可能性がある。保存失敗後は画面で通知し、そのセッションで再書込みを続けない。
+- Editorは `artifacts/editor-saves/Homecoming`、Playerは `Application.persistentDataPath/Homecoming`、テストは `artifacts/m4-01/tests/<固有ID>` に隔離。テスト用の保存先差替えはUNITY_EDITOR内だけで、Playerには含めない。
+- 新しい文章は「テキスト編集」の `11_保存・続き・結果`。追加メニューは既存の値を上書きせず、見つからないキーだけ追加する。結果の数値とキーは文章編集で変更しない。

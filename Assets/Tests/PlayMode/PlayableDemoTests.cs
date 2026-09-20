@@ -11,7 +11,7 @@ using UnityEngine.TestTools;
 using UnityEngine.UI;
 namespace GraduationProject.Tests
 {
- public class PlayableDemoTests : InputTestFixture
+ public partial class PlayableDemoTests : InputTestFixture
  {
   private Scene fixtureScene;
   private Mouse mouse;
@@ -21,11 +21,18 @@ namespace GraduationProject.Tests
   private Component journey, demo;
   private string State => journey.GetType().GetProperty("State").GetValue(journey).ToString();
   private bool Flag(string name) => (bool)demo.GetType().GetProperty(name).GetValue(demo);
-  public override void Setup() { base.Setup(); mouse=InputSystem.AddDevice<Mouse>(); keyboard=InputSystem.AddDevice<Keyboard>(); }
+  private string saveDirectory;
+  public override void Setup()
+  {
+   base.Setup(); mouse=InputSystem.AddDevice<Mouse>(); keyboard=InputSystem.AddDevice<Keyboard>();
+   saveDirectory=Path.GetFullPath("artifacts/m4-01/tests/"+Guid.NewGuid().ToString("N"));
+   GameAccess.Type("DemoSession").GetField("TestSaveDirectory",System.Reflection.BindingFlags.Static|System.Reflection.BindingFlags.NonPublic).SetValue(null,saveDirectory);
+  }
   [UnityTearDown] public IEnumerator Cleanup()
   {
    var fallback=SceneManager.CreateScene("DemoTestCleanup"); SceneManager.SetActiveScene(fallback);
    if(fixtureScene.IsValid() && fixtureScene.isLoaded) yield return SceneManager.UnloadSceneAsync(fixtureScene);
+   GameAccess.Type("DemoSession").GetField("TestSaveDirectory",System.Reflection.BindingFlags.Static|System.Reflection.BindingFlags.NonPublic).SetValue(null,null);
   }
   private IEnumerator Ui(string label)
   {
@@ -592,7 +599,7 @@ namespace GraduationProject.Tests
    Assert.That(StoryInt(story,"NormalStopDraws"),Is.Zero);
   }
 
-  private IEnumerator VerifyFourNights(Component story,string evidence)
+  private IEnumerator VerifyFourNights(Component story,string evidence,int startNight=1,bool retryFinal=true)
   {
    int Night()=>(int)story.GetType().GetProperty("CurrentNight").GetValue(story);
    int Attempt()=>(int)story.GetType().GetProperty("Attempt").GetValue(story);
@@ -603,17 +610,17 @@ namespace GraduationProject.Tests
     var beat=machine.GetType().GetField("currentBeat",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).GetValue(machine);
     return beat.GetType().GetProperty("Category").GetValue(beat).ToString();
    }
-   for(int night=1;night<=3;night++)
+   for(int night=startNight;night<=3;night++)
    {
     Assert.That(Night(),Is.EqualTo(night));
-    for(int retry=0;retry<(night==3?2:1);retry++)
+    for(int retry=0;retry<(night==3&&retryFinal?2:1);retry++)
     {
      yield return WalkTo(new Vector3(0,.95f,.5f)); yield return ClickAt(new Vector3(1.25f,1.5f,1.82f));
      yield return WaitState("Boarding"); yield return WaitForDoors(); yield return WalkTo(new Vector3(0,.95f,3.6f));
      yield return ClickAt(Control("Floor8"));
      yield return Until(()=>Find("AnomalyBehaviour")!=null,"campaign encounter starts",40);
      Assert.That(Attempt(),Is.EqualTo(retry+1));
-     if(night==3 && retry==0)
+     if(night==3 && retry==0 && retryFinal)
      {
       yield return Until(()=>BeatState()=="Diagnosis","final-night diagnosis");
       var wrong=Category()=="Lure"?"SideRightEmergency":"SideRightClose";
@@ -622,6 +629,7 @@ namespace GraduationProject.Tests
       yield return Until(()=>State=="WaitingForCall","final-night death",12);
       Assert.That(Night(),Is.EqualTo(3),"Completed nights are preserved");
       Assert.That(Flag("IsIntroduction"),Is.False);
+      Assert.That(CampaignSaveTests.Field<int>(Progress,"deaths"),Is.EqualTo(1),"Death counted once and persisted");
       continue;
      }
      var categories=new System.Collections.Generic.HashSet<string>();
@@ -664,6 +672,15 @@ namespace GraduationProject.Tests
       yield return Until(()=>Flag("IsComplete"),"four-night completion",15);
       Assert.That(UnityEngine.Object.FindObjectsByType<TMPro.TMP_Text>(FindObjectsSortMode.None).Any(t=>t.text.Contains("デモはここまで")),Is.False);
       ScreenCapture.CaptureScreenshot(Path.Combine(evidence,"four-nights-complete.png")); yield return null;
+      Assert.That(CampaignSaveTests.Field<bool>(Progress,"completed"),Is.True);
+      Assert.That(CampaignSaveTests.Field<int>(Progress,"deaths"),Is.EqualTo(1));
+      Assert.That(Elapsed,Is.GreaterThan(100));
+      double finished=Elapsed; yield return new WaitForSecondsRealtime(.2f); Assert.That(Elapsed,Is.EqualTo(finished));
+      var profile=CampaignSaveTests.Get(Save,"Profile");
+      Assert.That(CampaignSaveTests.Field<double>(profile,"bestSeconds"),Is.EqualTo(finished));
+      Assert.That(CampaignSaveTests.Field<int>(profile,"bestDeaths"),Is.EqualTo(1));
+      var oldText=new UnityEditor.SerializedObject(Find("RunManager")).FindProperty("nightClearText").objectReferenceValue as TMPro.TMP_Text;
+      Assert.That(oldText.gameObject.activeSelf,Is.False,"Legacy completion text must not overlap results");
      }
     }
    }

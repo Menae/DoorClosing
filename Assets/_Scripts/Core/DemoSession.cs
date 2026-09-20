@@ -9,9 +9,9 @@ using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-// A two-night demo wrapper. Standalone M1/M2 remain independently playable.
+// Shared presentation for the demo and the optional full campaign. Standalone M1/M2 stay independent.
 [DefaultExecutionOrder(-500)]
-public sealed class DemoSession : MonoBehaviour
+public sealed partial class DemoSession : MonoBehaviour
 {
     [SerializeField] private NormalJourneyController journey;
     [SerializeField] private RunManager run;
@@ -58,12 +58,14 @@ public sealed class DemoSession : MonoBehaviour
         colorAdjustments.postExposure.overrideState = true;
         view.GetUniversalAdditionalCameraData().renderPostProcessing = true;
         CreateCanvas();
+        InitializePersistence();
         SetMenu(true);
         ShowTitle();
     }
 
     private void Update()
     {
+        TickPersistence();
         if (completed || Keyboard.current == null || (transition && opening == null)) return;
         if (Keyboard.current.escapeKey.wasPressedThisFrame)
         {
@@ -80,6 +82,7 @@ public sealed class DemoSession : MonoBehaviour
 
     private void OnDestroy()
     {
+        ClosePersistence();
         if (journey != null) journey.IntroductionCompleted -= AfterIntroduction;
         if (run != null) run.HomeRunCompleted -= AfterHome;
         if (instance == this)
@@ -96,6 +99,7 @@ public sealed class DemoSession : MonoBehaviour
 
     private void SetMenu(bool open)
     {
+        if (open) PersistSession();
         menuOpen = open; blockedFrame = Time.frameCount + 1;
         Time.timeScale = open ? 0 : oldTimeScale;
         AudioListener.pause = open || oldAudioPause;
@@ -106,6 +110,12 @@ public sealed class DemoSession : MonoBehaviour
 
     private void Resume() { page = "Playing"; SetMenu(false); }
     private void Begin()
+    {
+        if (save != null && !campaign.FullStory) ClosePersistence();
+        if (save != null) { RequestNewGame(); return; }
+        BeginOpening();
+    }
+    private void BeginOpening()
     {
         Resume();
         if (opening != null) StartCoroutine(RevealOpening());
@@ -126,6 +136,7 @@ public sealed class DemoSession : MonoBehaviour
             yield return new WaitForSeconds(opening.NightBlackSeconds);
             introduction = false;
             if (campaign != null && campaign.FullStory) campaign.AdvanceNight();
+            PersistSession();
             run.PrepareFollowingNight();
             opening.PrepareFollowingNight(journey);
             journey.SetDemoNight(true);
@@ -155,6 +166,7 @@ public sealed class DemoSession : MonoBehaviour
         }
         completed = true; SetMenu(true); Clear("Complete");
         Heading(W("menu.AfterHome.1", "帰宅しました"));
+        if (save != null) { CompletePersistentRun(); return; }
         if (campaign == null || !campaign.FullStory) Copy(W("menu.AfterHome.2", "デモはここまでです。\nお疲れさまでした。"));
         Button(W("menu.AfterHome.3", "最初から遊ぶ"), Restart);
         Button(W("menu.AfterHome.4", "終了"), Quit);
@@ -162,13 +174,19 @@ public sealed class DemoSession : MonoBehaviour
 
     private void Restart()
     {
+        PersistSession(); transition = true;
         Clear("Loading"); Heading(W("menu.Restart.1", "読み込み中"));
         Time.timeScale = oldTimeScale; AudioListener.pause = oldAudioPause;
+#if UNITY_EDITOR
+        UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(gameObject.scene.path, new LoadSceneParameters(LoadSceneMode.Single));
+#else
         SceneManager.LoadSceneAsync(gameObject.scene.path);
+#endif
     }
 
-    private static void Quit()
+    private void Quit()
     {
+        PersistSession();
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
 #else
@@ -181,7 +199,8 @@ public sealed class DemoSession : MonoBehaviour
         Clear("Title"); Heading(W("menu.ShowTitle.1", "帰宅 / プレイアブルデモ"));
         if (opening == null) Copy(W("menu.ShowTitle.2", "あなたの自宅は８階です。\nまずは普段どおりに帰り、廊下の様子を覚えてください。\n\n乗る前に、エレベーター横の注意書きをご確認ください。"));
         Copy(W("menu.ShowTitle.3", "WASD：移動　Shift：走る　マウス：視点\n左クリック：操作　Esc：一時停止"), 24);
-        Button(W("menu.ShowTitle.4", "はじめる"), Begin);
+        if (save == null || save.Available) Button(W("menu.ShowTitle.4", "はじめる"), Begin);
+        if (save != null) PersistentTitle();
         Button(W("menu.ShowTitle.5", "設定"), ShowSettings);
         Button(W("menu.ShowTitle.6", "終了"), Quit);
     }
@@ -191,6 +210,7 @@ public sealed class DemoSession : MonoBehaviour
         Clear("Pause"); Heading(W("menu.ShowPause.1", "一時停止"));
         Copy(W("menu.ShowPause.2", "WASD：移動　Shift：走る　左クリック：操作\n掲示は入口のエレベーター横にあります。"), 24);
         Button(W("menu.ShowPause.3", "再開"), Resume); Button(W("menu.ShowPause.4", "設定"), ShowSettings);
+        if (save != null) { PersistentPause(); return; }
         Button(W("menu.ShowPause.5", "最初からやり直す"), () =>
         {
             Clear("Confirm"); Heading(W("menu.ShowPause.6", "最初からやり直しますか？"));
@@ -217,15 +237,15 @@ public sealed class DemoSession : MonoBehaviour
         Slider(W("menu.ShowSettings.5", "明るさ"), -1, 1, brightness, v => { brightness = v; colorAdjustments.postExposure.value = v; });
         Slider(W("menu.ShowSettings.6", "音量"), 0, 1, AudioListener.volume, v => AudioListener.volume = v);
         Button(W("menu.ShowSettings.7", "全画面／ウィンドウを切り替える"), () =>
-        { Screen.fullScreen = !Screen.fullScreen; });
-        Button(W("menu.ShowSettings.8", "表示サイズ：1280 × 720"), () => Screen.SetResolution(1280, 720, Screen.fullScreenMode));
-        Button(W("menu.ShowSettings.9", "表示サイズ：1920 × 1080"), () => Screen.SetResolution(1920, 1080, Screen.fullScreenMode));
-        Copy(W("menu.ShowSettings.10", "設定は今回のプレイ中に適用されます。"), 21);
+        { SetDisplay(!Screen.fullScreen, 0, 0); });
+        Button(W("menu.ShowSettings.8", "表示サイズ：1280 × 720"), () => SetDisplay(Screen.fullScreen, 1280, 720));
+        Button(W("menu.ShowSettings.9", "表示サイズ：1920 × 1080"), () => SetDisplay(Screen.fullScreen, 1920, 1080));
+        Copy(save == null ? W("menu.ShowSettings.10", "設定は今回のプレイ中に適用されます。") : S("settings"), 21);
         Button(W("menu.ShowSettings.11", "戻る"), ShowPrevious);
     }
 
     private void RefreshSettings() { bool wasTitle = settingsFromTitle; ShowSettings(); settingsFromTitle = wasTitle; }
-    private void ShowPrevious() { if (settingsFromTitle) ShowTitle(); else ShowPause(); }
+    private void ShowPrevious() { PersistSession(); if (settingsFromTitle) ShowTitle(); else ShowPause(); }
 
     private void CreateCanvas()
     {

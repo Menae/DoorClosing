@@ -46,6 +46,7 @@ public class RunManager : MonoBehaviour
     private List<BeatDefinition> attemptDefinitions;
     private IList<BeatDefinition> ActiveDefinitions => attemptDefinitions ?? beatDefinitions;
     internal event System.Action HomeRunCompleted;
+    internal event System.Action PlayerDied;
 
     private void Awake()
     {
@@ -329,6 +330,7 @@ public class RunManager : MonoBehaviour
     private void BeginDeathRestart()
     {
         deathRestartInProgress = true;
+        PlayerDied?.Invoke();
         GetComponent<HomecomingCampaign>()?.DiscardPendingExtras();
 
         if (deathRoutine != null)
@@ -396,6 +398,11 @@ public class RunManager : MonoBehaviour
         yield return FadeBlackImage(0f, 1f, clearFadeSeconds);
         nightClearText.gameObject.SetActive(true);
         HomeRunCompleted?.Invoke();
+    }
+
+    internal void HideClearMessage()
+    {
+        if (nightClearText != null) nightClearText.gameObject.SetActive(false);
     }
 
     private IEnumerator FadeBlackImage(float fromAlpha, float toAlpha, float seconds)
