@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Sol implementer report (WORK-007)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "summary", "changed_files", "verification", "unverified", "questions_for_leader", "notes"],
+  "properties": {
+    "status": { "type": "string", "enum": ["completed", "partial", "blocked", "failed"] },
+    "summary": { "type": "string" },
+    "changed_files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "change"],
+        "properties": {
+          "path": { "type": "string" },
+          "change": { "type": "string" }
+        }
+      }
+    },
+    "verification": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["check", "method", "result", "evidence"],
+        "properties": {
+          "check": { "type": "string" },
+          "method": { "type": "string" },
+          "result": { "type": "string", "enum": ["passed", "failed", "skipped", "not_run"] },
+          "evidence": { "type": "string" }
+        }
+      }
+    },
+    "unverified": { "type": "array", "items": { "type": "string" } },
+    "questions_for_leader": { "type": "array", "items": { "type": "string" } },
+    "notes": { "type": "string" }
+  }
+}

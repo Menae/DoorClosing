@@ -11,6 +11,7 @@ Communicate in Japanese. Existing first-person atmospheric horror for Windows; U
 - 編集前にPROJECT_STATUSへ目的／工程、担当task、変更範囲、期待結果、完了条件と検証を簡潔に記録し、意味のある単位と停止時に更新する。中断した処理は結果を確認してから再試行する。過去の詳細はPROJECT_HISTORYへ残す。
 - 同checkoutの実装・Unity操作は1担当。他の担当が稼働中なら所有を確認してから編集し、経過時間だけで引き継がない。PROJECT_STATUSは排他ロックではない。別taskは読み取りレビュー可。
 - モデル運用はSTART_HEREのWORK-003を参照し、最新の明示的な担当指定を優先する。モデル設定変更・サブエージェント起動の承認をこの規約から推測しない。スキルの一般手順で既存のユーザー委任を狭めない。
+- 現在の担当指定はWORK-007（2026-11-02）: Claude Code（Opus）がリーダー、`tools/orchestra/sol.py` から起動されるCodex Sol（gpt-6.1-sol・max）が実装、`.claude/agents/opus-reviewer.md` の独立Opusが審査。Solとして起動された場合は `tools/orchestra/sol-contract.md` の例外（gitの保存操作とPROJECT_STATUS／DECISIONSの編集をしない、構造化報告で返す）に従う。記録とWORK-005の保存はリーダーがレビュー合格後に行う。手順は [DEVELOPMENT](docs/DEVELOPMENT.md#opus主導の連携work-007)。
 
 ## Unity workflow
 

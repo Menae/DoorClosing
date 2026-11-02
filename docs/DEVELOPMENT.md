@@ -60,6 +60,22 @@ Mac Build Support導入済みの6000.3.14f1を使用する。既存Editorで保�
 
 Developer ID署名・公証・ストア公開はこの手順に含めない。Macの警告は[Appleの案内](https://support.apple.com/ja-jp/102445)に従い、OS全体の保護を無効化しない。対応構成は[Unity 6000.3のMacビルド説明](https://docs.unity3d.com/6000.3/Documentation/Manual/macos-building.html)を参照。
 
+## Opus主導の連携（WORK-007）
+
+役割はリーダー（Claude Code / Opus）がブリーフ作成・統合・記録・commit/push、Solが実装、独立Opusレビュー役が審査。決定理由はDECISIONSのWORK-007、確認済みの範囲はPROJECT_STATUSのWORK-007。
+
+1. **環境起動（リーダー）**: `./tools/UnityAgent.ps1 Launch`。固定版MCPサーバー（8080）を起動し、このprojectのEditorが開いていなければProjectVersion.txtの版で起動する。MCPにGraduationProjectのinstanceが登録されるまで最大15分待つ。起動済みEditorはコマンドラインと `Temp/UnityLockfile` で検出し、2つ目を開かない。Editorのパスは `UNITY_EDITOR_PATH` で上書きできる。
+2. **実装依頼**: `python tools/orchestra/sol.py run --task <ID> --brief <ブリーフ.md>`。先頭に `sol-contract.md` の共通規約が付く。既定はgpt-6.1-sol・推論max・workspace-write＋`--approve-for-me`（承認要求をCodexの自動審査へ回す）。調査だけなら `--read-only`。resumeは `--approve-for-me`／`--sandbox` を受け付けないため、同等の `-c sandbox_mode／approval_policy="on-request"／approvals_reviewer="guardian_subagent"` を明示する。長時間かかるため、リーダーはバックグラウンドで実行して終了通知を待つ。`artifacts/orchestra/.sol.lock`（python・codexのPID入り）で同時実行を防ぎ、終了・例外・timeout時はcodexのプロセスツリーを止める。
+3. **出力**: `artifacts/orchestra/<ID>/<UTC>/` に prompt.md、events.jsonl、stderr.log、report.json（`report.schema.json` 形式）、meta.json（codex版・session id・各試行のcommandとcodex PID・前後のgit状態・gitに出ないartifacts配下の書き込み `ignored_writes`）。
+4. **レビュー**: リーダーが `opus-reviewer` を起動し、ブリーフ・実行フォルダ・基準commitを渡す。CHANGES_REQUIREDなら `sol.py run --task <ID> --brief <指摘.md> --resume <session_id>` で同じSolへ差し戻し、合格まで繰り返す。
+5. **保存**: 合格後、リーダーがPROJECT_STATUS等を更新し、対象を明示stageしてcommit、既存upstreamへpushする（WORK-005）。
+
+- codex.exeはDesktopアプリの更新でフォルダ名が変わる。sol.pyは `%LOCALAPPDATA%\OpenAI\Codex\bin\*\codex.exe` の最新を使う（`CODEX_CLI_PATH` で上書き可）。ユーザーのCodex全体設定は変更しない。
+- モデル容量不足（`at capacity` 等）で中断したturnは、モデルを変えずに同じsessionを間隔を伸ばして自動再開する（既定4回・180秒刻み）。それ以外の失敗は再試行しない。
+- **Computer Useの前提**: CLIから起動したSolでも、window列挙はできるがUnity等の画面取得・操作はCodex側のアプリ単位の許可が必要で、未許可だと「Computer Use was not approved to use unity」で拒否される（SMOKE-001／002で確認）。許可はユーザーがCodex Desktopアプリの実際の承認画面で与える想定で、与える場所とCLI起動のSolへ引き継がれるかは未確認（PROJECT_STATUSのWORK-007）。リーダーやSolは迂回しない。
+- レビュー役 `opus-reviewer` はセッション開始時に読み込まれる。定義を作成・変更したセッションでは名前で起動できないため、general-purpose（model: opus）に定義ファイルを読ませて同じ手順で審査する。
+- Sol実行中、リーダーとレビュー役は同じcheckoutを編集・Unity操作しない（読み取りのみ）。
+
 ## MCPツールが表示されない場合
 
 Codexを再接続するか、導入済みの公式MCP Python SDKを使ったCLIから同じサーバーを操作する。別のEditorブリッジは増やさない。
@@ -90,7 +106,7 @@ Unityの編集はMCP優先。前面化・最終画面・Windows実入力が必�
    }
    ```
 
-3. 別セルで `globalThis.windows = await sky.list_windows(); nodeRepl.write(JSON.stringify(windows));` を実行。返されたapp・id・titleから目的のUnity／Playerウィンドウを一意に選び、スキルどおり `sky.get_window` → 必要な前面化 → `sky.get_window_state` へ進む。IDは毎回取得し、過去の値を固定しない。前面操作は事前に知らせる。
+3. 別セルで `globalThis.windows = (await sky.list_windows()).filter(w => /Unity\.exe|GraduationProject/i.test(w.app + " " + w.title)); nodeRepl.write(JSON.stringify(windows.map(w => ({ app: w.app, id: w.id, title: w.title }))));` を実行する。関係のないアプリのtitleを出力・保存しないよう、node_repl内で対象に絞ってから書き出す。返されたapp・id・titleから目的のUnity／Playerウィンドウを一意に選び、スキルどおり `sky.get_window` → 必要な前面化 → `sky.get_window_state` へ進む。IDは毎回取得し、過去の値を固定しない。前面操作は事前に知らせる。
 4. `cua_repl` の `apps: []` や同ツールの `Native computer APIs are disabled` は、その経路の制限として扱う。別途提供されたWindowsプラグイン全体の利用不可や、Solの非対応とは推定しない。実際にWindows側で拒否された場合は迂回せず、その制限に従う。
 5. Windows用ツールの探索結果、import、列挙、対象選択、画面取得のどこで失敗したかと具体エラーを記録する。復旧はスキルの範囲で行い、公開された権限要求が必要なら実際の承認機構を使う。シェルの昇格承認をComputer Use権限と混同せず、存在しない権限APIを要求しない。独自SendInput／PowerShell UI操作やhelper直起動で代替しない。
 

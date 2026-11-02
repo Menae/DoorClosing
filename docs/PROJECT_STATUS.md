@@ -1,6 +1,20 @@
 # 現在地・再開情報
 
-更新: 2026-10-20。ここには現在の担当・進捗・次の作業を置く。過去の詳細は [PROJECT_HISTORY.md](PROJECT_HISTORY.md)、仕様の正本は [GAME_SPEC.md](GAME_SPEC.md)。履歴中の「現在」や古い担当を再開指示に使わない。
+更新: 2026-11-02。ここには現在の担当・進捗・次の作業を置く。過去の詳細は [PROJECT_HISTORY.md](PROJECT_HISTORY.md)、仕様の正本は [GAME_SPEC.md](GAME_SPEC.md)。履歴中の「現在」や古い担当を再開指示に使わない。
+
+## 開発体制
+
+### WORK-007 Opus主導・Sol実装・独立Opusレビューの連携環境（2026-11-02、構築・疎通確認済み／Computer Useの画面取得はユーザーの許可待ち）
+- 担当: Claude Code（Opus 5.5 xhigh）リーダーセッション。開始main 7060765、origin/mainと0/0、stagedなし。Unity Editor未起動、8080のMCPサーバー停止。既存3差分は中身を確認し（Homecoming＝設備音0.518・比較用の声1件＋Unityの空白差分、PlayableDemo＝作者の掲示・案内文、slnx＝並び順）、作者の編集として `f9dad1c` に保存した。
+- ユーザー指定: リーダーOpus → 実装Sol（gpt-6.1-sol・推論max）→ 独立Opus 5.5レビュー。user-inputで選択: Solは `codex exec` CLIで起動／workspace-write＋承認の自動審査（guardian）／実装ごとに文脈を持たないOpusレビュー役を起動し、合格後にリーダーがcommit/push／既存3差分は作者の編集として先に保存／Computer Useの前面操作とUnity Editorの自動起動は常時可。最初の工程は自動実装せず、完成目標と計画をユーザーとOpusで議論して練り直す。
+- 範囲: 作者差分の保存→Sol起動・Unity環境起動の補助スクリプト（tools/orchestra）→レビュー役定義（.claude/agents）→AGENTS／START_HERE／DECISIONSの体制記述→疎通確認。ゲームのコード・シーン・仕様は変更しない。ユーザーのCodex全体設定（~/.codex/config.toml）は変更せず、起動時の引数で指定する。
+- 完了条件と検証: Sol max起動と構造化報告の取得、MCPサーバー＋Editor起動とClaude／Codex双方のUnity MCP接続、SolのComputer Useによるwindow列挙、Sol報告をOpusレビュー役が審査する一往復。各結果をartifacts/orchestraへ保存し、未確認点を記録する。
+- 成果: `tools/orchestra/sol.py`（起動・構造化報告・容量不足時の同session自動再開・原子的ロック・プロセスツリー停止・ignored領域の書込み記録）、`report.schema.json`、`sol-contract.md`、`tools/UnityAgent.ps1 Launch`、`.claude/agents/opus-reviewer.md`、AGENTS／START_HERE／DECISIONS WORK-007／DEVELOPMENTの手順。
+- Unity環境: `Launch` が未起動状態からMCPサーバー10.2.0とEditor 6000.3.14f1（PID 26748）を起動し、`GraduationProject@40efb0f06b9c2d3f` の登録まで待機（約10分、初回import込み）。起動済み状態では二重起動せず3秒でprojectRoot照合済みのinstanceを返す（PS 5.1.26100）。Editorの有効platformは `StandaloneOSX`（MAC-001の名残と推定、未変更）。このClaudeセッションのUnity MCPは起動時のECONNREFUSEDのまま再接続されず、リーダーは既存CLI client（`UnityAgent.ps1 Client`）で照合した。次のセッションではサーバー稼働中なら接続される想定（未確認）。
+- Sol: SMOKE-001（`artifacts/orchestra/SMOKE-001/`）初回は `--approve-for-me` と `-s` の併用不可で失敗→修正。2回目はOpenAI側「Selected model is at capacity」で中断→同sessionのresumeで完了（約6分、partial）。Unity MCPでprojectRoot一致・保存済みEdit Mode・Console error/warning 0・EditMode 2/2 Passed、window列挙で対象Editorを一意特定。画面取得は「Computer Use was not approved to use unity」で拒否。SMOKE-002（新規session、`--approve-for-me`）でも同じ拒否で、原因はCodexのアプリ単位の許可と切り分けた。SMOKE-003で最終版sol.pyの新規→resumeの一往復（resume時 `-c` 承認指定）を確認、stage・残存プロセス・残存ロックなし（確認用にeffort low）。
+- レビュー: 独立Opusレビュー役（定義は作成直後のため未登録、general-purpose＋model opus＋定義ファイルで代替）が1回目CHANGES_REQUIRED（major: resume時の承認方式未指定、minor 8件）。全件対応後の再審査でPASS（残minor 5件も対応）。Solの報告は証拠・events.jsonlと一致し、規約違反・権限迂回なしと判定。
+- 未確認・残り: CodexのComputer Useの許可をどこで与えるか、それがCLI起動のSolへ引き継がれるか（ユーザー操作待ち）。容量不足時の自動再開ループとtimeout時のtaskkillの実働（意図的に起こせず未発火）。初回SMOKE-001のevents.jsonlに無関係なwindow titleが残る（Git対象外のローカルのみ、以後は絞り込み手順）。
+- 次: ユーザーとOpusで完成目標・計画を議論して練り直す。自動実装はその合意後に開始する。
 
 ## 展示会用画像
 

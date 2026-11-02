@@ -1,5 +1,11 @@
 # Decisions
 
+## WORK-007 — Opusリーダー・Sol実装・独立Opusレビュー
+- Status/date/owner: 2026-11-02、ユーザー明示指定。リーダーはClaude Code（Opus 5.5 xhigh）、実装はChatGPT契約のCodex Sol（gpt-6.1-sol・推論max）、レビューは独立Opus 5.5。user-inputで、CLI起動／workspace-write＋承認の自動審査／実装ごとの独立レビュー役＋合格後にリーダーがcommit/push／既存3差分を作者の編集として先に保存／Computer Useの前面操作とEditor自動起動は常時可、を選択。最初の工程は自動実装せず、完成目標と計画をユーザーとOpusで議論して練り直す。
+- Context/options: `codex queue` でDesktopアプリのスレッドへ送る案は画面で見えるが完了検知が不安定。承認・サンドボックスの全解除は止まらないがPC全体へ誤操作が及ぶため不採用。リーダー兼任レビューは軽いが自己審査になるため不採用。
+- Decision: リーダーがブリーフを書き `tools/orchestra/sol.py run` でSolを起動、`report.schema.json` の構造化報告とJSONL・git状態をartifacts/orchestraへ保存する。指摘はSolの同じsessionへ `--resume` で差し戻す。Solはgitの保存操作とPROJECT_STATUS／DECISIONSの編集をせず、リーダーが記録・WORK-005の保存を担う。Unity環境は `tools/UnityAgent.ps1 Launch` で起動し、同じprojectに2つ目のEditorを開かない。レビュー役は `.claude/agents/opus-reviewer.md`（読み取り専用）。
+- Effects: ユーザーのCodex全体設定（~/.codex/config.toml）は変更せず、起動引数でモデル・推論・サンドボックスを指定。Sol・Opusの利用枠を消費する。新しい有料サービス・公開・外部依存なし。WORK-003の「Astra継続」指定はこの決定で置き換える。
+
 ## KV-001 — 展示会用キービジュアルの指定
 - Revision 3/date/owner: 2026-10-20、ユーザーが『ウミガリ』ロゴを添付し、歪みを取り除いた近い書体を探して採用、文字の拡大、添付入口スクショと同じ場所・アングルを指定。user-inputで全画角保持＋暗い余白へのタイトル配置を選択。前回の細いゴシック体・3場面候補より本指定を優先する。
 - Delegated choice/effects: 近い書体の選定依頼に基づき、4書体を描画比較してしっぽり明朝ExtraBold通常版を採用。原ロゴの書体名は断定しない。78pxの2行組み、字形変形なし。添付全体を切り抜かず配置し、既存承認の控えめなポスト処理を適用。公式OFL 1.1のfont・licenseを画像制作フォルダーへ取得し、ゲーム依存追加・system installなし。revision-03へ最終PNG・添付コピー・選定根拠・処理値・実見の記録を保持。
