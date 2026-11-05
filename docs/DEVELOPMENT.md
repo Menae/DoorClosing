@@ -62,23 +62,139 @@ Developer ID署名・公証・ストア公開はこの手順に含めない。Ma
 
 ## Opus主導の連携（WORK-007）
 
-役割はリーダー（Claude Code / Opus）がブリーフ作成・統合・記録・commit/push、Solが実装、独立Opusレビュー役が審査。決定理由はDECISIONSのWORK-007、確認済みの範囲はPROJECT_STATUSのWORK-007。
+役割は次のとおり。決定理由はDECISIONSのWORK-007（2026-11-06改訂＝ORCH-001）。
+- **リーダー**（Claude Code / Opus）: ブリーフ作成・統合・記録・commit/push。
+- **Sol**: 実装。
+- **独立Opusレビュー役**: 審査。
 
-1. **環境起動（リーダー）**: `./tools/UnityAgent.ps1 Launch`。固定版MCPサーバー（8080）を起動し、このprojectのEditorが開いていなければProjectVersion.txtの版で起動する。MCPにGraduationProjectのinstanceが登録されるまで最大15分待つ。起動済みEditorはコマンドラインと `Temp/UnityLockfile` で検出し、2つ目を開かない。Editorのパスは `UNITY_EDITOR_PATH` で上書きできる。
-2. **実装依頼**: `python tools/orchestra/sol.py run --task <ID> --brief <ブリーフ.md>`。先頭に `sol-contract.md` の共通規約が付く。既定はgpt-6.1-sol・推論max・workspace-write＋`--approve-for-me`（承認要求をCodexの自動審査へ回す）。調査だけなら `--read-only`。resumeは `--approve-for-me`／`--sandbox` を受け付けないため、同等の `-c sandbox_mode／approval_policy="on-request"／approvals_reviewer="guardian_subagent"` を明示する。長時間かかるため、リーダーはバックグラウンドで実行して終了通知を待つ。`artifacts/orchestra/.sol.lock`（python・codexのPID入り）で同時実行を防ぎ、終了・例外・timeout時はcodexのプロセスツリーを止める。
-3. **出力**: `artifacts/orchestra/<ID>/<UTC>/` に prompt.md、events.jsonl、stderr.log、report.json（`report.schema.json` 形式）、meta.json（codex版・session id・各試行のcommandとcodex PID・前後のgit状態・gitに出ないartifacts配下の書き込み `ignored_writes`）。
-4. **レビュー**: リーダーが `opus-reviewer` を起動し、ブリーフ・実行フォルダ・基準commitを渡す。CHANGES_REQUIREDなら `sol.py run --task <ID> --brief <指摘.md> --resume <session_id>` で同じSolへ差し戻し、合格まで繰り返す。
-5. **保存**: 合格後、リーダーがPROJECT_STATUS等を更新し、対象を明示stageしてcommit、既存upstreamへpushする（WORK-005）。
+1. **環境起動（リーダー）**: `./tools/UnityAgent.ps1 Launch`。
+   - 固定版MCPサーバー（8080）を起動し、このprojectのEditorが開いていなければProjectVersion.txtの版で起動する。
+   - MCPにGraduationProjectのinstanceが登録されるまで最大15分待つ。
+   - 起動済みEditorはコマンドラインと `Temp/UnityLockfile` で検出し、2つ目を開かない。Editorのパスは `UNITY_EDITOR_PATH` で上書きできる。
+2. **ブリーフ**: `artifacts/orchestra/briefs/<ID>.md` に次を書く。
+   - 目的
+   - 完了条件
+   - 変更してよい範囲
+   - 読むべき仕様のIDと見出し
+   - 必要な検証
+   - 現在地（PROJECT_STATUSから、必要な事実だけ）
 
-- codex.exeはDesktopアプリの更新でフォルダ名が変わる。sol.pyは `%LOCALAPPDATA%\OpenAI\Codex\bin\*\codex.exe` の最新を使う（`CODEX_CLI_PATH` で上書き可）。ユーザーのCodex全体設定は変更しない。
-- モデル容量不足（`at capacity` 等）で中断したturnは、モデルを変えずに同じsessionを間隔を伸ばして自動再開する（既定4回・180秒刻み）。それ以外の失敗は再試行しない。
-- **Computer Useの制約**: Codexの画面取得・操作はアプリ単位の許可をMCP elicitationで問い合わせ、保存済みの「常に許可」はDesktopアプリだけが返す。`sol.py run`（`codex exec`）で起動したSolはアプリの外で動くため、window列挙はできても撮影・操作は「Computer Use was not approved to use …」で拒否される（CU-001、SMOKE-001／002）。設定で問い合わせを自動承認させる等の迂回はしない。
-- **画面操作が必要な作業**: `python tools/orchestra/sol.py app --task <ID> --brief <ブリーフ.md>`（IDは英数字と `-` のみ、予約コマンドが引用後に32,000字以内）。ユーザーがDesktopアプリに作ったSol専用スレッド（gpt-6.1-sol・max、IDは `artifacts/orchestra/app-thread.json`、`--thread` で上書き可）へ `codex queue` で予約し、アプリが実行する。予約前にCodexの履歴DBの列・スレッドの存在・作業フォルダ一致を読み取り検査し、予約直後にmeta.json（受付番号・スレッド設定・queue出力）を書く。完了は `~/.codex/thread_history_1.sqlite` を読み取り専用で見て、受付番号を含む最初のユーザー発言のターンが completed／failed／interrupted になるまで待つ。出力は prompt.md、meta.json（ターンの開始・終了・error）、items.jsonl（ターンの全項目＝コマンド・ファイル変更・ツール呼び出し）、final.md、report.json（スキーマの必須キーを検査）。
-  - 既定120分で終わらない・アプリが閉じている・スレッドが使用中のときは exit 2（未完了）。予約やターンはアプリ内に残るため、ロック（`app_pending`）を残して `run`／`app` を拒否する。`python tools/orchestra/sol.py app-wait --run-dir <実行フォルダ>` で待ち直し、終われば記録してロックを外す（終了済みの実行は記録を上書きせず拒否、待機の経過はmeta.waitsに追記）。exit 2の間もSol実行中として扱い、リーダーは同じcheckoutを編集しない。予約の一覧・取消の手段はCLIでは未確認。ロックを手で外してよいのは、Codexの `thread_history_1.sqlite` に受付番号を含む発言が無く、`queue_1.sqlite` の `queued_items` にそのスレッド宛ての行も無い（どちらも読み取りで確認）とき、または該当ターンが終了状態のときに限る。
-  - 予約前に、スレッドが gpt-6.1-sol・max でない、または全権限（danger）で動く場合は拒否する。
-  - 差し戻しは `--resume` ではなく、同じスレッドへ指摘のブリーフを `app` で送る（スレッドが文脈を持つ）。ユーザーが同じスレッドで会話すると混ざるため、Sol専用にする。
-- レビュー役 `opus-reviewer` はセッション開始時に読み込まれる。定義を作成・変更したセッションでは名前で起動できないため、general-purpose（model: opus）に定義ファイルを読ませて同じ手順で審査する。
-- Sol実行中、リーダーとレビュー役は同じcheckoutを編集・Unity操作しない（読み取りのみ）。
+   Solは契約によりPROJECT_STATUS／HISTORY／START_HEREを読まないため、ブリーフが現在地の正本になる。ブリーフは実行前の記録も兼ねる。PROJECT_STATUSは保存時と中断時に更新する（AGENTS.md）。
+3. **実装依頼**: `python tools/orchestra/sol.py run --task <ID> --brief <ブリーフ> --scope '<glob>' --unity`。先頭に `sol-contract.md` の共通規約が付く。
+   - **既定**:
+     - gpt-6.1-sol・推論max。
+     - workspace-write＋`--approve-for-me`（承認要求をCodexの自動審査へ回す）。
+     - 1試行90分で停止（`--timeout-min`）。
+     - `features.default_mode_request_user_input` を無効化する（無人実行で質問ツールを使わせない）。
+     - 調査だけなら `--read-only`。
+     - resumeは `--approve-for-me`／`--sandbox` を受け付けないため、同等の `-c sandbox_mode／approval_policy="on-request"／approvals_reviewer="guardian_subagent"` を明示する。
+   - **推論強度**: 設計判断を含む実装はmax。撮影・テスト実行など証拠取得だけの依頼や、定型の修正は `--effort high`。
+   - **事前検査**:
+     - 新規の実行は、作業ツリーがclean（追跡・未追跡とも）でなければ拒否する。変更の出どころをSolに限るためで、作者の未コミット編集が混ざらない。
+     - 同じタスクの差し戻しは `--resume`（dirtyを許可）か `--allow-dirty` で行う。
+     - `--unity` は `Launch` の後に、project/info（build target）・editor state・アクティブシーン・Consoleのerror／warning件数を読む。Play中・未保存シーン・compile中なら拒否する。未保存シーンの保存・破棄はユーザーに確認する。
+     - editor stateが `stale_status` だけの場合（Editorが背面で待機中で、状態の更新が古い）は拒否しない。シーンとConsoleの読み取りが応答していることで代え、状態の古さ（`state_age_ms`）をmetaに残す。このとき、古い状態からコンパイル完了を断定しない。
+     - Unityを触る作業では `--unity` を必ず付ける。
+   - **実行中**:
+     - リーダーはバックグラウンドで実行し、終了通知を待つ。
+     - `artifacts/orchestra/.sol.lock` がある間は、`.claude/settings.json` のPreToolUse hook（`tools/orchestra/guard_hook.py`）が、リーダーの次の操作を拒否する: リポジトリ内の編集（`artifacts/orchestra/briefs`／`reviews` を除く）、状態を変えるgit、Unity操作。
+     - hookは、`.claude/settings.json` が開始時にあるセッションで有効になる。
+     - ロックはUnityの事前検査より前に取る。そのため `Launch` で待つ間もhookが効き、検査の後にもう一度cleanを確かめる。
+     - **hookの既知の穴**: シェル経由のファイル書き込み（リダイレクト、`Set-Content`、`sed -i` など）は止めないので、規則として行わない。gitも、パターンが想定しない書き方（変数に入れたコマンド、エイリアスなど）では止まらない。
+     - **安全側の誤拒否**: ロック中は、`git commit` を含む文字列の検索や `UnityAgent.ps1` の閲覧のような読み取りも拒否されることがある。
+     - **失敗時の扱い**:
+       - スクリプト内の例外は、ロック中なら拒否、ロックが無ければ許可になる。
+       - pythonやスクリプトが見つからない場合は、許可になる（コマンドの `|| true`）。終了コード2は全ツールの拒否と扱われるため、それを避けている。
+       - パスは `\\?\` 付きの形と `/c/…` の形も、ドライブ表記に直して判定する。
+   - **中止と停止理由**:
+     - 中止は `python tools/orchestra/sol.py stop`。codexはプロセスツリーごと止め、sol.pyは本体だけを止めて、ロックを外す。TaskStopだけではcodexが残ることがある。
+     - `--unity` の事前検査中に止めた場合、`Launch` が起動したUnity EditorとMCPサーバーは止めずに残す。
+     - 止める相手は、ロックを書いたプロセスと照合する（コマンドラインと起動時刻）。PIDが再利用された別のプロセス（Codexアプリ、MCPサーバー等）は止めない。
+     - プロセス表を読めないときは、ロックを残す（自動の除去も `stop` もしない）。
+     - 止めた後も生きていればロックを残す。止めた実行は、次の方法で記録が残る: 試行は開始時と途中でmeta.jsonに書くため残り、session idもevents.jsonlから補う。
+     - その実行のsol.pyもcodexも生きていないロックは、次の実行が自動で外す。
+     - モデル容量不足（`at capacity` 等）は、同じsessionを間隔を伸ばして自動再開する（既定4回・180秒刻み）。
+     - 利用上限（usage limit 等）とtimeoutは再試行せず、`meta.stop_reason` に残す。
+4. **出力**: `artifacts/orchestra/<ID>/<UTC>/` に次を置く。
+   - prompt.md、events.jsonl、stderr.log。
+   - report.json（`report.schema.json` 形式）。
+   - meta.json: codex版、session id、各試行のcommandとPID、所要秒、usage、前後のgit／Unity状態、`ignored_writes`、停止理由。
+   - summary.json（機械検査）:
+     - この実行で変わったファイル、`--scope` 外のファイル。
+     - 報告との差。
+     - Assets配下の.meta対応とGUIDの変化。移動で消えたGUIDも含む。
+     - `git diff --check`（この実行のファイルだけ）と、新規テキストファイルの空白・競合記号。
+     - 失敗したコマンドとMCP呼び出し。
+     - Unityの残留状態（Play・未保存・error増加）。
+     - 推奨レビュー段階。
+5. **レビュー（段階化）**: summary.jsonの `suggested_review` に従う。
+   - **full**: 次のいずれかに当てはまる場合。
+     - Assets／ProjectSettings／Packages、C#、シーン、Prefabに触れる。
+     - 契約で禁じたPROJECT_STATUS／DECISIONSを編集した。
+     - `.claude/`・`tools/orchestra/`・AGENTS.mdに触れる。
+     - 変更があるのに `--scope` が未指定。
+     - 範囲外のファイルがある。
+     - 報告と実際の変更が食い違う。
+     - .meta／GUIDの問題、Unity flag、headの変化、stageのどれかがある。
+     - Unityに触れたのに `--unity` を付けていない。
+     - 報告が無い、または未完了。
+
+     リーダーが `opus-reviewer` を起動し、ブリーフ・実行フォルダ・基準commitを渡す。
+   - **light**: 文書だけ、証拠取得だけ、Assets外の小修正。リーダーがsummary.json・差分・証拠を確認して判断し、疑義があればfullに上げる。
+   - **記録**: 審査結果は `<実行フォルダ>/review-<n>.md` に保存する（`sol.py status` が回数を数える）。
+   - **差し戻し**: CHANGES_REQUIREDなら `sol.py run --task <ID> --brief <指摘.md> --resume <session_id>` で同じSolへ戻し、合格まで繰り返す。
+   - **リーダーの直接実装**: Unity操作の要らない tools／docs／.claude の変更は、リーダーが直接実装してよい。tools／.claudeのコードはopus-reviewerが審査し、文書だけならリーダーが確認する。Assets・シーンの変更はSolに依頼する。
+6. **保存**:
+   - 合格後、リーダーがPROJECT_STATUSを3〜5行で更新し、対象を明示stageしてcommit、既存upstreamへpushする（WORK-005）。
+   - 詳細はcommit本文とartifactsに残し、PROJECT_STATUSへ実行記録を書き写さない。
+7. **再開時**: `python tools/orchestra/sol.py status` で次を確認する。
+   - ロックの持ち主（実行中／app待ち／STALE）。
+   - 最近の実行（所要秒、トークン、結果、推奨レビュー、レビュー回数）。
+
+### 補足
+- **パス**:
+  - codex.exeとrg.exeは、Desktopアプリの更新で別々のハッシュフォルダに入る。sol.pyは `%LOCALAPPDATA%\OpenAI\Codex\bin\*\` の最新のcodex.exeを使う（`CODEX_CLI_PATH` で上書き可）。
+  - PATHにrgが無ければ、同じ場所のrg.exeをSolのPATHへ足す。
+  - ユーザーのCodex全体設定は変更しない。
+- **無人運転**:
+  - 長い自動実行の前に、リーダーはClaude desktopアプリの `request_keep_awake` でスリープを防ぐ。
+  - app経路を使う日はCodexアプリを起動したままにする。
+  - Unity Editorはフォーカスを失うと自動でポーズするため、画面操作中はほかのアプリの通知や前面化と競合しうる。
+- **Computer Useの制約**:
+  - Codexの画面取得・操作は、アプリ単位の許可をMCP elicitationで問い合わせる。保存済みの「常に許可」を返すのはDesktopアプリだけ。
+  - そのため `sol.py run`（`codex exec`）で起動したSolは、window列挙はできても、撮影・操作は「Computer Use was not approved to use …」で拒否される（CU-001、SMOKE-001／002）。
+  - 設定で問い合わせを自動承認させる等の迂回はしない。
+  - Game Viewの撮影はCLIのSolからUnity MCPで行い、app経路はOSレベルの入力が必要なときだけに使う（ORCH-001の判断D）。
+- **画面操作が必要な作業**: `python tools/orchestra/sol.py app --task <ID> --brief <ブリーフ.md> [--unity]`。IDは英数字と `-` のみで、予約コマンドは引用後に32,000字以内。
+  - **予約**: ユーザーがDesktopアプリに作ったSol専用スレッド（gpt-6.1-sol・max、IDは `artifacts/orchestra/app-thread.json`、`--thread` で上書き可）へ `codex queue` で予約し、アプリが実行する。
+  - **予約前の検査**（読み取り）: Codexの履歴DBの列、スレッドの存在、作業フォルダの一致、モデル（gpt-6.1-sol・max以外は拒否）、全権限（danger）でないこと、cleanな作業ツリー。
+  - **予約直後**: meta.jsonに受付番号・スレッド設定・queue出力・スレッドのトークン数を書く。
+  - **完了の判定**: `~/.codex/thread_history_1.sqlite` を読み取り専用で見て、受付番号を含む最初のユーザー発言のターンが completed／failed／interrupted になるまで待つ。
+  - **出力**:
+    - prompt.md。
+    - meta.json（ターンの開始・終了・error、トークンの差）。
+    - items.jsonl（ターンの全項目＝コマンド・ファイル変更・ツール呼び出し）。
+    - report.json（スキーマの必須キーを検査）。
+    - summary.json。
+    - final.md（報告がスキーマに合わなかったときだけ）。
+  - **未完了（exit 2）**: 次の場合は exit 2 で返す。
+    - 5分たっても始まらない（`--start-min`。アプリが閉じている・スレッドが使用中）。
+    - 20分間新しい項目がない（`--stall-min`。アプリ内の承認・質問・新しいアプリの許可待ちの可能性）。
+    - 既定120分で終わらない。
+
+    予約やターンはアプリ内に残るため、ロック（`app_pending`）を残して `run`／`app` を拒否する。exit 2の間もSol実行中として扱い、hookも有効のまま。
+  - **待ち直し**: `python tools/orchestra/sol.py app-wait --run-dir <実行フォルダ>`。終われば記録してロックを外す。終了済みの実行は記録を上書きせずに拒否し、待機の経過は `meta.waits` に追記する。
+  - **予約の扱い**:
+    - 予約の一覧・取消の手段は、CLIでは未確認。
+    - ロックを手で外してよいのは、次のどちらかのときに限る（どちらも読み取りで確認する）。
+      - Codexの `thread_history_1.sqlite` に受付番号を含む発言が無く、`queue_1.sqlite` の `queued_items` にもそのスレッド宛ての行が無い。
+      - 該当ターンが終了状態になっている。
+  - **差し戻し**: `--resume` ではなく、同じスレッドへ指摘のブリーフを `app --allow-dirty` で送る（スレッドが文脈を持つ）。
+  - **スレッドの運用**:
+    - ユーザーが同じスレッドで会話すると指示が混ざるため、Sol専用にする。
+    - スレッドの文脈は使うほど増えるため、マイルストーンごとにユーザーが新しいSolスレッド（gpt-6.1-sol・max、作業フォルダはこのリポジトリ）を作り、リーダーが `app-thread.json` のIDを差し替える。
+- **レビュー役の登録**: `opus-reviewer` はセッション開始時に読み込まれる。定義を作成・変更したセッションでは名前で起動できないため、general-purpose（model: opus）に定義ファイルを読ませて同じ手順で審査する。
+- **Sol実行中**: リーダーとレビュー役は同じcheckoutを編集せず、Unityも操作しない（読み取りのみ）。
 
 ## MCPツールが表示されない場合
 

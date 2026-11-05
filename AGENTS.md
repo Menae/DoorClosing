@@ -8,10 +8,10 @@ Communicate in Japanese. Existing first-person atmospheric horror for Windows; U
 - 2026-09-07の仕様基準版と最新の明示決定を守る。WORK-001/002により承認済み範囲の可逆的実装・環境整備・検証・記録は委任済み。GAME-015の具体演出・数値は試作できるが、正式採用・怖さの評価とは分ける。
 - 依頼範囲の実装、関連検証、発見した回帰の修正、記録、WORK-005の保存まで継続する。初回実装や単位ごとの報告を継続確認のゲートにしない。新しい懸念がなければ合格済みの検証を広げず次へ進む。ユーザーの停止指示は直ちに優先する。
 - 質問は既存の決定・委任で解けない重大な判断に限る。未承認のゲーム体験・必須範囲、エンジン／描画基盤移行、大型置換、新依存・サービス・保存形式、破壊的変更、費用・公開・アクセス変更は影響を具体化して確認する。判断には利用可能なuser-inputツール、アクセスには実際の承認機構を使う。人の評価待ちは依存する範囲だけ止める。
-- 編集前にPROJECT_STATUSへ目的／工程、担当task、変更範囲、期待結果、完了条件と検証を簡潔に記録し、意味のある単位と停止時に更新する。中断した処理は結果を確認してから再試行する。過去の詳細はPROJECT_HISTORYへ残す。
+- 編集前にPROJECT_STATUSへ目的／工程、担当task、変更範囲、期待結果、完了条件と検証を簡潔に記録し、意味のある単位と停止時に更新する。WORK-007でSolへ依頼する工程は `artifacts/orchestra/briefs/` のブリーフが実行前の記録を兼ね、PROJECT_STATUSはcommit時と中断時に短く更新する（Sol実行前の作業ツリーをcleanに保つため）。中断した処理は結果を確認してから再試行する。過去の詳細はPROJECT_HISTORYへ残す。
 - 同checkoutの実装・Unity操作は1担当。他の担当が稼働中なら所有を確認してから編集し、経過時間だけで引き継がない。PROJECT_STATUSは排他ロックではない。別taskは読み取りレビュー可。
 - モデル運用はSTART_HEREのWORK-003を参照し、最新の明示的な担当指定を優先する。モデル設定変更・サブエージェント起動の承認をこの規約から推測しない。スキルの一般手順で既存のユーザー委任を狭めない。
-- 現在の担当指定はWORK-007（2026-11-02）: Claude Code（Opus）がリーダー、`tools/orchestra/sol.py` から起動されるCodex Sol（gpt-6.1-sol・max）が実装、`.claude/agents/opus-reviewer.md` の独立Opusが審査。Solとして起動された場合は `tools/orchestra/sol-contract.md` の例外（gitの保存操作とPROJECT_STATUS／DECISIONSの編集をしない、構造化報告で返す）に従う。記録とWORK-005の保存はリーダーがレビュー合格後に行う。手順は [DEVELOPMENT](docs/DEVELOPMENT.md#opus主導の連携work-007)。
+- 現在の担当指定はWORK-007（2026-11-02）: Claude Code（Opus）がリーダー、`tools/orchestra/sol.py` から起動されるCodex Sol（gpt-6.1-sol・max）が実装、`.claude/agents/opus-reviewer.md` の独立Opusが審査。Solとして起動された場合は `tools/orchestra/sol-contract.md` の例外に従う（現在地・範囲はブリーフが正本で、PROJECT_STATUS／HISTORY／START_HEREは読まない。gitの保存操作とPROJECT_STATUS／DECISIONSの編集をしない。構造化報告で返す）。記録とWORK-005の保存はリーダーがレビュー合格後に行う（レビューの段階化・推論強度・app経路の範囲は2026-11-06のORCH-001改訂）。再開時は `python tools/orchestra/sol.py status` でSolの実行中・未完了も確認する。手順は [DEVELOPMENT](docs/DEVELOPMENT.md#opus主導の連携work-007)。
 
 ## Unity workflow
 

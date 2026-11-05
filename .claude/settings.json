@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|NotebookEdit|Bash|PowerShell|mcp__UnityMCP__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$CLAUDE_PROJECT_DIR/tools/orchestra/guard_hook.py\" || true",
+            "timeout": 20
+          }
+        ]
+      }
+    ]
+  }
+}

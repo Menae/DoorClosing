@@ -5,6 +5,17 @@
 - Context/options: `codex queue` でDesktopアプリのスレッドへ送る案は画面で見えるが完了検知が不安定。承認・サンドボックスの全解除は止まらないがPC全体へ誤操作が及ぶため不採用。リーダー兼任レビューは軽いが自己審査になるため不採用。
 - Decision: リーダーがブリーフを書き `tools/orchestra/sol.py run` でSolを起動、`report.schema.json` の構造化報告とJSONL・git状態をartifacts/orchestraへ保存する。指摘はSolの同じsessionへ `--resume` で差し戻す。Solはgitの保存操作とPROJECT_STATUS／DECISIONSの編集をせず、リーダーが記録・WORK-005の保存を担う。Unity環境は `tools/UnityAgent.ps1 Launch` で起動し、同じprojectに2つ目のEditorを開かない。レビュー役は `.claude/agents/opus-reviewer.md`（読み取り専用）。
 - Revision 2026-11-05（CU-001）: ユーザーがClaudeとCodexの両方でComputer Useを使えるようにすると指定。CLIのSolはCodexのアプリ単位の許可に答えられないため、画面操作が必要な作業に限り、ユーザーが作ったDesktopアプリのSol専用スレッドへ `codex queue` で予約する `sol.py app` を採用する。当初「完了検知が不安定」とした点は、Codexの履歴DBを読み取り専用で見て受付番号つきターンの終了状態を待つ方式で補う。未完了時はロックを残して二重実行を防ぐ。通常の実装はCLIのまま。設定で許可の問い合わせを自動承認させる迂回はしない。Claude側はユーザーがClaude DesktopのComputer useをオンにし、許可画面で対象アプリを承認して使う。
+- Revision 2026-11-06（ORCH-001）:
+  - **経緯**: ユーザーの依頼で独立Opus（xhigh）が体制を設計レビューした。結果は `artifacts/orchestra/reviews/WORK-007-design-review-20261106.md`。ユーザーは「全てあなたがベストだと思う方法で改善してくれ」と指定し、判断依頼をリーダーの推奨で決めることを委任した。
+  - **判断A（記録のタイミング）**: Solへ依頼する工程は、ブリーフが実行前の記録を兼ねる。PROJECT_STATUSはcommit時と中断時に短く更新し、Sol実行前の作業ツリーをcleanに保つ。
+  - **判断B（レビューの段階化）**:
+    - Assets／ProjectSettings／Packages・C#・シーン・Prefab、またはsummary.jsonの警告がある変更は、従来どおり独立Opusが審査する。
+    - 文書だけ・証拠取得だけ・Assets外の小修正は、summary.jsonとリーダーの確認で済ませる。
+    - Unity操作の要らない tools／docs／.claude はリーダーが直接実装してよい。コードはOpusが審査する。
+  - **判断C（推論強度の使い分け）**: 設計判断を含む実装はmax、証拠取得・テスト実行・定型修正はhigh。品質への影響は今後のmeta.jsonで比べる。
+  - **判断D（app経路の縮小）**: Game Viewの撮影はCLIのSolからUnity MCPで行う。app経路はPlayerへのOS入力など、OSレベルの操作が必要な場合だけに使う。
+  - **hook**: Sol実行中のリーダー編集を防ぐため、PreToolUse hook（`.claude/settings.json`＋`tools/orchestra/guard_hook.py`）を常設する。
+  - **迂回しない点**: 承認や許可の迂回はしない。ユーザーのCodex全体設定も変えない（質問ツールの無効化は起動引数で行う）。
 - Effects: ユーザーのCodex全体設定（~/.codex/config.toml）は変更せず、起動引数でモデル・推論・サンドボックスを指定。Sol・Opusの利用枠を消費する。新しい有料サービス・公開・外部依存なし。WORK-003の「Astra継続」指定はこの決定で置き換える。
 
 ## KV-001 — 展示会用キービジュアルの指定

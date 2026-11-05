@@ -1,3 +1,304 @@
+# 過去の作業記録（2026-09-15〜11-05）— 2026-11-06移動分
+
+2026-11-06（ORCH-001）にPROJECT_STATUSから本文をそのまま移した。担当・「現在」「次」・実行中表示は記録当時の情報で、現在の指示ではない。現在地は [PROJECT_STATUS.md](PROJECT_STATUS.md) を参照する。
+
+## 開発体制（2026-11-02〜05）
+
+### CU-001 ClaudeとCodex双方のComputer Use（2026-11-05、Codexはアプリ経路で確認済み／Claudeは次セッションで確認）
+- 結果（ユーザーが両方を設定後）: ユーザーがCodex DesktopアプリにSolスレッド「Unity Editorを撮影」（01a1abd0…、gpt-6.1-sol・max、source=vscode）を作り、SMOKE-005でnode_repl経路の撮影に成功（`artifacts/orchestra/SMOKE-005/editor-window.png` を実見）。同スレッドへ `codex queue` で予約した指示はアプリが消化して実行した。最初の予約（SMOKE-006初回）はUnity Editorが22:08:48に正常終了していて対象なし（終了の原因は不明。撮影ターンはlist/get/activate/get_window_stateのみで閉じる操作なし）。Editor再起動後、新設の `sol.py app` で予約→アプリ内Solが照合・前面化・撮影・保存→構造化報告→完了検知まで約3分20秒で成功（`artifacts/orchestra/SMOKE-006/`、画像実見、stageなし）。
+- Claude側: ユーザーがClaude DesktopのComputer useをオンにしたが、このセッションには `mcp__computer-use__*` が読み込まれていない（ツールはセッション開始時に読み込まれると推定）。次のセッションで `request_access` によりUnity等の許可と動作を確認する。
+- 担当: Claude Code（Opus）リーダー、開始main 15e11a1・origin/mainと0/0（調査結果は99ec362で保存）。ユーザー報告: Codexには許可済み、以前もAstraは使えてSolは許可なしと主張した（Astraは経路違いと見立て）。ユーザー指定: ClaudeとCodexの両方でComputer Useを使えるようにする。
+- 調査結果: SMOKE-001／002の拒否は、@oai/skyがアプリ単位の許可をMCP elicitation（「Allow Codex to use Unity?」）で問い合わせ、`accept` 以外が返った時の文言。guardian（承認の自動審査）はnode_replの撮影コード実行を `allow` しており原因ではない。保存済みの「常に許可」を返す処理（`computer-use-persisted-state`）はcodex.exe（CLI）に無く、Desktopアプリ側だけが持つ。Desktopアプリは自分の `codex app-server --listen stdio://` でスレッドを動かすため、CLIの `codex exec` で起動したSolは許可に答える相手がなく拒否される（構造上の制約。許可の付け忘れやSolの経路ミスではない）。9月のAstraの成功も同じnode_repl経路で、アプリ内スレッドだった。アプリ内でSolが失敗した件はelicitationを使えない文脈から呼んだ可能性があり、未確認。
+- 試行: `codex queue --resume` でCLIスレッド01a19b40へ撮影指示を予約→「start a local daemon or specify a server with --remote」で再開できず、予約は未消化のまま残る（撮影1回の無害な指示。このスレッドは今後resumeしない）。`remote-control`／`app-server daemon` は新しいサーバーを立てるだけで、Desktopアプリのapp-serverには接続できない。
+- 対応: `sol.py app` を追加（DEVELOPMENTのWORK-007節、DECISIONS WORK-007 Revision）。独立レビュー1回目CHANGES_REQUIRED（major: 予約後に待機をやめた時にロックが外れ記録が残らない、アプリ経路の全項目記録なし。minor 8件）を受け、予約前の読み取り検査・予約直後の記録・未完了時のロック保持と `app-wait`・ターン全項目のitems.jsonl・終端3値・受付番号の最初の一致・final_agent_item_id・報告の必須キー検査・長さ／timeout検査に直した。
+- 確認: 不正なtask ID・存在しないthreadは予約前に停止。SMOKE-007を `--timeout-min 0.1` で実行し `inProgress`・exit 2・ロックに `app_pending`・その間の `run` 拒否を確認、続く `app-wait` で completed・items.jsonl 23件・report・ロック解放（exit 2時点のmetaはapp-waitで上書きされ、その経過はコンソール出力のみ）。再審査はPASS（minor 6件）。
+- 手順違反の記録: リーダーはSMOKE-007のアプリ内ターン実行中（22:29:58 JST）にsol.py（ロック順）を編集し、再審査依頼では「SMOKE-007の後」と誤って説明した。Solはファイルを編集しておらず（items.jsonlにfileChangeなし、Sol自身が差分量の変化を報告）、成果への影響はないが、DEVELOPMENTの「Sol実行中は編集しない」に反する。以後、exit 2の間も実行中として扱う旨を手順に明記した。`app-wait` は変更後の版で動いた。拒否された旧版の `run` が空フォルダ `artifacts/orchestra/SMOKE-007x/20261105-132941` を残した（削除方針が未合意のため保持）。
+- 残minor対応: mkdirのtry内移動、app_pending時の案内、app-waitの終了済み拒否・ロック取り直し・先頭一致での解放・待機経過の追記、プロセス作成失敗時のロック解放とコマンドライン長の検査、スレッドのモデル／全権限の拒否。
+- 現行版の確認: 編集なしでSMOKE-008（`artifacts/orchestra/SMOKE-008/`）を `app` で実行し、約2分40秒でcompleted・items.jsonl 24件・report completed・モデル検査（gpt-6.1-sol／max）通過・ロック解放・stageなし。終了済みの実行への `app-wait` は記録を変えず拒否。偽の受付番号の仮実行（scratchpad）で、ロック無しからの取り直し・exit 2での保持・他の実行の拒否と案内・meta.waitsの追記を確認し、手で外してよい条件（受付番号の発言0件・予約0件）を読み取りで確認してテスト用ロックを外した。最後のminor対応は再審査に出しておらず、上記の実地確認で代えている。
+- 次: Claude側は次セッションで `request_access` によりUnity等を承認して確認する。その後、完成目標と計画の議論へ。
+- Unity: `Launch` で未起動からEditor（PID 51128）とMCPを起動し、instance登録まで確認（11/05）。
+
+### WORK-007 Opus主導・Sol実装・独立Opusレビューの連携環境（2026-11-02、構築・疎通確認済み／Computer UseはCU-001でDesktopアプリ経路に対応）
+- 担当: Claude Code（Opus 5.5 xhigh）リーダーセッション。開始main 7060765、origin/mainと0/0、stagedなし。Unity Editor未起動、8080のMCPサーバー停止。既存3差分は中身を確認し（Homecoming＝設備音0.518・比較用の声1件＋Unityの空白差分、PlayableDemo＝作者の掲示・案内文、slnx＝並び順）、作者の編集として `f9dad1c` に保存した。
+- ユーザー指定: リーダーOpus → 実装Sol（gpt-6.1-sol・推論max）→ 独立Opus 5.5レビュー。user-inputで選択: Solは `codex exec` CLIで起動／workspace-write＋承認の自動審査（guardian）／実装ごとに文脈を持たないOpusレビュー役を起動し、合格後にリーダーがcommit/push／既存3差分は作者の編集として先に保存／Computer Useの前面操作とUnity Editorの自動起動は常時可。最初の工程は自動実装せず、完成目標と計画をユーザーとOpusで議論して練り直す。
+- 範囲: 作者差分の保存→Sol起動・Unity環境起動の補助スクリプト（tools/orchestra）→レビュー役定義（.claude/agents）→AGENTS／START_HERE／DECISIONSの体制記述→疎通確認。ゲームのコード・シーン・仕様は変更しない。ユーザーのCodex全体設定（~/.codex/config.toml）は変更せず、起動時の引数で指定する。
+- 完了条件と検証: Sol max起動と構造化報告の取得、MCPサーバー＋Editor起動とClaude／Codex双方のUnity MCP接続、SolのComputer Useによるwindow列挙、Sol報告をOpusレビュー役が審査する一往復。各結果をartifacts/orchestraへ保存し、未確認点を記録する。
+- 成果: `tools/orchestra/sol.py`（起動・構造化報告・容量不足時の同session自動再開・原子的ロック・プロセスツリー停止・ignored領域の書込み記録）、`report.schema.json`、`sol-contract.md`、`tools/UnityAgent.ps1 Launch`、`.claude/agents/opus-reviewer.md`、AGENTS／START_HERE／DECISIONS WORK-007／DEVELOPMENTの手順。
+- Unity環境: `Launch` が未起動状態からMCPサーバー10.2.0とEditor 6000.3.14f1（PID 26748）を起動し、`GraduationProject@40efb0f06b9c2d3f` の登録まで待機（約10分、初回import込み）。起動済み状態では二重起動せず3秒でprojectRoot照合済みのinstanceを返す（PS 5.1.26100）。Editorの有効platformは `StandaloneOSX`（MAC-001の名残と推定、未変更）。このClaudeセッションのUnity MCPは起動時のECONNREFUSEDのまま再接続されず、リーダーは既存CLI client（`UnityAgent.ps1 Client`）で照合した。次のセッションではサーバー稼働中なら接続される想定（未確認）。
+- Sol: SMOKE-001（`artifacts/orchestra/SMOKE-001/`）初回は `--approve-for-me` と `-s` の併用不可で失敗→修正。2回目はOpenAI側「Selected model is at capacity」で中断→同sessionのresumeで完了（約6分、partial）。Unity MCPでprojectRoot一致・保存済みEdit Mode・Console error/warning 0・EditMode 2/2 Passed、window列挙で対象Editorを一意特定。画面取得は「Computer Use was not approved to use unity」で拒否。SMOKE-002（新規session、`--approve-for-me`）でも同じ拒否で、原因はCodexのアプリ単位の許可と切り分けた。SMOKE-003で最終版sol.pyの新規→resumeの一往復（resume時 `-c` 承認指定）を確認、stage・残存プロセス・残存ロックなし（確認用にeffort low）。
+- レビュー: 独立Opusレビュー役（定義は作成直後のため未登録、general-purpose＋model opus＋定義ファイルで代替）が1回目CHANGES_REQUIRED（major: resume時の承認方式未指定、minor 8件）。全件対応後の再審査でPASS（残minor 5件も対応）。Solの報告は証拠・events.jsonlと一致し、規約違反・権限迂回なしと判定。
+- 未確認・残り: CLI起動のSolでComputer Useが使えない件はCU-001で原因特定・Desktopアプリ経路で対応。容量不足時の自動再開ループとtimeout時のtaskkillの実働（意図的に起こせず未発火）。初回SMOKE-001のevents.jsonlに無関係なwindow titleが残る（Git対象外のローカルのみ、以後は絞り込み手順）。
+- 次: ユーザーとOpusで完成目標・計画を議論して練り直す。自動実装はその合意後に開始する。
+- 設計レビュー（2026-11-06、ユーザー依頼）: 独立サブエージェント（Opus 5.5・xhigh、読み取り専用）が体制の効率と洗練余地を審査した。要約とリーダーの照合は `artifacts/orchestra/reviews/WORK-007-design-review-20261106.md`（Git対象外）。
+  - 指摘: 判断不要の改善が8件（計測記録、実行前後のUnity・作業ツリー検査、Solの冷間読込削減、summary.jsonによる機械検査、停止検知、CLI timeout既定など）。ユーザー判断が必要なのは5件（Sol実行中の編集をhookで阻止、記録タイミング、レビュー段階化、推論強度の使い分け、app経路の縮小）。
+  - 照合で訂正: SMOKE-002の4回の失敗は文字化けではなく、`rg` が無いことが原因（現行のCodex binにrg.exeがない）。
+  - 状態: すべて未実装。
+
+## 展示会用画像
+
+### KV-001 「ドアが閉まります」作品キービジュアル（2026-10-20、添付入口スクショ・明朝体へ改訂／作成確認済み）
+- 第3改訂: main eca4e52、既存3差分とstagedなしを確認。ユーザーが『ウミガリ』の添付ロゴを参照し、歪みを除いた近いフォントを探して採用、文字を拡大、添付2枚目の入口と同じ場所・アングルへ変更するよう指定。書体選定は依頼の範囲で行い、元ロゴの正確な書体名は未確定とする。
+- 第3改訂の構図: user-inputで「スクショ全体を残す」を選択。添付の郵便受けと自動扉の配置・画角を保持し、500×500の上下の暗い余白に大きいタイトルを置く。背景は再生成せず、従来承認の軽いポスト処理を継続。出力・添付コピー・書体資料・ライセンス・処理script・確認はartifacts/exhibition-keyvisual/revision-03へ保存。元スクショと既存候補は削除しない。
+- 第3改訂の書体選定（依頼内委任）: 添付は縦横の太細差・三角形のウロコ・かなの払いを持つ明朝系と観察。元ロゴの正確な書体は断定せず、しっぽり明朝ExtraBold／Bold、Noto Serif JP Bold、游明朝Demiboldを実描画で比較し、かなの曲線・太さが近い通常版しっぽり明朝ExtraBoldを選定。公式説明・Google Fonts metadata・OFL 1.1を確認してfontとlicenseを取得、systemへinstallせず画像制作内で使用。B1の墨だまり版や文字の歪みは使わない。選定資料は`revision-03/source/font-research.txt`／`font-comparison.png`。sandboxのDNS失敗後、通常ホストの承認機構で取得を完了。
+- 第3改訂成果／確認: `revision-03/output/ドアが閉まります_入口_しっぽり明朝_500x500.png`、500×500 PNG、184,533 bytes、SHA256 `3e13351a23db330bb663effc06e8d154049456b52d386ef310c03bb1b9d38470`。添付925×520の全体を500×281で配置（切抜きなし）、下の余白に白い78pxの2行タイトル（前回36px）。文字変形なし。最終500px画像を実見し、元構図・全文・余白を確認。`source/validation.json`に画像・fontのhash、配置、処理値を保持。ゲームテスト・Unity操作なし、既存3差分と旧候補保持。画像とfontはGit外ローカル保存。
+- 改訂担当: 同task。開始main ae925b3、既存Homecoming／PlayableDemo／slnx差分、stagedなし。ユーザーが旧生成画像の削除、背景に実ゲームスクショ、軽いポスト処理、質素なフォントを明示指定。場面を1つに選ばず複数候補を希望。
+- 改訂承認: user-inputで旧納品PNG＋workspace生成原本＋generated_images原本の3点削除を選択し、全3点の削除・不存在確認済み。promptと記録、元ゲームスクショは保持する。別のuser-inputで、生成AIによる再描画なし、Aホール閉扉／B通常8階廊下／Cかご内の3候補、軽い色調補正・周辺減光・光のにじみ、白い細めのゴシック体を承認。
+- 改訂範囲／完了条件: 既存スクショを正方形へ切出し、内容を再描画しない画像処理と文字合成。500×500 PNGを3点作成し、出典・処理値を記録、全3点実見・形式寸法確認→記録保存。artifacts/exhibition-keyvisual/revision-02へ保持。Unity・ゲーム本体は変更しない。以下の初案成果・hashは撤回前の履歴であり、画像は削除済み。
+- 改訂成果: `revision-02/output/`にA_閉じた扉・B_8階の廊下・C_かご内の3PNG、すべて500×500。比較画像は`revision-02/候補比較.png`。Yu Gothic Light 36px、白、1行。元画像750×422の422px正方形から同率拡大。明るさ1.12／彩度0.9、僅かな寒色補正、周辺減光最大16%、弱いbloomと文字下の暗化を適用。生成AIは使用せず、スクショの形状・設備・表示を保持。
+- 改訂確認: 3枚を各500pxで実見し、タイトル全文・文字の余白・背景を確認。`revision-02/source/manifest.json`に元スクショのパス・hash・切出し範囲・処理値・出力hash、`validation.json`にPNG寸法／元画像不変／旧3画像の不存在を記録。作成scriptと中間画像も保持。正式に選ぶ案は未指定、3候補を納品。既存3差分保持、文書以外のGit追加なし。
+- 担当: task 01a1480b-6346-7703-aa2f-7c7197252d89。ユーザー依頼: ゲームの雰囲気を伝える展示会用画像、タイトル「ドアが閉まります」、500×500 pixel、PNG。展示用表記でありゲーム内タイトルの変更は行わない。
+- 開始: main 8428a7e、既存Homecoming／PlayableDemo／slnx差分、stagedなし。中断した前turnに実行された生成処理はない。ゲーム開発・Unity操作は引き継がない。
+- 範囲／工程: 仕様と保存済みゲーム画像で材質・照明・静かな不安を確認→built-in image_genで画像制作→指定寸法への縮小・PNG形式確認・タイトルと全体の実見→記録・WORK-005保存。画像はAssets外のartifacts/exhibition-keyvisualへ保存し、既存ファイルを置換しない。
+- 完了条件: 正確な日本語タイトルを含む正方形画像、500×500 PNG、日常のエレベーターと廊下の不穏さが主題。制作画像と実ゲーム画像を区別する。生成原本とpromptを保持。外部投稿・展示会への送信は含まない。
+- 成果: `artifacts/exhibition-keyvisual/output/ドアが閉まります_キービジュアル_500x500.png`。閉まりかけた金属扉、隙間の長い廊下、緑灰色の石材、白い蛍光灯、8階表示と2行の白い日本語タイトル。built-in image_genで1254×1254を生成し、既存sharpで縦横同率のLanczos3縮小だけを実施。ゲーム実画面そのものではなく展示用の生成キービジュアル。
+- 確認: 最終500×500を実見し「ドアが閉まります」の全文・文字の余白・扉と廊下を確認。PNG／500×500／515,368 bytes、SHA256 `def445e3e7d4aec95cdb4d9fc7cd42dafd8493cc7c614986303b7129f7906daf`。`source/validation.json`、`source/prompt.txt`、生成原本と縮小scriptを保持。成果物はGit外ローカル保存、既存3差分保持。画像の正式採用・外部掲載は別。ゲーム変更のない画像制作のためUnityテスト・buildは実行していない。
+
+## 中間講評資料
+
+### SLIDES-002 Door Closing 中間講評（2026-10-17、作成・対象確認済み）
+- 担当: task 01a1480b-6346-7703-aa2f-7c7197252d89。ゲーム開発担当は引き継がず、資料と関連記録だけを編集。開始時main 75db7f0、既存Homecoming／PlayableDemo／slnx差分、stagedなし。
+- 目的: 作品をほぼ知らない副査へ、制作意図・先行作品との関係・制作方法・進捗を簡潔に紹介し、提示された6評価項目をカバーする。
+- 本人回答: 作品名Door Closing、川俣絢大。密室性とボタンを押した後に結果を待つエレベーターの怖さを共有したい。『8番出口』の形式から怪異への対応を複数に広げたい。制作全体を本人が担当し、実装は主にCodex、Claude Codeも使用。AIエージェントを初めて本格的に使った経験を制作方法に含める。
+- 承認: 30分・形式自由。本編8枚＋参考資料1枚、約7〜8分で紹介し残りは画面説明・対話へ使える構成。発表ノートは不要との追加指定。先行作品は『8番出口』との具体比較を中心とし、他作品は参考として扱う。読了未確認の研究を検討済みとしない。
+- 工程／範囲: 仕様・記録・実差分・既存検証結果と公式資料を照合→実画面を用いる編集可能PPTX→全9枚の描画・内容・構造確認→記録・WORK-005の保存。出力・生成ソース・検証はartifacts/midterm-slidesに保持する。
+- 完了条件: 9枚、本人の動機と担当範囲を正確に反映、発表ノートなし、外部根拠は参考資料で追跡可能、全ページ実見。9月20日までの技術証拠と未検証の現シーン変更、人の評価を区別する。Unity操作・再build・新規試遊は本作業に含めない。
+- 成果: `artifacts/midterm-slides/output/DoorClosing_中間講評_完成版.pptx`、9枚、編集可能テキスト・表1点・実画像6枚。約7〜8分は構成の目安であり本人のリハーサル実測ではない。[内容と評価ポイントの対応・根拠](MIDTERM_SLIDES.md)を記録。
+- 確認: `build/validation-final.json`で構造・配置・指定フォント・再import合格、警告0。全ページ描画を実見し2枚目の改行と8枚目の画像説明の接近を修正。最終版の未変更7枚は内容・配置・画像hashの一致、変更2枚は再描画・実見で確認。`build/delivery-check.json`でノート本文0、画像比率・無裁断・元画像hash一致、9枚・native表1を確認。SHA256 `82c67c6a8a352035bcff0ddcaa1253bc88571380276b9fa4f4d7b422c3b07508`。
+- 制約／試行: PowerPoint実アプリでは未確認。初回finalizerのファイルリンク作成はsandbox EPERM、通常ホストの承認機構で再実行して確定。補助検査の初回はexport時に変わるOffice生成IDと画像relationship IDを同一内容と比較できず失敗し、生成IDだけの正規化と画像hash解決へ修正。既存sceneのtrailing whitespaceは対象外、今回文書のdiff checkは合格。既存3差分は編集・stage対象外。PPTX・生成ソース・証拠はGit外ローカル保持。
+
+## 現在のゲーム開発
+
+### MAC-001 本編のMac試遊版（2026-09-20、build・Editor検証済み／Mac実機待ち）
+- 担当: task 01a0bdd5-4115-7920-a6b7-b5ca379d3e75。ユーザーが現状分析と他人に見せる最適構成のMac buildを委任。自分のMacで確認可能と回答。
+- 選択: Homecoming全4夜、非Development、Mono、Metal、Intel＋Apple Silicon。旧PlayableDemoは短いが現行の導入・保存・全6表現を見せられないため本編を採用。既存Unity/URPをExtend、新依存なし。今回の限定判断にOSS比較・基盤変更は不要。
+- 工程: 既存差分・設定保全→Mac build専用Editor補助→製品ビルド→構成／CPU／権限／同梱物検査→操作案内・ZIP→記録保存。実機でのプレイ合格はMac確認後。
+- 開始: main 5498120、既存Homecoming／PlayableDemo／slnx差分あり、stagedなし。初回sandbox検出ではEditorが見えなかったが、通常ホストで既存Editorを確認。二重起動ガードでbatch起動を中止し、既存Homecoming保存済みEdit ModeへMCP接続して実施。ゲーム挙動・ユーザーシーン編集なし。
+- Build: `artifacts/mac-01/player/build.json`、Succeeded、84.14秒、error/warning0、非Development／Mono／Metal／全4夜。初回補助コードの旧MacOSArchitecture型を現行OSArchitectureへ修正しcompile成功。シーンの全4夜フラグ・6参照・missing script 0をbuild前検査。
+- 配布: `artifacts/mac-01/delivery/Homecoming-Mac-20260920.zip`、58,030,970 bytes、SHA256 `b74deb14d8d4570a0744c01093becb231006275f9f9300afa4a3114675363542`。app＋操作／Mac確認案内＋素材license。全6ネイティブbinaryのIntel／ARM64、ZIP CRC・実行権限を確認。最低OS設定12.0。Developer ID署名・公証は未実施。成果物はGit外、外部公開なし。
+- 製品検査: Tests／Editor assemblyなし、ゲームdllのdebug正解／誤答・commit key・TestSaveDirectoryなし。既存MCPForUnity.Runtimeは互換／画像／serialization helperのみで残るが、Editor側の通信・serverは含まれない。CPUごとのcode signature load commandは存在するが、Mac codesignによる有効性検証とは区別。
+- 保全: シーン2枚・slnx・build設定6ファイルの開始時SHA256一致。Library内のEditorUserBuildSettingsは操作に伴う差分があるため丸ごと復元せず、build補助で元のarchitecture値へ戻した。Windowsターゲットと旧デモのbuild listは保持。
+- 入力検証: 最終`artifacts/tests/20260920-113550-355/playmode.xml`は全4夜＋最終夜死亡再試行、保存／設定／タイトル／再開の2/2 Passed、failed/skip0、317.52秒。合成Input System→Raycast→click。最終Game Viewは`artifacts/m3-04/safe-20260920-113555/`、結果画面を実見。これはWindows Editor検証でありMac入力・描画の合格ではない。
+- 試行の限界: 初回MCP経由は保存再開成功／全夜はフォーカス喪失の自動ポーズで失敗。再実行は最後の結果まで到達したがMCP監視が開始timeout扱いとなり正式結果を保持しなかった。既存UnityAgentMenuのXML保存経路へ切替え、最後の2件の合格で確認した。製品挙動やテストassertは変更していない。
+- 停止: Homecoming保存済みEdit Mode、処理中build／testなし。既存ユーザー3差分保持。再作成用Editorメニューと梱包Python／README／DEVELOPMENTを追加。人の怖さ・Mac実機の起動／全夜／音／性能は未認定。本人はMac確認「まだやってない」と回答、次は同梱READMEによる実機確認。
+
+### SLIDES-001 ゼミ紹介資料（2026-09-20、作成・検証済み）
+- 担当: task 01a0bdd5-4115-7920-a6b7-b5ca379d3e75。ゲーム開発担当は引き継がず、Unity操作なし。対象は紹介資料と本記録のみ。
+- ユーザー選択: 現行仕様・最新進捗・既存実画面を使い、概要／遊び方／進捗／スケジュール／展望の5枚。白・黒・青1色、短文、画像は比率維持・無裁断。10月目標／12月上旬最終を記載。
+- 完了条件: 編集可能PPTX、5分以内の発表ノート、全ページ描画確認、内容と出典照合。成果物・生成ソース・検証はartifacts/seminar-slidesへ保持。既存3ファイルの差分は対象外。
+- 成果: `artifacts/seminar-slides/output/ゼミ発表_自作ホラーゲーム_発表用.pptx`。5枚、編集可能テキストと個別画像7枚、約4分20秒配分の発表ノート。仕様・進捗・ROADMAPに基づき、実装と人の評価待ちを区別。
+- 検証: 最終PPTXの構造・配置・フォント指定・再import合格、警告0。最終ファイルから全5枚を描画して実見、画像無裁断・比率保持を確認。PowerPoint実アプリでは未確認。初回の検証環境変数不足、再出力時のreceipt重複を解消。最終証拠はbuild/validation-v3.jsonとslide-1〜5.png。成果物はGit外のローカル保存でありpush対象外。
+
+### M5-01 空間・環境演出の仕上げ（2026-09-20、実装・対象検証済み／体験評価待ち）
+- 担当Astra、同checkout main a842d50。ユーザーがM5の実装・技術検証までの自走を明示委任。人の怖さ・楽しさの最終評価は後の通しプレイで行う。既存の文章・音量・比較設定は保持する。
+- 工程: 現シーン監査→未実装の退出／階段の空間ループと環境音の接続→既存6表現・導線の画面確認と必要な修正→Windows版・記録・保存。既存Unity/URP、造作・AudioSource・Input System試験をExtendし、新依存や全面置換を行わない。
+- 変更候補: Homecomingの追加造作・狭い演出component、作者用Inspector、関連入力試験、Docs。GAME-011の短い接続通路、GAME-012/015の生活設備音と日常／怪異の対比を試作。文章は作者執筆方針を保ち、新しい物語・ルール・怪異は追加しない。
+- 完了条件: 入力経路で退出→同ホール帰還、反復／ポーズ／復帰で破綻しないこと、怪異の判別・帰路の維持、最終Game View実見、音の出力条件、Console・製品build。M5全体の実装確認と人の受入は分け、残件を明記する。
+- 保全: 開始時stagedなし。Homecomingは作者のdroneVolume=.518／声1件とUnity空白差分、PlayableDemoも既存作者差分。両シーンの開始時コピー・hashをartifacts/m5-01へ保存し、今回の追加分だけをcommitする。
+- 実装: 対称通路の途中で視点pitch／移動を保って同じ場所へ接続。退路・階段口の歩行とダッシュ、反復、ポーズ、帰宅後の翌夜、固定設備音の非表示階停止と追従音非重複を追加。初回062612-311は試験の状態名AwaitingCall誤記で失敗（実装はWaitingForCall）。修正後`artifacts/tests/20260920-062801-642/playmode.xml`の対象試験1/1成功・71.23秒。
+- 追加監査: 機械暴走に残る旧発光cubeを本編だけ非表示にし、実かご照明の0.85／0.65倍への遷移・復元へ接続。全6表現・階数・期限・正解操作を維持。5戸しかなかった8階へ806を加え、番号を作者編集へ接続。結果後のページ式スタッフロール、フェード、固定スキップ、編集Inspectorを追加。新しい物語の文章は追加しない。
+- 通し結果: `artifacts/tests/20260920-063721-070/playmode.xml`、3/3成功・failed/skip0・387.36秒。全4夜＋最終夜死亡再試行、保存最終夜→結果→スタッフロール→スキップ→タイトル、長文でも固定スキップ・ページフェード・自動終了。怪異中の実照明と終了後復元、6表現の画像を確認。機械暴走の旧cube非表示と天井伸長は別経路で維持。
+- 反射更新後: `artifacts/tests/20260920-064515-349/playmode.xml`、3/3成功・failed/skip0・111.35秒。開扉前の濡れ→徒歩救済・復元、旧M2の13超えと一定間隔・停止、期限超過から非常停止で救済。`artifacts/tests/20260920-064805-301/editmode.xml`、2/2成功・failed/skip0。今回の修正後合計はPlayMode7件＋EditMode2件。全テスト一括実行ではない。Consoleには従来のLure plateText未接続warningがあり、今回のerrorなし。
+- 実画像: `artifacts/m5-01/input-20260920-062806/`の退出／階段接続・戻ったホール、`artifacts/m3-04/safe-20260920-063840/`の各夜6表現・結果、`artifacts/m4-01/tests/3eefe61acdb14dfc86cbd5cd4366851b/credits-first-page.png`、反射更新後`artifacts/m3-01/recovery-20260920-064521/07b-wet-during-opening.png`を実見。通常モニターは既存作者設定の表示6秒／フェード3秒を保持し、撮影タイミングで暗くなる。初見の読解・怖さの合格宣言はしない。
+- Windows: `artifacts/builds/20260920-064826-157/GraduationProject.exe`、非Development、15.11秒、build error/warning0、Tests assemblyなし。READMEとlicensesを同梱。設定5ファイルは直前hashへ一致復元。Computer Useで起動・1920幅のタイトル・続き表示を実見。クリック後の遷移は確認できず、次の操作で`user input was detected in this window`となったため再観測後に前面操作を終了。Playerは起動したまま、ユーザーの進行を上書きしていない。
+- Player証拠: `artifacts/m5-01/Player-title.png`／`Player-startup.log`。後者は通常ホストの読取権限で取得。起動ログに例外・shader errorなし、既存D3D12 info queue診断あり。今回のWindows操作・全4夜通しの成功とは扱わない。主な通し証拠はEditorの合成Input System入力。
+- 保全・次: Homecomingの作者音量／比較設定とPlayableDemoの開始時hashを保持し、今回の意味差分だけをGitへ保存する。Editorは保存済みEdit Mode。M5の仕上げ実装を通し評価できる版とし、次は本人の理解・怖さ・間延び・音への評価に応じて修正。M6のWindows全行程・代表環境の性能確認は残る。物語・掲示の最終文章は作者執筆という委任境界を維持。
+
+### M4-01 保存・結果（2026-09-20、実装・対象検証済み）
+- 担当Astra、同checkout。M4_SAVE_PLAN採用と自己ベスト独立保存の回答を反映。既存JSON API／標準IOと既存メニューをExtendし、外部frameworkなし。
+- 範囲: 専用保存層、DemoSession／HomecomingCampaign／RunManager、作者用追加文章グループ、隔離保存試験。進行／プロフィールを分離し、一時ファイル＋直前backup・版／整合性検査・排他で誤上書きを防ぐ。新規／続き／タイトル・結果・設定を既存UIへ接続。
+- 完了条件: 保存の正常／異常系、独立ベスト、累積・計時除外、入力経路の夜再開／設定／結果、最終画像、Windows終了→再起動→続き、Console／build、作者差分保護・Docs・commit/push。素材・物語・大規模UI刷新は行わない。
+- 現在: 保存層と既存メニュー接続、文章編集11を実装。初回050801-799は5/8成功、空／未来版のInvalidDataException捕捉漏れとEditorのbuild list外シーン再ロードが失敗。例外条件とEditor専用再ロード経路を修正。再試験`artifacts/tests/20260920-051050-622/playmode.xml`は9/9成功・failed/skip0・8.66秒。復元・設定・タイトル再ロード・上書き取消／確定・導入省略・独立ベスト・完成直後中断・破損／二重起動／IO失敗の保護を確認。
+- 通し検証: `artifacts/tests/20260920-051148-286/playmode.xml`、全4夜・最終夜死亡→結果の累積と既存PlayableDemo再プレイの2/2成功・failed/skip0、462.8秒。導入を除く247.41秒・死亡1を今回値と初回ベストへ保存。`artifacts/m4-01/tests/7de8b7af4dfe4add913bad679a44ea13/continue-title.png` と79f09163…のskip-choice.pngを実見。
+- 結果画面の実画像で旧RunManagerの帰宅文が背後に残るのを発見し、専用結果では旧文だけ非表示へ修正。`artifacts/tests/20260920-052118-563/playmode.xml`、最終夜保存→通常入力でクリアが1/1成功・failed/skip0・68.6秒。`artifacts/m4-01/tests/4d86b8a62e734c58ba9ffec39473e757/four-nights-complete.png`を実見して重複解消。文章編集の導入表示も追加。Editorのdirty表示はSaveAsCopyと現ファイルのSHA256完全一致を確認して保存した。
+- Windows: `artifacts/builds/20260920-052326-582/GraduationProject.exe`、非Development、11.17秒、error/warning0、テストassembly／Editor保存先overrideなし。build設定5ファイルを直前値へ一致復元。Computer Useで720pの音量変更→開始→フォーカス喪失ポーズ→確認付きタイトル復帰→終了、別PIDで再起動→同じ音量／サイズと続き表示→クリックで導入入口へ復帰を確認。終了後のプロセス残存なし。検証用設定は1080p・音量約1へ戻し、導入の確認用セーブを残した。
+- 証拠: `artifacts/m4-01/Player-title-after-restart.png`、`Player-settings-after-restart.png`、`Player-continued-entrance.png`、前後JSON、`Player-restarted.log`。例外／shader errorなし。既存D3D12 info queue診断と影atlas縮小あり。Computer UseのEsc送信は反応を確認できず、実キーボードの可否とは分離。Windows再起動は導入で検証し、怪異夜の再開・死亡累積・全4夜完走はEditor入力試験で検証。Windows全夜通し／人の怖さ・長さは未評価。
+- 保全: Homecomingの新文章グループだけを既存作者差分と分離して保存。作者の音量0.518／声1件、PlayableDemoの文章・音量変更は保持。PlayableDemoのSHA256は開始時と一致。Editor保存済みEdit Mode。
+- 次: M4の必須機能は実装した。Astra継続、M5の演出・空間・音と初見の理解を詰める。技術合格から面白さや10〜20分の体感を認定しない。旧節の「保存未実装／確認待ち」は当時の履歴として扱う。
+
+### DOOR-001 行先未選択の閉扉待機（2026-09-20、実装・対象検証済み）
+- 担当Astra、main 65f124a。ユーザー指定: 8階未選択で「閉」を押したら、その場で閉じたまま待機する。既存の到着階再提示は維持。正常乗車時のCloseAndReopenを分離し、「開」・閉扉後8選択・安全再開扉を検証する。
+- 範囲: NormalJourneyController、対象Input System試験と実シーン入力、GAME-008／Docs。新状態の追加やserialized enum値変更は不要で、乗車待機状態のまま扉を閉じる。既存の作者シーン2枚は変更・commit対象外。
+- 検証: 修正前045218-082で閉扉保持の失敗を再現。修正後`artifacts/tests/20260920-045442-809/playmode.xml`、5/5成功・failed/skip0、64秒。閉扉保持・移動なし・無効ボタン・開／8選択・閉塞再開扉・正常帰宅を入力経路で確認。`artifacts/door-01/safe-20260920-045454/`で閉扉待機と到着のGame Viewを保存、閉扉画像を実見。
+- Windows build: `artifacts/builds/20260920-045843-622`、非Development、13.9秒、error/warning0。この版のWindows内操作は未実施（M4完成版と併せて確認）。作者シーン2枚のSHA256は開始時と一致。自己ベストは独立保存と回答済み。
+
+### M3-05 通常停止の追加遭遇（2026-09-19、実装・対象検証済み）
+- 担当Astra、main 594930d（M3-04 commit/push済み）。GAME-008に従い、本編の通常走行で受理した非常停止1回につき約1/3、全6表現から均等に追加する。導入と正解の暴走停止は免除、停止中連打は再抽選しない。
+- 方針: HomecomingCampaignに実行中だけの追加待ち列、RunManagerで通常3件の手前へ挿入、NormalJourney／FSMの通常走行で短い停止と再開。通常ノルマを消費せず、追加も通常のDiagnosisから開始する。既存デモは本編componentなしで維持。新依存・保存形式なし。
+- 範囲／完了条件: 停止受付・抽選・追加順序・終了／死亡時の破棄、Inspectorの実行状況、対象入力試験（導入免除、停止中連打、再開後再受理、6候補、正解停止免除、追加を経て通常3件と帰宅）、既存通常走行の回帰、Windows build／画像・Docs・保存。両シーンの作者差分は保持する。
+- 試験履歴: 092204-172は抽選・既存正常走行2件成功、通しは既存▲の2時点測定が揺れの同位相を拾い失敗。0.6秒窓内の最大変位へ修正（動作と閾値は維持）。092337-016は受理成功・固定seedの当選期待が共有乱数の消費で外れた。怪異乱数をSystem.Randomへ分離し、試験fixtureのみでseed固定。強制正解／遭遇開始呼出しは使用していない。
+- 結果: `artifacts/tests/20260919-092707-461/playmode.xml`、3/3成功・failed/skip0・152.8秒。6000回の抽選分布・全6候補・元asset保全と定義破棄、固定夜／最終夜の抽選回帰、Homecoming通常入力で導入停止免除→翌夜の当選／外れ→追加の濡れ→遭遇間停止→追加の声→通常3件→帰宅→次夜。停止中連打／保持とポーズ、暴走正解の抽選免除、追加の非重複を確認。既存M1正常停止試験は092204-172で成功。全回帰一括は未実施。
+- 証拠: `artifacts/m3-05/safe-20260919-092717/`。追加遭遇時の最終Game Viewは側面操作盤を向いたままの記録で、濡れの見た目の評価には使わない。濡れの描画自体の証拠はM3-02／01参照。通常入力の通し証拠はEditorであり、Windowsの全行程とは区別する。
+- Windows: `artifacts/builds/20260919-093133-664/GraduationProject.exe`、非Development・8.87秒・build error/warning0・Tests assemblyなし。Computer Useで開始画面→実クリック→入口を確認。`artifacts/m3-05/Player-startup.log` に例外・shader errorなし、既存D3D12 info queue診断／影atlas縮小の記録あり。Windows全4夜・OS移動入力は未検証。
+- 保全: build直前設定5ファイルのhash一致復元。PlayableDemoは開始時SHA256一致、Homecomingの残差分は作者の音量0.518／声1件とUnity空白のみ。Editorは保存済みEdit Mode。通常停止の1秒は既存Inspector値を共用。
+- 次: M3主要実装は揃った。技術確認を怖さ・面白さの受入とは扱わない。M4保存／続き／累積記録へ進むため、未決の保存方式を `M4_SAVE_PLAN.md` に具体化しM4-SAVE-001で確認する。文章の細かな調整はユーザー指定どおり後回し。
+
+### M3-04 全4夜・最終夜抽選（2026-09-19、実装・対象検証済み）
+- 担当Astra、main 797acc6。M3-03をcommit/push済み。6表現を既定の導入＋3/3/3へ接続する。Homecomingに任意の本編進行componentを追加し、既存デモ／単独怪異比較を維持する。
+- 範囲: 夜ごとの定義・最終夜の系統別抽選と順序shuffle、現在夜の死亡再試行、後半猶予90%の試作、暗転で次夜へ。UIは既存開始／ポーズ／帰宅終了を再利用し、途中の説明画面は増やさない。保存形式・新依存なし。M4保存／結果集計、通常停止の追加遭遇は別単位。
+- 方針: RunManagerは1夜内、HomecomingCampaignは夜の構成、DemoSessionは既存UI／暗転。定義assetを直接変更せず、短縮値は実行用コピーで破棄する。全4夜と作者の単独比較はInspectorで明示切替。
+- 検証: 固定夜各3件・各系統1回、最終夜の同条件再現・死亡時再抽選、元asset非変更／コピー破棄、通常入力で全4夜帰宅、後半の救済、ポーズと既存デモ回帰。今回のシーン追加hunkと作者の声1件／音量調整を分離して保存。
+- 結果: 085942-265の抽選／定義保全・既存デモ2件は成功。全4夜はUnity既定の180秒制限で中断したため当該試験のみ600秒へ延長（ゲーム内の所要時間は変更なし）。`artifacts/tests/20260919-090730-599/playmode.xml` は1/1成功・failed/skip0・312.7秒。合成Input System→Raycast→clickで全4夜帰宅、最終夜の死亡→再乗車・再抽選、後半の徒歩帰還／暴走期限超過救済を確認。
+- 画像: `artifacts/m3-04/safe-20260919-090735/` の各夜帰宅とfour-nights-complete。最終Game Viewの終了画面を実見し、途中のデモ終了表示がないことを検証。全回帰一括・怖さの受入は未実施。
+- Windows: `artifacts/builds/20260919-091347-408/GraduationProject.exe`、非Development・11.85秒・error/warning0・Tests assemblyなし・README／licenses同梱。設定5ファイルをbuild直前値へ一致復元。PlayableDemoの開始時SHA256一致。Homecomingの作者の声1件／音量0.518は保持し、追加componentだけをcommit対象とする。
+- Windows実見: Computer Useの実クリックではじめる→入口表示を確認。Windows全4夜・OS移動入力は未検証で、全4夜の通し証拠はEditor。次はGAME-008の通常停止による追加遭遇。
+
+### M3-03 かご内の空間異常（2026-09-19、実装・対象検証済み）
+- 担当Astra、main 41b15c7。ユーザーは概ね満足と評価し、文章の微調整を後回しにして継続を指示。次の既定表現をGAME-015内で試作する。
+- 方針: 既存Hijackの判定・階上昇・走行音をExtendし、天井と照明が上へ遠ざかる専用PrefabをBuild。上部壁を伸ばし、床・操作盤・移動範囲・カメラは固定。全面的な空間変形shader／外部frameworkは採らず、新依存なし。既存UnityのTransform／Rendererを使用する狭い実装比較で、OSS移植は不要。
+- 対象: HijackAnomalyの任意演出接続、空間表現・Prefab／定義・比較Inspector、対象入力試験とDocs。診断時4m・悪化時さらに2m程度の伸長を試し、成功・死亡・停止で元へ復元する。具体値や怖さは正式採用と分離する。
+- 完了条件: 閉扉中の天井伸長と階数／音の合図、非常停止成功、期限超過→救済、二度目誤操作／猶予超過死亡、ポーズと復元、既存Hijack回帰。最終Game View／Windows実見、試すシーン・手順の明示、記録・commit/push。
+- 保全: 作者の両シーン差分は除外。Homecomingの未保存内容を `artifacts/m3-03/user-unsaved-before.unity` に保全してから検証する。現在の遭遇リスト変更も作者の比較設定として保持。
+- 結果: `artifacts/tests/20260919-084459-992/playmode.xml`、PlayMode3/3・failed/skip0・157秒。通常帰宅→濡れ→声→空間異常4回で直接停止／期限超過から救済／閉から救済／二度目閉で死亡、元天井の復元・固定操作盤・ポーズを合成Input Systemで確認。既存Hijackの13超え／一定ペース／音停止と猶予超過死亡も成功。全回帰一括は未実施。
+- 実画像: `artifacts/m3-03/safe-20260919-084507/` の11-normal-ceiling／12-spatial-diagnosis／13-spatial-grace-1（最終Game View 750×422）を実見。元天井→4m伸長→6m伸長を比較。正確な間接照明・怖さは未受入。
+- Windows: `artifacts/builds/20260919-084859-219/GraduationProject.exe` は空間異常1件の比較版。非Development・15.2秒・error/warning0・Tests assemblyなし・README／licenses同梱。Computer Useで実クリック開始とフェード後の入口を1920幅で実見。Windowsの怪異到達・OS移動入力は未検証。通し入力はEditorの証拠。
+- 復元: 作者の単独「声」リスト・音量0.518を保持し、build前シーンとの意味差分0。PlayableDemoは開始時SHA256と一致。build設定5ファイル復元一致。テストConsoleの既知warningはplateText未使用・Hijack検証fixtureのRenderer未指定、errorなし。
+- 次: 6表現の実装が揃ったため、全4夜の進行／最終夜抽選へ接続する。M3全体はまだ未完。確認メニューと試す手順はDEMO_AUTHORING。
+
+### M3-02 開扉前の濡れ表示／外からの声（2026-09-19、実装・対象検証済み）
+- 担当Astra、main 5ba0864。濡れが開扉後に出現するという本人報告を再現・修正し、既定の次表現「外から助けを求める声」を制作する。
+- 範囲: Lureの見た目を開扉前に準備、入力受付・退出検出・猶予は維持。声は独立した音声Prefabと既存Provocation判定を組み合わせ、音源・音量・間隔をInspectorで編集。新規のゲーム規則・人物表示は追加しない。
+- 検証: 開扉途中の表示を先に失敗再現→修正→車内観察／到着前ダッシュ／帰還。声は閉扉走行・無操作成功・誤操作後の無操作救済・二度目誤操作・ポーズ／終了時停止を確認。音色の本人評価は技術確認と分離。関連Docsとcommit／pushまで行う。
+- 保全: 両シーンの既存作者差分を除外。開始時Homecoming未保存は最初のLureを濡れへ切替した差分のみで、`artifacts/m3-02/user-unsaved-before.unity`へ保全。作者の比較設定として保持する。
+- 結果: 開扉前表示の試験で失敗再現（`artifacts/tests/20260919-080334-972/playmode.xml`、0/1）→Lureの準備を開扉前へ分離。濡れ帰還＋到着前ダッシュ2/2成功（080704-653、146秒）。声は仮WAV2本・独立Prefab・日本語Inspectorを追加し、通常帰宅から濡れ→声3回（無操作／救済／二度目誤操作死亡）まで1/1成功（081242-032、133秒）。修正後failed/skip0。合成Input System→Raycast→clickで、ポーズ中の声停止・終了後の音源破棄も確認。全回帰／EditMode一括は未実施。
+- 実画像: 最終Game View 750×422の `artifacts/m3-01/recovery-20260919-080749/07b-wet-during-opening.png` で開き始めの隙間から既に濡れている床を確認。`artifacts/m3-02/safe-20260919-081250/10-outside-voice-closed-door.png` で声の際の閉扉・通常モニター・不要なパネルなしを確認。音声は再生位置の進行を検証したが聴感は未確認、自然さ・怖さの本人評価も未了。
+- Windows比較版: `artifacts/builds/20260919-082009-538/GraduationProject.exe`。最初は作者設定の濡れ、2番目を外からの声とした比較用。非Development、13.3秒、build error/warning0、Tests assemblyなし。Homecoming専用README・音声creditを含むlicenses同梱。既存build要求のdelayCallが未実行だったため、その待機callbackだけを一度dispatchして完了。重複buildなし。
+- 確認の限界: 今回のtool一覧にはWindows pluginのnode_repl入口がなく、ネイティブComputer Use／Windows版の操作検証は実施していない。cua_replだけを見た権限不可判定ではない。通し入力・画像の証拠はEditor。仮音声制作のローカルVOICEVOX helperは停止済み。
+- 保全／停止: build前コピー `artifacts/m3-02/homecoming-before-voice-build.unity` と復元後の意味差分0。2番目だけ設備放送へ復元し、作者の最初の濡れ選択・設備音量0.518を保持。PlayableDemo SHA256は開始時4112DABE…F6F8DB56と一致。両シーンはコミット対象外。build設定5ファイルは直前値へ一致復元。Editor保存済みEdit Mode、声Prefabを選択。Console error/warning0。
+- 次: Astra継続。6表現中の残り「かご内の空間異常」を制作し、その後に全4夜・最終夜抽選・追加遭遇へ接続する。現段階は5表現の技術実装で、M3完了や怖さの正式受入ではない。
+
+### M3-01 誘引「濡れた廊下」（2026-09-19、実装・対象検証済み）
+- 担当Astra、main e0799cd。音はユーザーが一旦及第点とし次工程を指示。仮台詞・仮音声も今回だけuser-inputで委任、正式文章の執筆方針は保持。
+- 最初の単位: 誘引の別表現「濡れた廊下」。既存BeatDefinition／Lure判定／減光・帰還を再利用し、柱と別のPrefab・Materialへ分ける。通常床や歩行ルールは変更しない。作者がInspectorから比較・調整できる入口を整える。
+- 検証: 車内から濡れを識別できる最終Game View、車内待機の安全、退出→徒歩帰還＋閉、終了後の表面／照明／音の復元、正常廊下との比較。新依存・保存形式なし。音声・空間異常と全4夜進行は後続の実装単位。
+- 保全: 開始時はPlayableDemoに既存作者差分。Homecomingに未保存の設備音量0.12→0.518のみを確認し、`artifacts/m3-01/user-unsaved-before.unity`へコピー保全。作者調整として保持し、自動コミットへ混ぜない。
+- 進捗: 濡れPrefab・専用shader・室内反射・比較Inspectorを実装。PlayMode対象2/2成功（073659-784）、反射修正後の帰還ケース1/1成功（074249-508）。反射ベイク時にURPが追加するlight metadataを後処理で取り除き、再生成前後のシーン意味差分は作者音量のみ、Cubemap SHA256も一致。
+- 成果: 不規則な濡れ・細かい水面変化・室内照明の反射を既存廊下へ追加。車内から判別でき、Collider・歩行速度・正解・猶予を変更しない。専用Materialの日本語項目、怪異比較Inspector、配置変更時の反射再生成メニューを追加。通常初回は柱、濡れは後続夜用の別asset。
+- 試験履歴: 初回2件とも失敗（`artifacts/tests/20260919-072838-373/playmode.xml`）。旧試験の音量0.12固定を作者設定値との一致へ変更し、到着待ちをゲーム時間35秒＋実時間60秒watchdogへ修正（旧実時間32秒は通常所要約30秒に対し描画停止の余裕不足）。ゲームの成功条件・作者音量は変更しない。再実行2/2成功・failed/skip0（073659-784、220秒）。最終反射修正後の救済ケース1/1成功・failed/skip0（074249-508、110秒）。全件回帰・EditMode一括は今回未実施。
+- 確認範囲: 通常帰宅→翌夜、6秒車内観察の安全、退出後の減光、ポーズ停止、徒歩帰還＋閉、次の遭遇、照明／音／水面／反射probeの復元。合成Input System→Raycast→clickで実施。`artifacts/m3-01/recovery-20260919-074258/`の最終Game View（750×422）で水面と通常床・減光後を実見。初回shader仮表示と空の青い反射は修正済み。
+- Windows: `artifacts/builds/20260919-074650-058/GraduationProject.exe` は最初の誘引だけを濡れにした比較用。非Development・10.65秒・build error/warning0・Tests assemblyなし・README／licenses同梱。Computer Useで実クリック開始→入口を実見（1920幅）、`artifacts/m3-01/windows-entrance.png`。Editorでも比較ボタンの実クリックと定義切替を確認し `inspector.png` 保存。Windows全経路・OS移動入力・濡れ到達は未検証。通しの証拠はEditor。
+- 保全／停止: 比較build後、Homecomingの最初の定義を柱へ復元。直前コピーとの意味差分0。現在のHomecoming差分は作者の設備音量0.518のみ（Unity保存時の空白差分を除く）、PlayableDemoは開始時SHA256 4112DABE…F6F8DB56のまま。両シーンはコミット対象外。Editorは保存済みEdit Mode、Windows比較版を起動したまま。
+- 既知／限界: 室内反射は128pxの事前生成で、減光後の鏡像は正確には更新しない。反射再生成後のCubemap SHA256一致とシーン保全を確認。Player起動ログは既存D3D12 info queue診断／URP影atlas縮小warningのみ、例外・shader errorなし。怖さ・初見判別・音の正式受入は本人評価待ち。仮音声は委任を記録したが素材未作成。
+- 次: Astra継続。既定のProvocation「外から助けを求める声」、Hijack「かごの空間異常」、その後に全4夜・最終夜抽選・通常停止の追加遭遇を実装。6表現・本編完走の完成扱いにはしない。
+
+### OPENING-003 操作盤縮小と代表Lureの演出（2026-09-19、実装・関連検証済み）
+- 担当Astra、main ef3bb33。PlayableDemoの作者差分は除外。ユーザーは入口の他の改善を好評価、操作盤だけ大きすぎると指定し開発継続を指示。
+- 範囲／工程: 操作盤を幅205×高さ440mmへ縮小し壁との接触を保つ→本編HomecomingだけにLure演出componentを接続→入力／救済／状態復元と最終画像→Docs・保存。
+- 演出試作: 日常の廊下との差を柱で判別し、誤降車後に奥から照明が弱まり機械的な低音が立ち上がる。手前の帰還経路と操作盤は保持。正解操作・期限・移動距離・新怪異・物語文は変更しない（GAME-015／OPENING-001）。既存デモの色演出は互換経路として維持。
+- 保守性: 既存のProvocation表示接続と同じく、状態機械はタイミング、シーンcomponentは参照・演出値・復元を担当。新framework・新依存を導入せず、人がInspectorから調整できるようにする。
+- 完了条件: 小型盤の実Raycastクリックで805解錠。Lureの車内観察が安全、誤降車の変化と徒歩帰還＋閉で救済、演出後に元の照明・音へ戻る。通常シーン・作者編集保持。技術合格と恐怖の受入は別。
+- 成果: 幅205×高さ440mm・厚さ32.5mmの操作盤を壁に密着。入口操作Inspectorに配置選択ボタン。本編のLureは奥→中央2灯の減光（遅れ0.35秒／0.65秒で6%）と設備音（0.12／1.2秒fade）に置換し、手前1灯・柱の材質・判定は保持。Hierarchy最上部 `演出調整_誘引の廊下` に日本語Inspector。参照・演出・復元を専用component、受付と期限を既存FSMに分離。編集方法はDEMO_AUTHORING。
+- 検証: import／compile成功。最初の対象PlayModeは3成功・1失敗・skip0（`artifacts/tests/20260919-065748-797/playmode.xml`、310秒）。新しい救済試験がReveal中に早押ししていたため、既存仕様のGrace受付開始を待つよう試験を修正。対象だけ再実行1/1成功・failed/skip0（`artifacts/tests/20260919-070346-893/playmode.xml`、110秒）。ゲームの期待結果は緩和していない。
+- 成功範囲: 小型キーの誤入力・取消・805解錠、通常帰宅と翌夜、6秒車内観察で演出なし、誤降車後の奥→手前の減光、ポーズ中の停止、帰路の光を保持した徒歩帰還＋閉、次の遭遇へ進行・光と音の復元。既存M2の到着前ダッシュと救済も成功。合成Input System→Raycast→clickで実施。全件回帰・EditModeは今回未実施。
+- 実画像: `artifacts/opening-03/recovery-20260919-070355/` の最終Game View（763×429）で操作盤・診断時／変貌時を比較。Windows版は `artifacts/builds/20260919-070620-792/GraduationProject.exe`、非Development・11.7秒・build error/warning0・Tests assemblyなし、README／licenses同梱。Computer Useで実クリック開始とフェード後の入口（1920幅）を確認し `artifacts/opening-03/windows-entrance.png` 保存。日本語Inspectorも実見。
+- 限界／既知: Windows全経路・音の聴感・怖さは未評価。Player.logには既存D3D12 info queue取得診断とURP shadow atlas縮小warning。Editorの既存Lure plateText未接続warningは表札を使わない構成による。再試験後Console error0。CUのEditor前面化は一度timeoutしたが再観察でbuild完了を確認、重複要求なし。
+- 保全／次: Homecomingの既存object削除0、意味変更は操作盤Transform・FSM参照・SceneRootsのみ、演出object追加6。既存PlayableDemoのSHA256は開始前と同じ4112DABE…F6F8DB56で未ステージ保持。Editorは保存済みEdit Mode、演出調整を選択、Windows版は起動したまま。Astra継続。代表Lureの怖さ・音と早押しの体感評価を受け、その後に既定の残り表現／M3へ。技術合格だけで本編完成とはしない。
+
+### OPENING-002 近距離マーカー・集合ポストの改善（2026-09-19、実装・関連検証済み）
+- 担当: Astra / task 01a07fbb-3ac2-7a62-a049-19d919724625。main b14b85bから。既存PlayableDemo.unityの作者差分は対象外。
+- 明示決定: user-inputで1階共用入口、2〜10階各6戸、計54戸。805を調べる必須導線は維持する。
+- 工程／範囲: ゲームUIとメーカー実例調査→Homecomingの郵便受けを実寸54戸へ更新→▲の微小浮遊・フェード・注視強調・密集抑制と調整Inspector→入口通し入力試験・最終画像→記録・commit/push。
+- 期待結果: 部屋数に整合する薄型集合ポスト、読み取れる部屋番号、操作を邪魔しない滑らかな目印。既存入力距離／遮蔽／クリックと翌夜移行を維持。表現の具体値は委任内試作で、本人の見た目・理解の受入とは分ける。
+- 実装: 6列×9段の54戸、薄型金属扉・投函口・個別番号・丸い錠・端部の見切りと壁付け照明。▲は0.18秒フェード、2.4秒周期・2.5px浮遊、注視1.25倍。ポストでは面内に収め、テンキーは1個に集約。Playerの日本語Inspectorで調整可能。旧9個は非表示で保存。
+- 検証: 入口通しPlayMode1/1（062756-487、102秒）成功後、実画面でポスト▲の段違いと金属の暗潰れを修正。最終版1/1（`artifacts/tests/20260919-063240-397/playmode.xml`、102秒、failed/skip0）。54戸の一意番号・805前の入力不可・誤番号／取消／805解錠・扉通行・▲の浮遊／注視／ポーズ非表示／完了後非表示・テンキー集約・翌夜Lureまで合成Input Systemで確認。全44件の一括回帰ではない。
+- 画像: `artifacts/opening-02/input-20260919-063244/` の最終Game Viewを実見（750×422）。最後に見切り裏の固定レール・照明ブラケットを追加し、壁との接続を補った。衝突なしの支持金具追加後はbuildとWindows画像を確認し、通し入力の再実行はしていない。
+- Windows: `artifacts/builds/20260919-063703-280/GraduationProject.exe`、非Development・6.5秒・build error/warning0・Tests assemblyなし、README／licenses同梱。Computer Useで実クリック開始、フェード後の入口を1920幅のPlayerで実見、`artifacts/opening-02/windows-entrance.png`。Windowsでの全経路・OS移動入力は今回未検証。起動ログにはD3D12 info queue取得診断と既存URPのshadow atlas縮小warningあり（描画継続）。Editorでも後者を観測。性能目標の合格とはしない。
+- 保全: PlayableDemoのSHA256は開始前と同じ4112DABE…F6F8DB56。既存Homecomingのserialized object削除0、意味変更は入口の参照／テキスト登録／旧配置非表示／Player表示設定／親の子リストに限定。EditorはHomecoming保存済みEdit Mode、Windows版は評価用に起動したまま。本人の好み・初見理解は未受入。次は入口評価と既定の代表Lure演出、Astra継続。
+
+### OPENING-001 本編冒頭と最初の怪異の制作（2026-09-19、入口単位を実装・検証）
+- 担当: Astra / task 01a07fbb-3ac2-7a62-a049-19d919724625。開始 main 95753d1。PlayableDemo.unityの既存ユーザー編集は保持し、対象から除外する。
+- ユーザーは「導入から初回怪異を一本の体験として仕上げ、その後M3全4夜へ」を承認。導入内容はuser-inputで「帰宅の日常を中心に描く」を選択。文章の執筆は引き続きユーザー担当。
+- 工程: 接続と未保存状態確認→本編用シーンへ既存体験を複製→入口・掲示・通常帰宅の連続した導入→代表Lureの演出→関連入力・画像検証→記録と保存。新しい人物／会話／屋外全域、未承認ルールは追加しない。
+- 対象: 本編冒頭シーンとEditor組立、導入・夜間遷移、Lure演出、必要な試験、ROADMAP／作者向け文書。既存デモの起動・作者文・検証シーンは保つ。具体配置・音・間はGAME-015内の試作で、人の理解・怖さの受入と分ける。
+- 完了条件: 解説画面に依存せず開始・掲示確認・通常帰宅・翌夜の初回怪異へ進める。メニュー／死亡再開を壊さず、Lure判別と帰還経路を保持。import／compile／対象試験／最終Game Viewを確認する。
+- 追加の明示指定: 入口の集合郵便受け805を調べるとオートロックを操作可能にし、805入力で自動ドアを開ける必須導線を制作。▲は近づいた操作対象に表示。短い独白案は採らない。入口一式を先に完成・検証し、その後に代表Lureへ進む。新しい入口には物理キーパッド・郵便受け・自動扉と作者向けInspectorを用意する。
+- 成果: `Assets/Scenes/Homecoming.unity`に独立した本編冒頭。集合ポスト805を調べると扉が開き、操作盤が有効化。805入力でガラス自動扉が開く。誤番号・取消・再入力、近距離／遮蔽なしの▲、開始フェード中のポーズ、説明メニューなしの翌夜移行。翌夜の再開位置は既存ホールへ切替。詳細と作者の編集入口はOPENING_PLAN／DEMO_AUTHORING。
+- 検証: PlayMode 27/27（failed/skip 0、`artifacts/tests/20260919-055658-986/playmode.xml`）。入口から翌夜Lureまでの合成Input System入力、既存デモ3怪異・死亡再開・再プレイ、既存クリック／救済回帰。操作音と日本語Inspector追加後、入口通し1/1を再検証（060401-722、100秒）。最終Game Viewは`artifacts/opening-01/input-20260919-060406/`。今回はEditMode試験は実行していない。
+- Windows: 非Development build成功18.2秒、error/warning 0。`artifacts/builds/20260919-060557-702/GraduationProject.exe`、Homecomingのみ・Tests assemblyなし、READMEと素材license同梱。Computer UseでWindows版の実クリック開始・フェード後の入口を実見。OSキー送信の移動反応は確証を得られず、Windows全経路・音の聴感は未確認。経路の成功はEditor合成入力の証拠と区別する。
+- 保全: PlayableDemoのSHA256は作業前後一致（4112DABE…F6F8DB56）。作者差分は未ステージ保持。EditorはHomecoming保存済みEdit Mode、Playerは評価用に起動。buildによる設定差分は補助処理で直前値へ復元済み。
+- 次: 入口の本人評価（805に気づくか・▲・文字と音）を受けつつ、代表Lureの空間・光・音の変貌を制作する。今回Lureの演出自体は変更していない。出口／階段ループ、全4夜・6表現・保存は後続。Astra継続、Solへ全面引継ぎはしていない。
+
+### MONITOR-001 通常案内のスライドショー実装（2026-09-16）
+- 担当Astra / task 01a07fbb-3ac2-7a62-a049-19d919724625。対象CabinInformationDisplay・文章Inspector・関連試験。既存文を1枚目として保持、追加文リスト・表示秒数・フェード秒数を日本語Inspectorへ。ユーザー執筆のため新しい文章は創作せず、追加欄で本人が入力する。
+- 通常案内を順に循環し、フェードアウト→次の文→フェードイン。怪異案内が優先し終了時に通常案内を再開。怪異の提示時間／ルールと既存シーン編集は変更しない。コンパイル、複数文／1枚／空欄／停止復帰／怪異割込みと関連実シーン画像を確認し記録保存する。
+- 編集入口: テキスト編集→05_案内・怪異・階数。「最初の文言」＋「追加の文言（＋で追加）」、1枚の表示秒数（初期5）、片道フェード秒数（初期0.5）。モニター本体Inspectorでも同じ設定。初期追加0件、1枚なら常時表示。空欄は空白スライド。既存文／設定を上書きするscene移行なし。
+- 検証: PlayMode2/2成功・failed/skip0（artifacts/tests/20260916-054452-045/playmode.xml）。複数文／空欄／一周／中間alpha／時間停止／怪異割込み・表示保持／Restore／0秒／disable-enable／1枚と、既存3怪異通しを確認。最終Game View 01-first・02-fade・03-secondを実見。Computer Useで編集欄と＋の存在を確認し、入口を選択したまま停止。Console error0を確認。
+- 限界: Windowsビルド／OS実入力は今回は再実行せず、既存exeへは未反映。追加の文言は作者の入力待ちで、こちらで新しい掲示文を創作していない。PlayableDemoの既存ユーザー差分は未ステージ保持。
+
+
+
+### LURE-002 到着前からの連続ダッシュ取りこぼしを修正（2026-09-16）
+- 担当Astra / task 01a07fbb-3ac2-7a62-a049-19d919724625。開始main 38f0f70。対象はElevatorControllerの再閉指示と関連テスト。閉扉への押し付けは安全、開扉後の退出でReveal、既存救済・外側閉操作は維持する。
+- 工程: 未保存ユーザーシーン保護→到着前からShift+Wを保持する再現テスト→最小修正→通常／連続ダッシュと救済回帰・最終画像→記録と保存。PlayableDemoの文章／音・時間調整は変更対象外。未保存内容をartifacts/lure-02/user-unsaved-before.unityに複製し保存してからテストする。
+- 再現: artifacts/tests/20260916-052234-658/playmode.xmlで到着前からShift+W保持→Reveal待ちtimeout（0/1）。原因はRunBeatの再CloseDoorsが、閉扉済みでも安全センサーを評価して開き直すこと。到着前に退出でき、到着時ラッチがfalseになる。単にラッチを常時trueにする修正はせず、扉の不要な再開扉を抑える。
+- 結果: 移動距離のない再閉指示では安全センサーによる再開扉を起こさず、実際の閉扉中の障害物検知は維持。Lureの既存退出／救済条件自体は変更なし。
+- 検証: PlayMode 28/28、failed/skip 0（artifacts/tests/20260916-052426-846/playmode.xml）。到着前からのShift+W、到着後ダッシュ、車内観察、外側閉操作、帰還／閉扉救済・障害物再開扉を含む。before-arrival-reveal.pngを最終Game Viewとして実見。Console error 0。
+- 停止: PlayableDemo保存済みEdit Mode。未保存だったユーザーシーンと現在のファイルはSHA256一致（97D4AE83…86CA10）。今回シーン変更なし、既存ユーザー差分を未ステージ保持。通常build／Windows入力は今回は再実行していないため、以前のexeにはこの修正は未反映。確認はEditor Playで行う。
+
+
+
+
+### FEEDBACK-001 指摘9点を実装・検証（2026-09-15）
+- 担当Astra。ユーザー指定9点：革靴足音、静かな走行／扉音と調整Inspector、扉の内側目地／水平線、到着後の間、8ボタン登録灯、右袖壁上部モニター、早期ダッシュ誘引判定、上限なし一定階数上昇。新しい怪異・依存は追加せず、既存判定と救済を保つ。階数表示は遭遇中継続し、非常停止または死亡等の遭遇終了で止める。
+- 工程：実例調査→音／表示／到着→境界判定→関連入力・画像・音出力・通常build→記録保存。音色の聴感は技術検証と区別。
+- 開始main c97208d。PlayableDemoにユーザーの文章／root名変更あり、artifacts/feedback-01へ元シーンとpatch保護。既存ユーザー差分は維持し、今回の変更だけをstageする。
+- 操作入口: 3シーンのHierarchy「音・動作調整」。各音量、チャイム後1.4秒、怪異の階数間隔1秒をInspectorで編集可能。Play後の保存方法はDEMO_AUTHORING。足音は革靴／コンクリートの実録4種、ライセンス同梱。
+- 検証: 初回PlayMode37件中34合格／3失敗。退出判定の既存外側開始ケースと新テストのStart競合を修正。デモ通しtimeoutは再実行で再現せず、失敗診断画像を追加。対象再検証29件中28合格／1失敗の後、実際の扉面へ退出境界を合わせ、最終対象26/26合格（090555-342）。デモ通しと13超え／一定間隔／停止は085853-402で合格。EditMode2/2（090719-963）、skipなし。最終状態で全37件を一括再実行はしていない。
+- 実見: artifacts/feedback-01/inside-door-selected.pngで内側目地・水平線除去・8登録灯、sprint-reveal.pngでダッシュ退出後の赤い廊下。モニターは袖壁への2mm接触をテスト・画像で確認。音の波形・発火検証と人の聴感受入は別、自然さの評価は未完。
+- 通常Windows build: artifacts/builds/20260915-090821-735/GraduationProject.exe。13.5秒、error/warning 0、足音／フォントlicense同梱。起動してwindow生成を確認したが、Computer Useが「foreground window did not report a process id」で取得・再接続とも失敗。新Playerの画面／実入力は未確認。前面操作を迂回せず停止。
+- 停止状態: PlayableDemo保存済みEdit Mode、「音・動作調整」を選択。ユーザーの文章変更は未コミット差分として保持。今回の実装のみ保存対象。次は新しい足音・静音バランス・到着の間の実プレイ評価。Solへの全面引継ぎはしていない。
+
+
+
+### TEXT-001 文章編集の入口を整備（2026-09-15）
+
+- 担当Astra。ユーザーの全表示文の直接執筆依頼に対応。現行3シーンのHierarchy最上部 `★文章編集_ここから` に、起動／ポーズ／翌夜・結果／設定／動的案内／館内表示／掲示の8カテゴリを配置。日本語Inspectorから編集・Ctrl+S保存。詳しくは [DEMO_AUTHORING](DEMO_AUTHORING.md)。ルール・物理配置は変更なし。
+- メニューの固定文をシーン保存値へ接続。空欄保持・長文スクロール・ボタン名変更に対応。内装再適用でも執筆内容を保持。掲示は既存EditableNoticeへの編集入口を追加し、元の場所からも編集可能。
+- 検証: 保存・再読込・ApartmentVisualPass再適用で独自タイトル／空欄の保持を確認。PlayMode対象2/2合格（長文・空欄・改名ボタン・不正階数書式＋既存の通常帰宅→3怪異→死亡再挑戦→帰宅・再プレイ）。`artifacts/tests/20260915-071925-578/playmode.xml`。初回テストコードのTMP参照不足は修正後に合格。全回帰34件の再実行はしていない。
+- 実見: `artifacts/text-01/title-inspector.png` と `artifacts/demo-02/input-20260915-071930/` の最終Game Viewで編集欄・タイトル・設定を確認。
+- 通常Windows build: `artifacts/builds/20260915-072340-630/GraduationProject.exe`、11.7秒、error/warning 0。今回の新buildのWindows実入力は未確認。以前起動したPlayerには文章編集は反映されない。作者の執筆後は保存・再buildする。
+- 開始時の未保存シーンは `artifacts/text-01/user-scene-before.unity` にコピー保護。意味差分はTMPスタイルhash／Canvas追加shader channelのみと確認し、保持した。停止時はPlayableDemo保存済みEdit Mode。人の理解・怖さは未受入のまま。
+- 次: ユーザーが上記8カテゴリで文章を執筆し、実プレイでルール説明の分かりやすさを評価する。文章変更とゲームルール変更は別。Solへの全面引継ぎは今回実施していない。
+
+### DEMO-002 完成候補を実装・検証（2026-09-15）
+
+- 担当: Astra task 01a07fbb-3ac2-7a62-a049-19d919724625。開始main clean / 8ae08e1。DEMO-001の続行と「掲示でのルール学習／Hierarchyで文章編集箇所を明示」を実装。Solへの全面引継ぎは保留のまま。
+- 起動: `Assets/Scenes/PlayableDemo.unity`。開始→通常帰宅→翌夜の基本3怪異→帰宅→再プレイ／終了。死亡は怪異夜の入口へ戻る。M1/M2は個別確認用として保持。通常buildの入口もPlayableDemoに変更。
+- 掲示: 右壁に三原則、左掲示板に帰宅手順と修正方法。遮蔽を避け、掲示用照明と短い日本語で提示。Hierarchyで `文章編集` を検索し、各EditableNoticeの見出し／本文を編集。保存・内装再適用・再読込で文章を保持。詳細は [DEMO_AUTHORING](DEMO_AUTHORING.md)。
+- UI／音: 開始・ポーズ・設定・完了画面。メニュー中は入力／時間／音を停止し、復帰直後のクリックも遮断。フォーカス喪失でポーズ。感度・反転・視野角・明るさ・音量・表示サイズを調整。足音4種と低音量の換気音を独自生成。ゲーム側の永続保存・新依存なし。
+- 成果物: `artifacts/builds/20260915-062502-491/GraduationProject.exe`、必要runtimeファイル＋README／licenses入り `artifacts/demo-02/PlayableDemo-20260915.zip`。ローカル評価用。外部公開はしていない。artifactsはGit外で自動同期されない。
+- 停止時: Unity EditorはPlayableDemoの保存済みEdit Mode、compile／Console errorなし。テスト・buildの実行中処理なし。Windows Playerはユーザーの確認用に起動したまま残す。キー操作の確認後に強制終了しない。
+- 次: ユーザーが解説なしで入口の掲示に気づくか、普通の廊下を覚え、三原則で判断できるかを通しプレイで評価。迷い／不公平／文字・音の判別を優先修正する。大型美術再制作やM3全4夜へ広げない。初見理解・怖さ・音色の受入を技術合格から認定しない。
+
+## 最新の技術証拠と限界
+
+| 項目 | DEMO-002の結果 |
+|---|---|
+| 回帰 | PlayMode 34/34、失敗・skip 0（20260915-061502-693）。続いてデモの死亡／再挑戦・怪異中ポーズを加えた通し1/1（062149-789、143秒）。EditMode 2/2（062129-324） |
+| 入力・画像 | 合成Keyboard/Mouse→UI raycast／ゲームRaycast→clickで導入・三系統・死亡再開・帰宅・再プレイ。最終画像はartifacts/demo-02/input-20260915-062153。掲示Inspectorはnotice-inspector.png。掲示の保存／再適用保持、紙面超過なし、再読込で不要なdirtyなしを確認 |
+| 音 | 実移動による足音発火と換気source再生、怪異中ポーズのAudioListener停止／復帰を確認。生成波形のpeak／RMS確認。聴感・自然さは未認定 |
+| Windows | 通常build成功、error/warning 0、Tests assemblyなし、README／font license同梱（062502-491）。Computer Useのクリックで開始・設定・720p→1080p切替・反転表示を確認。フォーカス喪失後のポーズを実見。ユーザーが実キーボードのEsc・W正常を確認 |
+| 限界 | Computer Useキー送信ではW/Escの反応を確認できず、ユーザーの実キー確認と区別。Windows全経路・終了操作、初見理解、怖さ、スピーカー聴感、1080p60fps測定・最低環境・長時間安定性は未認定。既知D3D12診断行は残る |
+
+初回テストの状態名誤記と提示前クリックをテスト側で修正した。途中の掲示遮蔽・強い照明・開くだけでdirtyになる副作用は実装側で解消。詳細な試行は [PROJECT_HISTORY](PROJECT_HISTORY.md#demo-002-掲示編集とデモ接続2026-09-15)。本編4夜・別演出・保存は [DEMO_PLAN](DEMO_PLAN.md) に従い保留する。
+
+## DOCS-06 Astra運用文書の整理（2026-09-15）
+
+- 状態: 文書編集・検証完了。担当: task 01a0a383-4c35-73c0-b769-4876bb5eb297、このcheckout。開始main clean / 9210c30。ゲーム実装担当を引き継がず、Unity操作・テスト・buildは実行していない。
+- 変更: AGENTS、START_HERE、PROJECT_STATUS／HISTORY、VALIDATION、DEVELOPMENT、OPEN_QUESTIONS、DECISIONS、2スキル、WORKFLOW_AUDIT_2026-09-15。目的別参照、現在地の一本化、旧hold訂正、完了・継続と検証範囲を整理。ゲーム仕様・コード・Assets・設定は無変更。
+- 検証: 18文書の相対リンク48件・見出し7件は不備0。旧進捗本文のbyte一致、変更範囲、git diff --checkを確認。2スキルのquick_validateはUTF-8指定で合格。証拠はartifacts/docs-06/validation.json。
+- 失敗／回復と限界: quick_validateの初回はWindows既定cp932でUnicodeDecodeError、`-X utf8`で解消。代表的な作業の指示読み合わせを実施したが、モデル動作・時間・利用枠削減の実測ではない。個人用Global AGENTSの所見は監査へ残し、このプロジェクト外の設定は編集していない。
+- Git事前確認: WORK-005に従う保存単位は今回の11文書。既存公開origin/mainは9210c30、開始ahead/behind 0/0、ローカルActions定義なし、commit／push hookはGit LFS。`gh`は通常ホストのPATHにも見つからず、認証変更は行わずgit ls-remoteとGitHub接続のrepo metadataで確認した。最終commitと送信状態はGit履歴・statusを参照。
+- 次: 本依頼の文書作業は完了。ゲーム開発を再開するときは上の現在地から所有・ライブUnity状態を確認する。
+
+## 記録の更新
+
+### DEMO-001 方針相談（2026-09-15）
+- 担当: Astra task 01a07fbb-3ac2-7a62-a049-19d919724625。開始main clean / 4dca30f。今回の目的は読取監査・方針相談・決定記録で、ゲーム実装やUnity操作はしない。
+- 対象: PROJECT_STATUS、DECISIONS、DEMO_PLAN。現在の仕様／記録、進行・入力・掲示・音・build設定と保存済み証跡を照合。完了条件は不足・優先順・合格条件・ユーザー選択の記録と文書差分の検査。
+- 結果: ユーザーは導入＋怪異1夜を選択。掲示の非常停止一律推奨が正解規則と矛盾、M1/M2未接続、終了UIなし、Esc非ポーズ、標準buildリストが旧Mainを指す点を優先課題へ。過去のゲーム検証を今回再実行したとは扱わない。実装未着手、次回はDEMO_PLANの順序で再開。
+
+---
+
 # 過去の作業記録（2026-09-08〜14）
 
 2026-09-15にPROJECT_STATUSの過去本文を保存。以下の担当・「現在」「次」・実行中表示は記録当時の情報で、現在の指示ではない。再開時は [PROJECT_STATUS.md](PROJECT_STATUS.md) を参照し、原因調査や証跡確認に必要な節だけ読む。過去の検証結果を現在版の合格に読み替えない。
