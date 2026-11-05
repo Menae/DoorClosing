@@ -72,7 +72,7 @@ Developer ID署名・公証・ストア公開はこの手順に含めない。Ma
 
 - codex.exeはDesktopアプリの更新でフォルダ名が変わる。sol.pyは `%LOCALAPPDATA%\OpenAI\Codex\bin\*\codex.exe` の最新を使う（`CODEX_CLI_PATH` で上書き可）。ユーザーのCodex全体設定は変更しない。
 - モデル容量不足（`at capacity` 等）で中断したturnは、モデルを変えずに同じsessionを間隔を伸ばして自動再開する（既定4回・180秒刻み）。それ以外の失敗は再試行しない。
-- **Computer Useの前提**: CLIから起動したSolでも、window列挙はできるがUnity等の画面取得・操作はCodex側のアプリ単位の許可が必要で、未許可だと「Computer Use was not approved to use unity」で拒否される（SMOKE-001／002で確認）。許可はユーザーがCodex Desktopアプリの実際の承認画面で与える想定で、与える場所とCLI起動のSolへ引き継がれるかは未確認（PROJECT_STATUSのWORK-007）。リーダーやSolは迂回しない。
+- **Computer Useの制約**: Codexの画面取得・操作はアプリ単位の許可をMCP elicitationで問い合わせ、保存済みの「常に許可」はDesktopアプリだけが返す。`sol.py`（`codex exec`）で起動したSolはアプリの外で動くため、window列挙はできても撮影・操作は「Computer Use was not approved to use …」で拒否される（CU-001、SMOKE-001／002）。Solの画面操作はDesktopアプリ内のスレッドで行う。設定で問い合わせを自動承認させる等の迂回はしない。
 - レビュー役 `opus-reviewer` はセッション開始時に読み込まれる。定義を作成・変更したセッションでは名前で起動できないため、general-purpose（model: opus）に定義ファイルを読ませて同じ手順で審査する。
 - Sol実行中、リーダーとレビュー役は同じcheckoutを編集・Unity操作しない（読み取りのみ）。
 

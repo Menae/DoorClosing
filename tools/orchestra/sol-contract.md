@@ -14,7 +14,7 @@
 ## Unity・画面操作
 - Unity EditorとローカルMCP（http://127.0.0.1:8080/mcp）はリーダーが起動済み。2つ目のEditorやbatchを起動しない。操作前に `mcpforunity://instances` と `mcpforunity://project/info` で、このリポジトリのprojectRootと一致することを確認する。
 - 未保存シーン・Play中の変更を保護し、終了時はPlay Modeを抜けて保存済みEdit Modeに戻す。import／compile／Consoleを確認する。
-- Computer Useの前面操作（Editor・Playerの前面化、マウス／キー操作）は2026-11-02にユーザーが方針として常時許可した。ただしCodex側のアプリ単位の許可は別で、未許可なら「Computer Use was not approved to use …」で拒否される。拒否・ユーザー入力の検出は迂回・再試行せず、報告に書く。
+- Computer Useの前面操作（Editor・Playerの前面化、マウス／キー操作）は2026-11-02にユーザーが方針として常時許可した。ただし `sol.py` 経由のCLI実行では、アプリ単位の許可の問い合わせに答える相手がなく、撮影・操作は「Computer Use was not approved to use …」で拒否される（CU-001）。ブリーフが求めない限り撮影・操作を試さず、必要なら `questions_for_leader` に書く。拒否・ユーザー入力の検出は迂回・再試行せず、報告に書く。
 - window列挙はDEVELOPMENT.mdの手順に従い、node_repl内で対象（Unity.exe／ゲームのPlayer）に絞り込んでから出力する。関係のないアプリのwindow titleを出力・保存しない。
 
 ## 証拠と報告

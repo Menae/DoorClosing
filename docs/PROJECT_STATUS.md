@@ -4,6 +4,13 @@
 
 ## 開発体制
 
+### CU-001 ClaudeとCodex双方のComputer Use（2026-11-05、原因特定・ユーザー操作待ち）
+- 担当: Claude Code（Opus）リーダー、main 15e11a1・origin/mainと0/0。ユーザー報告: Codexには許可済み、以前もAstraは使えてSolは許可なしと主張した（Astraは経路違いと見立て）。ユーザー指定: ClaudeとCodexの両方でComputer Useを使えるようにする。
+- 調査結果: SMOKE-001／002の拒否は、@oai/skyがアプリ単位の許可をMCP elicitation（「Allow Codex to use Unity?」）で問い合わせ、`accept` 以外が返った時の文言。guardian（承認の自動審査）はnode_replの撮影コード実行を `allow` しており原因ではない。保存済みの「常に許可」を返す処理（`computer-use-persisted-state`）はcodex.exe（CLI）に無く、Desktopアプリ側だけが持つ。Desktopアプリは自分の `codex app-server --listen stdio://` でスレッドを動かすため、CLIの `codex exec` で起動したSolは許可に答える相手がなく拒否される（構造上の制約。許可の付け忘れやSolの経路ミスではない）。9月のAstraの成功も同じnode_repl経路で、アプリ内スレッドだった。アプリ内でSolが失敗した件はelicitationを使えない文脈から呼んだ可能性があり、未確認。
+- 試行: `codex queue --resume` でCLIスレッド01a19b40へ撮影指示を予約→「start a local daemon or specify a server with --remote」で再開できず、予約は未消化のまま残る（撮影1回の無害な指示。このスレッドは今後resumeしない）。`remote-control`／`app-server daemon` は新しいサーバーを立てるだけで、Desktopアプリのapp-serverには接続できない。
+- 次: (1) ClaudeはユーザーがClaude Desktopの設定でComputer useをオンにした後、`request_access` の許可画面で対象アプリを承認して使う。(2) CodexはユーザーがDesktopアプリにSol用スレッドを作って一度許可し、リーダーが `codex queue --thread <名前>` で指示を入れてアプリが消化するかを試す。消化されない場合、Solの画面操作はアプリ内での手動起動に限る。
+- Unity: `Launch` で未起動からEditor（PID 51128）とMCPを起動し、instance登録まで確認（11/05）。
+
 ### WORK-007 Opus主導・Sol実装・独立Opusレビューの連携環境（2026-11-02、構築・疎通確認済み／Computer Useの画面取得はユーザーの許可待ち）
 - 担当: Claude Code（Opus 5.5 xhigh）リーダーセッション。開始main 7060765、origin/mainと0/0、stagedなし。Unity Editor未起動、8080のMCPサーバー停止。既存3差分は中身を確認し（Homecoming＝設備音0.518・比較用の声1件＋Unityの空白差分、PlayableDemo＝作者の掲示・案内文、slnx＝並び順）、作者の編集として `f9dad1c` に保存した。
 - ユーザー指定: リーダーOpus → 実装Sol（gpt-6.1-sol・推論max）→ 独立Opus 5.5レビュー。user-inputで選択: Solは `codex exec` CLIで起動／workspace-write＋承認の自動審査（guardian）／実装ごとに文脈を持たないOpusレビュー役を起動し、合格後にリーダーがcommit/push／既存3差分は作者の編集として先に保存／Computer Useの前面操作とUnity Editorの自動起動は常時可。最初の工程は自動実装せず、完成目標と計画をユーザーとOpusで議論して練り直す。
