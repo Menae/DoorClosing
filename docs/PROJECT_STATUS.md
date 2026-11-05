@@ -1,6 +1,6 @@
 # 現在地・再開情報
 
-更新: 2026-11-05。ここには現在の担当・進捗・次の作業を置く。過去の詳細は [PROJECT_HISTORY.md](PROJECT_HISTORY.md)、仕様の正本は [GAME_SPEC.md](GAME_SPEC.md)。履歴中の「現在」や古い担当を再開指示に使わない。
+更新: 2026-11-06。ここには現在の担当・進捗・次の作業を置く。過去の詳細は [PROJECT_HISTORY.md](PROJECT_HISTORY.md)、仕様の正本は [GAME_SPEC.md](GAME_SPEC.md)。履歴中の「現在」や古い担当を再開指示に使わない。
 
 ## 開発体制
 
@@ -29,6 +29,10 @@
 - レビュー: 独立Opusレビュー役（定義は作成直後のため未登録、general-purpose＋model opus＋定義ファイルで代替）が1回目CHANGES_REQUIRED（major: resume時の承認方式未指定、minor 8件）。全件対応後の再審査でPASS（残minor 5件も対応）。Solの報告は証拠・events.jsonlと一致し、規約違反・権限迂回なしと判定。
 - 未確認・残り: CLI起動のSolでComputer Useが使えない件はCU-001で原因特定・Desktopアプリ経路で対応。容量不足時の自動再開ループとtimeout時のtaskkillの実働（意図的に起こせず未発火）。初回SMOKE-001のevents.jsonlに無関係なwindow titleが残る（Git対象外のローカルのみ、以後は絞り込み手順）。
 - 次: ユーザーとOpusで完成目標・計画を議論して練り直す。自動実装はその合意後に開始する。
+- 設計レビュー（2026-11-06、ユーザー依頼）: 独立サブエージェント（Opus 5.5・xhigh、読み取り専用）が体制の効率と洗練余地を審査した。要約とリーダーの照合は `artifacts/orchestra/reviews/WORK-007-design-review-20261106.md`（Git対象外）。
+  - 指摘: 判断不要の改善が8件（計測記録、実行前後のUnity・作業ツリー検査、Solの冷間読込削減、summary.jsonによる機械検査、停止検知、CLI timeout既定など）。ユーザー判断が必要なのは5件（Sol実行中の編集をhookで阻止、記録タイミング、レビュー段階化、推論強度の使い分け、app経路の縮小）。
+  - 照合で訂正: SMOKE-002の4回の失敗は文字化けではなく、`rg` が無いことが原因（現行のCodex binにrg.exeがない）。
+  - 状態: すべて未実装。
 
 ## 展示会用画像
 
