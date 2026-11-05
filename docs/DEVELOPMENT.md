@@ -72,7 +72,11 @@ Developer ID署名・公証・ストア公開はこの手順に含めない。Ma
 
 - codex.exeはDesktopアプリの更新でフォルダ名が変わる。sol.pyは `%LOCALAPPDATA%\OpenAI\Codex\bin\*\codex.exe` の最新を使う（`CODEX_CLI_PATH` で上書き可）。ユーザーのCodex全体設定は変更しない。
 - モデル容量不足（`at capacity` 等）で中断したturnは、モデルを変えずに同じsessionを間隔を伸ばして自動再開する（既定4回・180秒刻み）。それ以外の失敗は再試行しない。
-- **Computer Useの制約**: Codexの画面取得・操作はアプリ単位の許可をMCP elicitationで問い合わせ、保存済みの「常に許可」はDesktopアプリだけが返す。`sol.py`（`codex exec`）で起動したSolはアプリの外で動くため、window列挙はできても撮影・操作は「Computer Use was not approved to use …」で拒否される（CU-001、SMOKE-001／002）。Solの画面操作はDesktopアプリ内のスレッドで行う。設定で問い合わせを自動承認させる等の迂回はしない。
+- **Computer Useの制約**: Codexの画面取得・操作はアプリ単位の許可をMCP elicitationで問い合わせ、保存済みの「常に許可」はDesktopアプリだけが返す。`sol.py run`（`codex exec`）で起動したSolはアプリの外で動くため、window列挙はできても撮影・操作は「Computer Use was not approved to use …」で拒否される（CU-001、SMOKE-001／002）。設定で問い合わせを自動承認させる等の迂回はしない。
+- **画面操作が必要な作業**: `python tools/orchestra/sol.py app --task <ID> --brief <ブリーフ.md>`（IDは英数字と `-` のみ、予約コマンドが引用後に32,000字以内）。ユーザーがDesktopアプリに作ったSol専用スレッド（gpt-6.1-sol・max、IDは `artifacts/orchestra/app-thread.json`、`--thread` で上書き可）へ `codex queue` で予約し、アプリが実行する。予約前にCodexの履歴DBの列・スレッドの存在・作業フォルダ一致を読み取り検査し、予約直後にmeta.json（受付番号・スレッド設定・queue出力）を書く。完了は `~/.codex/thread_history_1.sqlite` を読み取り専用で見て、受付番号を含む最初のユーザー発言のターンが completed／failed／interrupted になるまで待つ。出力は prompt.md、meta.json（ターンの開始・終了・error）、items.jsonl（ターンの全項目＝コマンド・ファイル変更・ツール呼び出し）、final.md、report.json（スキーマの必須キーを検査）。
+  - 既定120分で終わらない・アプリが閉じている・スレッドが使用中のときは exit 2（未完了）。予約やターンはアプリ内に残るため、ロック（`app_pending`）を残して `run`／`app` を拒否する。`python tools/orchestra/sol.py app-wait --run-dir <実行フォルダ>` で待ち直し、終われば記録してロックを外す（終了済みの実行は記録を上書きせず拒否、待機の経過はmeta.waitsに追記）。exit 2の間もSol実行中として扱い、リーダーは同じcheckoutを編集しない。予約の一覧・取消の手段はCLIでは未確認。ロックを手で外してよいのは、Codexの `thread_history_1.sqlite` に受付番号を含む発言が無く、`queue_1.sqlite` の `queued_items` にそのスレッド宛ての行も無い（どちらも読み取りで確認）とき、または該当ターンが終了状態のときに限る。
+  - 予約前に、スレッドが gpt-6.1-sol・max でない、または全権限（danger）で動く場合は拒否する。
+  - 差し戻しは `--resume` ではなく、同じスレッドへ指摘のブリーフを `app` で送る（スレッドが文脈を持つ）。ユーザーが同じスレッドで会話すると混ざるため、Sol専用にする。
 - レビュー役 `opus-reviewer` はセッション開始時に読み込まれる。定義を作成・変更したセッションでは名前で起動できないため、general-purpose（model: opus）に定義ファイルを読ませて同じ手順で審査する。
 - Sol実行中、リーダーとレビュー役は同じcheckoutを編集・Unity操作しない（読み取りのみ）。
 

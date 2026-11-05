@@ -1,17 +1,24 @@
 # 現在地・再開情報
 
-更新: 2026-11-02。ここには現在の担当・進捗・次の作業を置く。過去の詳細は [PROJECT_HISTORY.md](PROJECT_HISTORY.md)、仕様の正本は [GAME_SPEC.md](GAME_SPEC.md)。履歴中の「現在」や古い担当を再開指示に使わない。
+更新: 2026-11-05。ここには現在の担当・進捗・次の作業を置く。過去の詳細は [PROJECT_HISTORY.md](PROJECT_HISTORY.md)、仕様の正本は [GAME_SPEC.md](GAME_SPEC.md)。履歴中の「現在」や古い担当を再開指示に使わない。
 
 ## 開発体制
 
-### CU-001 ClaudeとCodex双方のComputer Use（2026-11-05、原因特定・ユーザー操作待ち）
-- 担当: Claude Code（Opus）リーダー、main 15e11a1・origin/mainと0/0。ユーザー報告: Codexには許可済み、以前もAstraは使えてSolは許可なしと主張した（Astraは経路違いと見立て）。ユーザー指定: ClaudeとCodexの両方でComputer Useを使えるようにする。
+### CU-001 ClaudeとCodex双方のComputer Use（2026-11-05、Codexはアプリ経路で確認済み／Claudeは次セッションで確認）
+- 結果（ユーザーが両方を設定後）: ユーザーがCodex DesktopアプリにSolスレッド「Unity Editorを撮影」（01a1abd0…、gpt-6.1-sol・max、source=vscode）を作り、SMOKE-005でnode_repl経路の撮影に成功（`artifacts/orchestra/SMOKE-005/editor-window.png` を実見）。同スレッドへ `codex queue` で予約した指示はアプリが消化して実行した。最初の予約（SMOKE-006初回）はUnity Editorが22:08:48に正常終了していて対象なし（終了の原因は不明。撮影ターンはlist/get/activate/get_window_stateのみで閉じる操作なし）。Editor再起動後、新設の `sol.py app` で予約→アプリ内Solが照合・前面化・撮影・保存→構造化報告→完了検知まで約3分20秒で成功（`artifacts/orchestra/SMOKE-006/`、画像実見、stageなし）。
+- Claude側: ユーザーがClaude DesktopのComputer useをオンにしたが、このセッションには `mcp__computer-use__*` が読み込まれていない（ツールはセッション開始時に読み込まれると推定）。次のセッションで `request_access` によりUnity等の許可と動作を確認する。
+- 担当: Claude Code（Opus）リーダー、開始main 15e11a1・origin/mainと0/0（調査結果は99ec362で保存）。ユーザー報告: Codexには許可済み、以前もAstraは使えてSolは許可なしと主張した（Astraは経路違いと見立て）。ユーザー指定: ClaudeとCodexの両方でComputer Useを使えるようにする。
 - 調査結果: SMOKE-001／002の拒否は、@oai/skyがアプリ単位の許可をMCP elicitation（「Allow Codex to use Unity?」）で問い合わせ、`accept` 以外が返った時の文言。guardian（承認の自動審査）はnode_replの撮影コード実行を `allow` しており原因ではない。保存済みの「常に許可」を返す処理（`computer-use-persisted-state`）はcodex.exe（CLI）に無く、Desktopアプリ側だけが持つ。Desktopアプリは自分の `codex app-server --listen stdio://` でスレッドを動かすため、CLIの `codex exec` で起動したSolは許可に答える相手がなく拒否される（構造上の制約。許可の付け忘れやSolの経路ミスではない）。9月のAstraの成功も同じnode_repl経路で、アプリ内スレッドだった。アプリ内でSolが失敗した件はelicitationを使えない文脈から呼んだ可能性があり、未確認。
 - 試行: `codex queue --resume` でCLIスレッド01a19b40へ撮影指示を予約→「start a local daemon or specify a server with --remote」で再開できず、予約は未消化のまま残る（撮影1回の無害な指示。このスレッドは今後resumeしない）。`remote-control`／`app-server daemon` は新しいサーバーを立てるだけで、Desktopアプリのapp-serverには接続できない。
-- 次: (1) ClaudeはユーザーがClaude Desktopの設定でComputer useをオンにした後、`request_access` の許可画面で対象アプリを承認して使う。(2) CodexはユーザーがDesktopアプリにSol用スレッドを作って一度許可し、リーダーが `codex queue --thread <名前>` で指示を入れてアプリが消化するかを試す。消化されない場合、Solの画面操作はアプリ内での手動起動に限る。
+- 対応: `sol.py app` を追加（DEVELOPMENTのWORK-007節、DECISIONS WORK-007 Revision）。独立レビュー1回目CHANGES_REQUIRED（major: 予約後に待機をやめた時にロックが外れ記録が残らない、アプリ経路の全項目記録なし。minor 8件）を受け、予約前の読み取り検査・予約直後の記録・未完了時のロック保持と `app-wait`・ターン全項目のitems.jsonl・終端3値・受付番号の最初の一致・final_agent_item_id・報告の必須キー検査・長さ／timeout検査に直した。
+- 確認: 不正なtask ID・存在しないthreadは予約前に停止。SMOKE-007を `--timeout-min 0.1` で実行し `inProgress`・exit 2・ロックに `app_pending`・その間の `run` 拒否を確認、続く `app-wait` で completed・items.jsonl 23件・report・ロック解放（exit 2時点のmetaはapp-waitで上書きされ、その経過はコンソール出力のみ）。再審査はPASS（minor 6件）。
+- 手順違反の記録: リーダーはSMOKE-007のアプリ内ターン実行中（22:29:58 JST）にsol.py（ロック順）を編集し、再審査依頼では「SMOKE-007の後」と誤って説明した。Solはファイルを編集しておらず（items.jsonlにfileChangeなし、Sol自身が差分量の変化を報告）、成果への影響はないが、DEVELOPMENTの「Sol実行中は編集しない」に反する。以後、exit 2の間も実行中として扱う旨を手順に明記した。`app-wait` は変更後の版で動いた。拒否された旧版の `run` が空フォルダ `artifacts/orchestra/SMOKE-007x/20261105-132941` を残した（削除方針が未合意のため保持）。
+- 残minor対応: mkdirのtry内移動、app_pending時の案内、app-waitの終了済み拒否・ロック取り直し・先頭一致での解放・待機経過の追記、プロセス作成失敗時のロック解放とコマンドライン長の検査、スレッドのモデル／全権限の拒否。
+- 現行版の確認: 編集なしでSMOKE-008（`artifacts/orchestra/SMOKE-008/`）を `app` で実行し、約2分40秒でcompleted・items.jsonl 24件・report completed・モデル検査（gpt-6.1-sol／max）通過・ロック解放・stageなし。終了済みの実行への `app-wait` は記録を変えず拒否。偽の受付番号の仮実行（scratchpad）で、ロック無しからの取り直し・exit 2での保持・他の実行の拒否と案内・meta.waitsの追記を確認し、手で外してよい条件（受付番号の発言0件・予約0件）を読み取りで確認してテスト用ロックを外した。最後のminor対応は再審査に出しておらず、上記の実地確認で代えている。
+- 次: Claude側は次セッションで `request_access` によりUnity等を承認して確認する。その後、完成目標と計画の議論へ。
 - Unity: `Launch` で未起動からEditor（PID 51128）とMCPを起動し、instance登録まで確認（11/05）。
 
-### WORK-007 Opus主導・Sol実装・独立Opusレビューの連携環境（2026-11-02、構築・疎通確認済み／Computer Useの画面取得はユーザーの許可待ち）
+### WORK-007 Opus主導・Sol実装・独立Opusレビューの連携環境（2026-11-02、構築・疎通確認済み／Computer UseはCU-001でDesktopアプリ経路に対応）
 - 担当: Claude Code（Opus 5.5 xhigh）リーダーセッション。開始main 7060765、origin/mainと0/0、stagedなし。Unity Editor未起動、8080のMCPサーバー停止。既存3差分は中身を確認し（Homecoming＝設備音0.518・比較用の声1件＋Unityの空白差分、PlayableDemo＝作者の掲示・案内文、slnx＝並び順）、作者の編集として `f9dad1c` に保存した。
 - ユーザー指定: リーダーOpus → 実装Sol（gpt-6.1-sol・推論max）→ 独立Opus 5.5レビュー。user-inputで選択: Solは `codex exec` CLIで起動／workspace-write＋承認の自動審査（guardian）／実装ごとに文脈を持たないOpusレビュー役を起動し、合格後にリーダーがcommit/push／既存3差分は作者の編集として先に保存／Computer Useの前面操作とUnity Editorの自動起動は常時可。最初の工程は自動実装せず、完成目標と計画をユーザーとOpusで議論して練り直す。
 - 範囲: 作者差分の保存→Sol起動・Unity環境起動の補助スクリプト（tools/orchestra）→レビュー役定義（.claude/agents）→AGENTS／START_HERE／DECISIONSの体制記述→疎通確認。ゲームのコード・シーン・仕様は変更しない。ユーザーのCodex全体設定（~/.codex/config.toml）は変更せず、起動時の引数で指定する。
@@ -20,7 +27,7 @@
 - Unity環境: `Launch` が未起動状態からMCPサーバー10.2.0とEditor 6000.3.14f1（PID 26748）を起動し、`GraduationProject@40efb0f06b9c2d3f` の登録まで待機（約10分、初回import込み）。起動済み状態では二重起動せず3秒でprojectRoot照合済みのinstanceを返す（PS 5.1.26100）。Editorの有効platformは `StandaloneOSX`（MAC-001の名残と推定、未変更）。このClaudeセッションのUnity MCPは起動時のECONNREFUSEDのまま再接続されず、リーダーは既存CLI client（`UnityAgent.ps1 Client`）で照合した。次のセッションではサーバー稼働中なら接続される想定（未確認）。
 - Sol: SMOKE-001（`artifacts/orchestra/SMOKE-001/`）初回は `--approve-for-me` と `-s` の併用不可で失敗→修正。2回目はOpenAI側「Selected model is at capacity」で中断→同sessionのresumeで完了（約6分、partial）。Unity MCPでprojectRoot一致・保存済みEdit Mode・Console error/warning 0・EditMode 2/2 Passed、window列挙で対象Editorを一意特定。画面取得は「Computer Use was not approved to use unity」で拒否。SMOKE-002（新規session、`--approve-for-me`）でも同じ拒否で、原因はCodexのアプリ単位の許可と切り分けた。SMOKE-003で最終版sol.pyの新規→resumeの一往復（resume時 `-c` 承認指定）を確認、stage・残存プロセス・残存ロックなし（確認用にeffort low）。
 - レビュー: 独立Opusレビュー役（定義は作成直後のため未登録、general-purpose＋model opus＋定義ファイルで代替）が1回目CHANGES_REQUIRED（major: resume時の承認方式未指定、minor 8件）。全件対応後の再審査でPASS（残minor 5件も対応）。Solの報告は証拠・events.jsonlと一致し、規約違反・権限迂回なしと判定。
-- 未確認・残り: CodexのComputer Useの許可をどこで与えるか、それがCLI起動のSolへ引き継がれるか（ユーザー操作待ち）。容量不足時の自動再開ループとtimeout時のtaskkillの実働（意図的に起こせず未発火）。初回SMOKE-001のevents.jsonlに無関係なwindow titleが残る（Git対象外のローカルのみ、以後は絞り込み手順）。
+- 未確認・残り: CLI起動のSolでComputer Useが使えない件はCU-001で原因特定・Desktopアプリ経路で対応。容量不足時の自動再開ループとtimeout時のtaskkillの実働（意図的に起こせず未発火）。初回SMOKE-001のevents.jsonlに無関係なwindow titleが残る（Git対象外のローカルのみ、以後は絞り込み手順）。
 - 次: ユーザーとOpusで完成目標・計画を議論して練り直す。自動実装はその合意後に開始する。
 
 ## 展示会用画像

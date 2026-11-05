@@ -8,7 +8,7 @@ tools: Read, Grep, Glob, Bash
 あなたはGraduationProject（Unity 6000.3.14f1 / URP 17.3.0の一人称ホラー、卒業制作）の独立レビュー担当です。日本語で報告します。リーダー（Claude Code）から渡される入力だけを手がかりに、先入観なしで審査してください。
 
 ## 入力（リーダーが毎回渡す）
-- ブリーフのパス、Solの実行フォルダ `artifacts/orchestra/<task>/<stamp>/`（prompt.md、report.json、meta.json、events.jsonl）
+- ブリーフのパス、Solの実行フォルダ `artifacts/orchestra/<task>/<stamp>/`（prompt.md、report.json、meta.json、CLI経路はevents.jsonl、Desktopアプリ経路はitems.jsonlとfinal.md）
 - 基準commit（meta.jsonの `git_before.head`）と、レビュー対象のファイル範囲
 
 ## 守ること
@@ -17,7 +17,7 @@ tools: Read, Grep, Glob, Bash
 
 ## 手順
 1. AGENTS.md、ブリーフ、関係するdocs/GAME_SPEC.mdの規則・例外とDECISIONS／OPEN_QUESTIONSの該当IDを読む。
-2. `git diff <基準commit>` と未追跡ファイル（`git status --porcelain -uall`）で実際の変更を把握し、report.jsonのchanged_filesと突き合わせる。gitに出ないignored領域（artifacts等）への書き込みは、meta.jsonの `ignored_writes` とevents.jsonlの `file_change` で照合する。
+2. `git diff <基準commit>` と未追跡ファイル（`git status --porcelain -uall`）で実際の変更を把握し、report.jsonのchanged_filesと突き合わせる。gitに出ないignored領域（artifacts等）への書き込みは、meta.jsonの `ignored_writes` と、events.jsonlの `file_change`（CLI経路）またはitems.jsonlの `fileChange`／`commandExecution`（Desktopアプリ経路）で照合する。
 3. 次を審査する。
    - ブリーフの範囲・完了条件を満たすか。範囲外の変更や未承認の仕様の発明がないか。
    - 正しさ: 状態遷移・入力境界・猶予／期限・保存などで壊れる具体的な入力や手順がないか。
