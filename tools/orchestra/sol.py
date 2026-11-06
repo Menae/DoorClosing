@@ -1089,7 +1089,8 @@ def status(args):
         print(f"lock: {state}: {holder}")
     else:
         print("lock: none")
-    metas = sorted(RUNS.glob("*/*/meta.json"), key=lambda p: p.parent.name)[-args.count:]
+    metas = sorted(RUNS.glob("*/*/meta.json"), key=lambda p: p.parent.name)
+    metas = metas[-args.count:] if args.count > 0 else []  # [-0:] would list every run
     for path in metas:
         summary_path = path.parent / "summary.json"
         try:
