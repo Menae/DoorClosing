@@ -165,6 +165,11 @@ Developer ID署名・公証・ストア公開はこの手順に含めない。Ma
   - そのため `sol.py run`（`codex exec`）で起動したSolは、window列挙はできても、撮影・操作は「Computer Use was not approved to use …」で拒否される（CU-001、SMOKE-001／002）。
   - 設定で問い合わせを自動承認させる等の迂回はしない。
   - Game Viewの撮影はCLIのSolからUnity MCPで行い、app経路はOSレベルの入力が必要なときだけに使う（ORCH-001の判断D）。
+- **Claude側のComputer Use**（2026-11-06に確認）:
+  - Claude DesktopのComputer useがオンなら、`mcp__computer-use__*` が使える。許可はセッションごとに `request_access` で求める。
+  - スタートメニューの「Unity」はUnity 6000.3.18f1を指す。プロジェクトのEditorには、`C:\Program Files\Unity\Hub\Editor\6000.3.14f1\Editor\Unity.exe` をパスで指定して許可を求める（tierはfull）。
+  - 前面にあるのが許可外のアプリ（Chrome等）だと、クリックは拒否される。Editorは、PowerShellの `(New-Object -ComObject WScript.Shell).AppActivate(<EditorのPID>)` で前面に出す。`open_application("Unity")` は別の版を起動するおそれがあるので使わない。
+  - Windows Playerを操作するときは、そのexeにも別途許可を求める。
 - **画面操作が必要な作業**: `python tools/orchestra/sol.py app --task <ID> --brief <ブリーフ.md> [--unity]`。IDは英数字と `-` のみで、予約コマンドは引用後に32,000字以内。
   - **予約**: ユーザーがDesktopアプリに作ったSol専用スレッド（gpt-6.1-sol・max、IDは `artifacts/orchestra/app-thread.json`、`--thread` で上書き可）へ `codex queue` で予約し、アプリが実行する。
   - **予約前の検査**（読み取り）: Codexの履歴DBの列、スレッドの存在、作業フォルダの一致、モデル（gpt-6.1-sol・max以外は拒否）、全権限（danger）でないこと、cleanな作業ツリー。

@@ -4,7 +4,7 @@
 
 ## 開発体制
 
-### ORCH-001 WORK-007体制の改善（2026-11-06、実装・実地確認・独立レビューPASS・hook実発火確認済み／Claude CUは14f1 Editorの許可待ち）
+### ORCH-001 WORK-007体制の改善（2026-11-06、実装・実地確認・独立レビューPASS・hook実発火確認済み・Claude CUでEditorの撮影とクリックを確認済み）
 - **依頼**: ユーザー指定「全てあなたがベストだと思う方法で改善してくれ」。2026-11-06の設計レビュー（下のWORK-007を参照）の判断不要8件と判断依頼5件（A〜D・hook）を、リーダーの推奨どおりに実施する。
 - **担当・開始時点**: Claude Code（Opus）リーダーが直接実装し、独立Opusレビュー役が審査する（判断Bの「Assets外ツールはリーダー実装」に沿う）。開始main 5c90d19、origin/mainと0/0、clean。Unity Editor（PID 36372）とMCPは稼働中。
 - **範囲**: `tools/orchestra/`（sol.py・契約・hook）、`.claude/`（レビュー役・settings.jsonのhook）、AGENTS／START_HERE／DEVELOPMENT／DECISIONS、PROJECT_STATUSの圧縮（過去記録はPROJECT_HISTORYへ移す）。ゲームのコード・シーン・仕様は変更しない。
@@ -80,7 +80,13 @@
 - **Claude側のComputer Use**（同日）:
   - `request_access` でスタートメニューの「Unity」が許可され、tierはfull。デスクトップの撮影もできた。
   - ただしこの許可が付いたのは Unity 6000.3.18f1 の実行ファイルで、プロジェクトの6000.3.14f1のEditorは撮影時に隠された。
-  - 6000.3.14f1のパスを指定して許可を求め直したが、許可画面の結果は「拒否」だった。迂回はしていない。
+  - 6000.3.14f1のパスを指定して許可を求め直したところ、1回目は「拒否」だった。ユーザーによると意図しない拒否で、2回目に許可された（tierはfull）。
+  - Editorの撮影: タイトル「GraduationProject - Homecoming - Unity 6.3 LTS (6000.3.14f1)」が見えた。
+  - クリック:
+    - 前面がChrome（未許可）のときは拒否された。
+    - PowerShellの `AppActivate` でEditorを前面に出してからは、Consoleタブへの切り替えと、Sceneタブへの戻しの両方が届いた。
+  - Editorの状態は変わらず、Play中・未保存・errorとも0（MCPで確認）。Consoleの4件はwarningではなくLogで、読み取りと表示は一致していた。
+  - 証拠は `artifacts/orchestra/CU-CLAUDE/20261106/`。手順はDEVELOPMENTのWORK-007補足に書いた。
 - **Unityの停止**（観察、原因は未確認）: セッションの開始時点で、前のセッションが `Launch` で起動したUnity EditorとMCPサーバーは、どちらも停止していた。セッションの終了と一緒に止まった可能性がある。`Launch` で起動し直した（Editor PID 47756、MCPのinstance登録まで確認）。
 - **その他**: 未消化の予約が残るCLIスレッド01a19b40を `codex archive` で保管済みにした（`codex unarchive` で戻せる）。
 
